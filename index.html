@@ -290,7 +290,7 @@
     <aside id="sidebar" class="w-64 bg-gray-700 text-white flex flex-col p-5 shadow-lg
                              transition-transform duration-300 ease-in-out fixed inset-y-0 left-0 z-50 sidebar-collapsed">
         <div class="flex items-center justify-center mb-6">
-            <img src="Biznet_Logo.png" alt="Biznet Logo" class="h-20 w-auto">
+            <img src="Biznet Logo.png" alt="Biznet Logo" class="h-20 w-auto">
         </div>
         <h3 class="text-xl font-semibold text-center mb-6">Dashboard Branch Bandar Lampung Campang Raya</h3>
         <nav class="flex-grow">
@@ -345,6 +345,9 @@
                 </li>
             </ul>
         </nav>
+        <button id="logoutBtn" class="flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors duration-200 mt-4" style="display:none;">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
     </aside>
 
     <!-- Floating button to open sidebar (muncul di semua ukuran layar saat sidebar disembunyikan) -->
@@ -400,6 +403,101 @@
                             <p id="kpiChurnStatus" class="text-xs font-semibold mt-1">-</p>
                         </div>
                     </div>
+
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Daftar Customer</h2>
+
+                    <!-- Dashboard Summary Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="metric-card p-6 flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-500">Customer Active</h4>
+                                <p id="activeCustomersCount" class="text-3xl font-bold text-gray-800">0</p>
+                            </div>
+                            <div class="icon-box icon-blue"><i class="fas fa-user-check"></i></div>
+                        </div>
+                        <div class="metric-card p-6 flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-500">Customer Suspend</h4>
+                                <p id="suspendedCustomersCount" class="text-3xl font-bold text-gray-800">0</p>
+                            </div>
+                            <div class="icon-box icon-orange"><i class="fas fa-user-clock"></i></div>
+                        </div>
+                        <div class="metric-card p-6 flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-500">Total Customer Terminasi (All Time)</h4>
+                                <p id="totalTerminatedCustomersDisplay" class="text-3xl font-bold text-gray-800">0</p>
+                            </div>
+                            <div class="icon-box icon-gray"><i class="fas fa-user-times"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="col-span-1">
+                            <label for="searchCustomer" class="block text-gray-700 text-sm font-bold mb-2">Pencarian Customer:</label>
+                            <div class="relative">
+                                <input type="text" id="searchCustomer" placeholder="Cari berdasarkan nama, email, atau ID..."
+                                       class="shadow-sm appearance-none border rounded-lg w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent pl-10">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="filterStatus" class="block text-gray-700 text-sm font-bold mb-2">Filter Status:</label>
+                            <select id="filterStatus" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <option value="">Semua Status</option>
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="SUSPENDED">SUSPENDED</option>
+                                <option value="TERMINATED">TERMINATED</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="filterSalesCode" class="block text-gray-700 text-sm font-bold mb-2">Filter Sales Code:</label>
+                            <select id="filterSalesCode" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <option value="">Semua Sales Code</option>
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-span-1 flex items-end">
+                            <button id="applyFiltersBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 w-full">
+                                <i class="fas fa-sync-alt mr-2"></i> Apply Filters
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Total Customer Display -->
+                    <div id="totalCustomerDisplay" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-6 text-center" role="alert">
+                        Memuat jumlah customer...
+                    </div>
+
+                    <!-- Customer Table -->
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white table-custom" id="customerTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">ID Partner Bisnis</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Nama Lengkap</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Email</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">No. HP</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Akun Kontrak</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Alamat Instalasi</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Customer data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination for customer table -->
+                    <nav class="mt-6">
+                        <ul class="flex justify-center space-x-2" id="customerPagination">
+                            <!-- Pagination buttons will be inserted here -->
+                        </ul>
+                    </nav>
 
                     <!-- Segmentasi Bundle_LOB: Home, Metronet, Dedicated -->
                     <h4 class="text-base font-bold text-gray-700 mb-3">Segmentasi Bundle (Bundle_LOB)</h4>
@@ -564,100 +662,6 @@
                         <p id="penetrationError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                     </div>
 
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Daftar Customer</h2>
-
-                    <!-- Dashboard Summary Cards -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <div class="metric-card p-6 flex items-center justify-between">
-                            <div>
-                                <h4 class="text-sm font-semibold text-gray-500">Customer Active</h4>
-                                <p id="activeCustomersCount" class="text-3xl font-bold text-gray-800">0</p>
-                            </div>
-                            <div class="icon-box icon-blue"><i class="fas fa-user-check"></i></div>
-                        </div>
-                        <div class="metric-card p-6 flex items-center justify-between">
-                            <div>
-                                <h4 class="text-sm font-semibold text-gray-500">Customer Suspend</h4>
-                                <p id="suspendedCustomersCount" class="text-3xl font-bold text-gray-800">0</p>
-                            </div>
-                            <div class="icon-box icon-orange"><i class="fas fa-user-clock"></i></div>
-                        </div>
-                        <div class="metric-card p-6 flex items-center justify-between">
-                            <div>
-                                <h4 class="text-sm font-semibold text-gray-500">Total Customer Terminasi (All Time)</h4>
-                                <p id="totalTerminatedCustomersDisplay" class="text-3xl font-bold text-gray-800">0</p>
-                            </div>
-                            <div class="icon-box icon-gray"><i class="fas fa-user-times"></i></div>
-                        </div>
-                    </div>
-
-                    <!-- Customer Filters -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="col-span-1">
-                            <label for="searchCustomer" class="block text-gray-700 text-sm font-bold mb-2">Pencarian Customer:</label>
-                            <div class="relative">
-                                <input type="text" id="searchCustomer" placeholder="Cari berdasarkan nama, email, atau ID..."
-                                       class="shadow-sm appearance-none border rounded-lg w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent pl-10">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-search text-gray-400"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-span-1">
-                            <label for="filterStatus" class="block text-gray-700 text-sm font-bold mb-2">Filter Status:</label>
-                            <select id="filterStatus" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
-                                <option value="">Semua Status</option>
-                                <option value="ACTIVE">ACTIVE</option>
-                                <option value="SUSPENDED">SUSPENDED</option>
-                                <option value="TERMINATED">TERMINATED</option>
-                            </select>
-                        </div>
-                        <div class="col-span-1">
-                            <label for="filterSalesCode" class="block text-gray-700 text-sm font-bold mb-2">Filter Sales Code:</label>
-                            <select id="filterSalesCode" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
-                                <option value="">Semua Sales Code</option>
-                                <!-- Options will be loaded dynamically -->
-                            </select>
-                        </div>
-                        <div class="col-span-1 flex items-end">
-                            <button id="applyFiltersBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 w-full">
-                                <i class="fas fa-sync-alt mr-2"></i> Apply Filters
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Total Customer Display -->
-                    <div id="totalCustomerDisplay" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-6 text-center" role="alert">
-                        Memuat jumlah customer...
-                    </div>
-
-                    <!-- Customer Table -->
-                    <div class="overflow-x-auto rounded-lg shadow-md">
-                        <table class="min-w-full bg-white table-custom" id="customerTable">
-                            <thead class="bg-gray-700 text-white">
-                                <tr>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">ID Partner Bisnis</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Nama Lengkap</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Email</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">No. HP</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Akun Kontrak</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Alamat Instalasi</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Customer data will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination for customer table -->
-                    <nav class="mt-6">
-                        <ul class="flex justify-center space-x-2" id="customerPagination">
-                            <!-- Pagination buttons will be inserted here -->
-                        </ul>
-                    </nav>
 
                     <!-- Modals -->
                     <!-- Customer Detail Modal -->
@@ -1003,12 +1007,12 @@
             // terbuka di desktop (>768px), tertutup di HP.
             setSidebarOpen(window.innerWidth > 768);
 
-            document.addEventListener('DOMContentLoaded', function () {
-                var toggleBtn = document.getElementById('sidebarToggle');
-                var openBtn = document.getElementById('openSidebarBtn');
-                if (toggleBtn) toggleBtn.addEventListener('click', window.toggleSidebar);
-                if (openBtn) openBtn.addEventListener('click', window.toggleSidebar);
-            });
+            // Catatan: tombol #sidebarToggle & #openSidebarBtn sudah punya atribut
+            // onclick="toggleSidebar()" langsung di HTML, jadi TIDAK perlu
+            // addEventListener tambahan di sini. Sebelumnya kedua cara ini
+            // dipasang bersamaan sehingga satu klik memicu toggle 2x (buka
+            // lalu langsung tertutup lagi) — itulah sebabnya tombol "Buka Menu"
+            // terasa tidak merespons di HP.
 
             window.addEventListener('resize', function () {
                 setSidebarOpen(window.isSidebarOpen());
@@ -3594,7 +3598,6 @@
 #login-card input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:12px;font-size:14px}
 #login-card button{width:100%;padding:10px;border-radius:8px;border:0;background:#007bff;color:#fff;font-weight:600;cursor:pointer}
 #login-error{color:#b91c1c;background:#fff5f5;padding:8px;border-radius:8px;margin-bottom:12px;display:none;font-size:13px;text-align:center}
-#logoutBtn{position:fixed;top:14px;right:14px;background:#ef4444;color:#fff;padding:8px 12px;border:0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;z-index:10000}
 </style>
 
 <div id="login-overlay" aria-hidden="false">
@@ -3609,7 +3612,6 @@
   </div>
 </div>
 
-<button id="logoutBtn">Logout</button>
 
 <script>
 const USERS = [
@@ -3631,10 +3633,10 @@ function getSession(){try{return JSON.parse(localStorage.getItem('campang_auth')
 function clearSession(){localStorage.removeItem('campang_auth');sessionStorage.removeItem('campang_auth');}
 function valid(s){return s&&USERS.includes(s.user)&&Date.now()-s.ts<EXPIRY_MS;}
 
-function doLogin(){hideErr();const u=(document.getElementById('login-username').value||'').trim().toLowerCase();const p=document.getElementById('login-password').value||'';const r=document.getElementById('login-remember').checked;if(!u||!p){showErr('Isi username & password');return;}if(!USERS.includes(u)){showErr('User tidak dikenal');return;}if(p!==PASSWORD){showErr('Password salah');return;}saveSession(u,r);overlay.style.display='none';logoutBtn.style.display='block';}
+function doLogin(){hideErr();const u=(document.getElementById('login-username').value||'').trim().toLowerCase();const p=document.getElementById('login-password').value||'';const r=document.getElementById('login-remember').checked;if(!u||!p){showErr('Isi username & password');return;}if(!USERS.includes(u)){showErr('User tidak dikenal');return;}if(p!==PASSWORD){showErr('Password salah');return;}saveSession(u,r);overlay.style.display='none';logoutBtn.style.display='flex';}
 function doLogout(){clearSession();alert('Anda telah logout.');location.reload();}
 logoutBtn.addEventListener('click',doLogout);
 document.getElementById('login-button').addEventListener('click',doLogin);
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&overlay.style.display!=='none')doLogin();});
-(function init(){const s=getSession();if(valid(s)){overlay.style.display='none';logoutBtn.style.display='block';}else{clearSession();overlay.style.display='flex';}})();
+(function init(){const s=getSession();if(valid(s)){overlay.style.display='none';logoutBtn.style.display='flex';}else{clearSession();overlay.style.display='flex';}})();
 </script>
