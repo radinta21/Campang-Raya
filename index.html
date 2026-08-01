@@ -436,7 +436,7 @@
                         <div class="col-span-1">
                             <label for="searchCustomer" class="block text-gray-700 text-sm font-bold mb-2">Pencarian Customer:</label>
                             <div class="relative">
-                                <input type="text" id="searchCustomer" placeholder="Cari berdasarkan nama, email, atau ID..."
+                                <input type="text" id="searchCustomer" placeholder="Cari berdasarkan nama, email, ID, akun kontrak, atau no. HP..."
                                        class="shadow-sm appearance-none border rounded-lg w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent pl-10">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="fas fa-search text-gray-400"></i>
@@ -637,7 +637,7 @@
                     <!-- Status Modem Terminate & Subdistrict Instalasi Bulan Berjalan -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Modem Customer Terminate Bulan Ini</h3>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Modem Customer Suspend &amp; Terminate Bulan Ini</h3>
                             <div class="chart-container h-72">
                                 <canvas id="modemStatusTerminateChart"></canvas>
                             </div>
@@ -663,113 +663,6 @@
                     </div>
 
 
-                    <!-- Modals -->
-                    <!-- Customer Detail Modal -->
-                    <div id="customerDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1050]">
-                        <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-3/4 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
-                            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                                <h5 class="text-xl font-semibold text-gray-800">Detail Customer</h5>
-                                <button type="button" class="text-gray-500 hover:text-gray-700" onclick="closeModal('customerDetailModal')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div id="customerDetailBody" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 text-sm">
-                                <!-- Customer details will be loaded here -->
-                            </div>
-                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
-                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('customerDetailModal')">Tutup</button>
-                                <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200" id="showVaButton">Tampilkan VA Pembayaran</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- VA Modal -->
-                    <div id="vaModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1060]">
-                        <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2 va-print-content transform scale-95 opacity-0 transition-all duration-300">
-                            <div class="text-center mb-6 border-b pb-4">
-                                <img src="Biznet_Logo.png" alt="Biznet Logo" class="h-16 mx-auto mb-2">
-                                <h5 class="text-2xl font-bold text-gray-800">Virtual Account Pembayaran</h5>
-                                <p class="text-gray-600">INVOICE</p>
-                            </div>
-                            <div id="vaDetailBody" class="text-gray-700 text-base space-y-3 mb-6">
-                                <!-- VA details will be loaded here -->
-                            </div>
-                            <div class="text-center text-sm text-gray-500 border-t pt-4">
-                                <p>Terima kasih atas kepercayaan Anda menggunakan layanan Biznet.</p>
-                                <p>Thank you for your trust in using Biznet services.</p>
-                            </div>
-                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4 modal-footer">
-                                <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200" id="downloadVaBtn">Download sebagai JPG</button>
-                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('vaModal')">Tutup</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chart Detail Modal -->
-                    <div id="chartDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1070]">
-                        <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-5/6 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
-                            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                                <h5 class="text-xl font-semibold text-gray-800" id="chartDetailModalLabel">Detail Customer untuk Analisis</h5>
-                                <button type="button" class="text-gray-500 hover:text-gray-700" onclick="closeModal('chartDetailModal')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="overflow-x-auto rounded-lg shadow-md">
-                                <table class="min-w-full bg-white table-custom" id="chartCustomerDetailTable">
-                                    <thead class="bg-gray-700 text-white">
-                                        <tr>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">BP_FULLNAME</th>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTACCOUNT</th>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm">SALESCODE</th>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTSTARTDATE</th>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm">EXPIREDDATE</th>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm">TERMDATE</th>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm">STATUS</th>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm">BUNDLE_NAME</th>
-                                            <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">SUBDISTRICT_INST</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Customer data will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
-                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('chartDetailModal')">Tutup</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Overview Insight Detail Modal (Terminasi per Sales Code & Umur Suspend) -->
-                    <div id="overviewDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1070] p-2">
-                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full md:w-11/12 lg:w-5/6 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
-                            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                                <h5 class="text-base sm:text-xl font-semibold text-gray-800" id="overviewDetailModalLabel">Detail Customer</h5>
-                                <button type="button" class="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2" onclick="closeModal('overviewDetailModal')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <p id="overviewDetailModalHint" class="text-xs text-gray-500 mb-3 hidden">
-                                <i class="fas fa-info-circle text-green-600 mr-1"></i>
-                                Klik ikon <i class="fab fa-whatsapp text-green-600"></i> pada tiap baris untuk langsung membuka chat WhatsApp ke customer.
-                            </p>
-                            <div class="overflow-x-auto rounded-lg shadow-md">
-                                <table class="min-w-full bg-white table-custom" id="overviewDetailTable">
-                                    <thead class="bg-gray-700 text-white">
-                                        <tr id="overviewDetailTableHeadRow">
-                                            <!-- Header kolom diisi otomatis lewat JS -->
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Customer data will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
-                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('overviewDetailModal')">Tutup</button>
-                            </div>
-                        </div>
-                    </div>
 
                 </div>
             </section>
@@ -796,6 +689,46 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Pencapaian Sales per Sales Code: Penjualan, Terminasi, Net Subs, bisa disaring per bulan & tahun -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-1 text-center">Pencapaian Sales per Sales Code</h2>
+                    <p class="text-center text-xs text-gray-400 mb-4">Total Penjualan (Instalasi), Terminasi, dan Net Subs per Sales Code — pilih bulan &amp; tahun untuk melihat pencapaian periode tertentu</p>
+                    <div class="mb-4 flex flex-wrap gap-4 items-center justify-center">
+                        <div>
+                            <label for="salesPerfMonthSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Bulan:</label>
+                            <select id="salesPerfMonthSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="salesPerfYearSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Tahun:</label>
+                            <select id="salesPerfYearSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <button id="applySalesPerfFilterBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 self-end">
+                            <i class="fas fa-sync-alt mr-2"></i> Terapkan
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white table-custom" id="salesPerformanceTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Penjualan (Instalasi)</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Terminasi</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right rounded-tr-lg">Net Subs</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesPerformanceBody">
+                                <tr><td colspan="5" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 mt-3">Klik angka Penjualan atau Terminasi untuk melihat daftar customer-nya (termasuk tombol WhatsApp).</p>
                 </div>
             </section>
 
@@ -967,6 +900,131 @@
             </div>
 
         </main>
+
+        <!-- ============================================================
+             Modal-modal detail (Customer Detail, VA, Chart Detail,
+             Overview Detail) SENGAJA diletakkan di sini -- sebagai
+             saudara (sibling) dari <main>, BUKAN di dalam salah satu
+             <section class="content-section">.
+             Alasannya: setiap <section> non-aktif diberi class "hidden"
+             (display:none) oleh showSection(). Kalau modal ini taruh di
+             DALAM salah satu section (misalnya customerOverview), maka
+             saat pengguna sedang membuka section LAIN (misalnya Sales
+             Ranking atau Daily Termination Subscribers) dan meng-klik
+             sesuatu yang memicu modal ini, modal tidak akan pernah
+             terlihat -- karena section leluhurnya (ancestor) masih
+             "hidden", walaupun class "hidden" milik modal itu sendiri
+             sudah dilepas. Ini akar penyebab "klik tidak muncul apa-apa"
+             pada tabel Pencapaian Sales per Sales Code & tombol
+             "Lihat VA" di Daily Termination Subscribers.
+           ============================================================ -->
+                    <!-- Modals -->
+                    <!-- Customer Detail Modal -->
+                    <div id="customerDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1050]">
+                        <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-3/4 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                                <h5 class="text-xl font-semibold text-gray-800">Detail Customer</h5>
+                                <button type="button" class="text-gray-500 hover:text-gray-700" onclick="closeModal('customerDetailModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="customerDetailBody" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 text-sm">
+                                <!-- Customer details will be loaded here -->
+                            </div>
+                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
+                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('customerDetailModal')">Tutup</button>
+                                <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200" id="showVaButton">Tampilkan VA Pembayaran</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VA Modal -->
+                    <div id="vaModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1060]">
+                        <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2 va-print-content transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="text-center mb-6 border-b pb-4">
+                                <img src="Biznet_Logo.png" alt="Biznet Logo" class="h-16 mx-auto mb-2">
+                                <h5 class="text-2xl font-bold text-gray-800">Virtual Account Pembayaran</h5>
+                                <p class="text-gray-600">INVOICE</p>
+                            </div>
+                            <div id="vaDetailBody" class="text-gray-700 text-base space-y-3 mb-6">
+                                <!-- VA details will be loaded here -->
+                            </div>
+                            <div class="text-center text-sm text-gray-500 border-t pt-4">
+                                <p>Terima kasih atas kepercayaan Anda menggunakan layanan Biznet.</p>
+                                <p>Thank you for your trust in using Biznet services.</p>
+                            </div>
+                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4 modal-footer">
+                                <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200" id="downloadVaBtn">Download sebagai JPG</button>
+                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('vaModal')">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Detail Modal -->
+                    <div id="chartDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1070]">
+                        <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-5/6 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                                <h5 class="text-xl font-semibold text-gray-800" id="chartDetailModalLabel">Detail Customer untuk Analisis</h5>
+                                <button type="button" class="text-gray-500 hover:text-gray-700" onclick="closeModal('chartDetailModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto rounded-lg shadow-md">
+                                <table class="min-w-full bg-white table-custom" id="chartCustomerDetailTable">
+                                    <thead class="bg-gray-700 text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">BP_FULLNAME</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTACCOUNT</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm">SALESCODE</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTSTARTDATE</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm">EXPIREDDATE</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm">TERMDATE</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm">STATUS</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm">BUNDLE_NAME</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">SUBDISTRICT_INST</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Customer data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
+                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('chartDetailModal')">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Overview Insight Detail Modal (Terminasi per Sales Code & Umur Suspend) -->
+                    <div id="overviewDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1070] p-2">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full md:w-11/12 lg:w-5/6 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                                <h5 class="text-base sm:text-xl font-semibold text-gray-800" id="overviewDetailModalLabel">Detail Customer</h5>
+                                <button type="button" class="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2" onclick="closeModal('overviewDetailModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <p id="overviewDetailModalHint" class="text-xs text-gray-500 mb-3 hidden">
+                                <i class="fas fa-info-circle text-green-600 mr-1"></i>
+                                Klik ikon <i class="fab fa-whatsapp text-green-600"></i> pada tiap baris untuk langsung membuka chat WhatsApp ke customer.
+                            </p>
+                            <div class="overflow-x-auto rounded-lg shadow-md">
+                                <table class="min-w-full bg-white table-custom" id="overviewDetailTable">
+                                    <thead class="bg-gray-700 text-white">
+                                        <tr id="overviewDetailTableHeadRow">
+                                            <!-- Header kolom diisi otomatis lewat JS -->
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Customer data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
+                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('overviewDetailModal')">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
     </div>
 
     <!-- Script sidebar: SENGAJA dipisah & diletakkan lebih awal, terpisah dari
@@ -1188,7 +1246,7 @@
             if (sectionId === 'kecamatanAnalysis') renderKecamatanChart();
             if (sectionId === 'bundleNameAnalysis') renderBundleNameChart();
             if (sectionId === 'modemStatusAnalysis') renderModemStatusChart();
-            if (sectionId === 'salesRanking') renderSalesRanking(); // Render sales ranking
+            if (sectionId === 'salesRanking') { renderSalesRanking(); renderSalesPerformanceTable(); } // Render sales ranking
             if (sectionId === 'dailyNewSubscribersAnalysis') { // New section for daily new subscribers
                 // Initialize month and year filter for daily new subscribers
                 const now = new Date();
@@ -1619,19 +1677,36 @@
         // Download VA as JPG
         function downloadVaAsJpg(customer) {
             const vaModalContent = document.getElementById('vaModal').querySelector('.va-print-content');
-            
-            // Temporarily adjust modal size and overflow for html2canvas
+
+            // Simpan style asli agar bisa dikembalikan setelah proses capture selesai
             const originalMaxHeight = vaModalContent.style.maxHeight;
             const originalOverflowY = vaModalContent.style.overflowY;
+            const originalWidth = vaModalContent.style.width;
+            const originalMaxWidth = vaModalContent.style.maxWidth;
+            const originalMargin = vaModalContent.style.margin;
+
+            // PERBAIKAN: paksa lebar tetap (fixed) khusus saat proses capture.
+            // Sebelumnya elemen ini di-capture pada lebar tampilan on-screen-nya
+            // (95% dari lebar layar di HP vs 50% dari layar desktop yang jauh
+            // lebih lebar via CSS ".va-print-content{width:95%}" / "md:w-1/2"),
+            // sehingga ukuran & proporsi JPG hasil download berbeda-beda
+            // tergantung perangkat yang dipakai. Dengan lebar tetap di sini,
+            // hasil unduhan selalu proporsional sama persis baik dari HP
+            // maupun desktop.
+            const CAPTURE_WIDTH = 480;
             vaModalContent.style.maxHeight = 'fit-content'; // Allow content to dictate height
             vaModalContent.style.overflowY = 'visible'; // Ensure no scrollbars interfere with capture
+            vaModalContent.style.width = `${CAPTURE_WIDTH}px`;
+            vaModalContent.style.maxWidth = `${CAPTURE_WIDTH}px`;
+            vaModalContent.style.margin = '0';
 
             html2canvas(vaModalContent, {
                 scale: 2,
                 useCORS: true, // Pastikan ini true
                 logging: false, 
                 backgroundColor: '#ffffff', // Pastikan latar belakang putih untuk cetak
-                allowTaint: false // Set to false to avoid tainting the canvas if cross-origin images are not handled correctly
+                allowTaint: false, // Set to false to avoid tainting the canvas if cross-origin images are not handled correctly
+                windowWidth: CAPTURE_WIDTH + 40 // beri sedikit ruang render agar layout tidak berubah aneh
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `VA_Invoice_${(customer.BP_FULLNAME || 'Unknown').replace(/\s/g, '_')}.jpg`;
@@ -1645,6 +1720,9 @@
                 // Restore original styles after capture
                 vaModalContent.style.maxHeight = originalMaxHeight;
                 vaModalContent.style.overflowY = originalOverflowY;
+                vaModalContent.style.width = originalWidth;
+                vaModalContent.style.maxWidth = originalMaxWidth;
+                vaModalContent.style.margin = originalMargin;
             });
         }
 
@@ -1658,7 +1736,10 @@
                 const matchesSearch = searchTerm === '' ||
                     (customer.BP_FULLNAME && customer.BP_FULLNAME.toLowerCase().includes(searchTerm)) ||
                     (customer.BP_EMAIL && customer.BP_EMAIL.toLowerCase().includes(searchTerm)) ||
-                    (customer.BUSINESSPARTNERID && customer.BUSINESSPARTNERID.toLowerCase().includes(searchTerm));
+                    (customer.BUSINESSPARTNERID && customer.BUSINESSPARTNERID.toLowerCase().includes(searchTerm)) ||
+                    (customer.CONTRACTACCOUNT && String(customer.CONTRACTACCOUNT).toLowerCase().includes(searchTerm)) ||
+                    (customer.BP_PHONE && String(customer.BP_PHONE).toLowerCase().includes(searchTerm)) ||
+                    (customer.BILLING_PHONE && String(customer.BILLING_PHONE).toLowerCase().includes(searchTerm));
 
                 const matchesStatus = statusFilter === '' ||
                     (customer.STATUS && customer.STATUS.toUpperCase() === statusFilter.toUpperCase());
@@ -1981,11 +2062,12 @@
             // Forecast jumlah customer yang akan terminate bulan berjalan (TERMDATE bulan ini, segmen ini)
             const endOfThisMonth = new Date(startOfThisMonth.getFullYear(), startOfThisMonth.getMonth() + 1, 0);
             endOfThisMonth.setHours(23, 59, 59, 999);
-            const forecastTerminateSeg = allCustomers.filter(c => {
+            const forecastTerminateSegCustomers = allCustomers.filter(c => {
                 if (!inSegment(c)) return false;
                 const d = parseDate(c.TERMDATE);
                 return d && d >= startOfThisMonth && d <= endOfThisMonth;
-            }).length;
+            });
+            const forecastTerminateSeg = forecastTerminateSegCustomers.length;
 
             const netSubsSeg = installThisMonthSeg - forecastTerminateSeg;
 
@@ -1996,6 +2078,22 @@
             renderGrowthLabel(`${idPrefix}InstallGrowth`, installThisMonthSeg, installLastMonthSeg, `s/d tgl ${sameDayLastMonth.getDate()} bulan lalu`);
             setText(`${idPrefix}ForecastTerm`, formatNumber(forecastTerminateSeg));
             setText(`${idPrefix}NetSubs`, formatNumber(netSubsSeg));
+
+            // Jadikan angka Forecast Terminasi bisa diklik untuk melihat detail customer-nya
+            const forecastTermEl = document.getElementById(`${idPrefix}ForecastTerm`);
+            if (forecastTermEl) {
+                const segmentLabel = bundleKeyword.charAt(0) + bundleKeyword.slice(1).toLowerCase();
+                forecastTermEl.classList.add('cursor-pointer', 'hover:underline');
+                forecastTermEl.title = 'Klik untuk melihat detail customer';
+                forecastTermEl.onclick = () => {
+                    showOverviewDetailModal(
+                        forecastTerminateSegCustomers,
+                        `Forecast Terminasi Bulan Ini - Segmen ${segmentLabel}`,
+                        true,
+                        DEFAULT_DETAIL_COLUMNS
+                    );
+                };
+            }
         }
 
         // 6. Pencapaian instalasi harian per Area Coordinator (Sales Code): bulan ini vs bulan lalu (transparan)
@@ -2092,18 +2190,36 @@
             return digits;
         }
 
-        // Template pesan WhatsApp otomatis (dipakai di semua drill-down: Terminasi per Sales Code,
+        // Template pesan WhatsApp default (dipakai di semua drill-down: Terminasi per Sales Code,
         // Umur Customer Suspend, dan Forecast Terminasi)
-        function buildWhatsAppLink(customer) {
+        function defaultWaMessage(customer) {
+            const name = customer.BP_FULLNAME || 'Kak';
+            return `Halo Kak ${name},\nTerimakasih telah menjadi pelanggan setia #Biznet,\nDibantu untuk konfirmasinya kak, Wifi dirumahnya sudah tidak aktif, apakah ada kendala kak? Jika ada kendala kami siap membantu!\nJangan lupa untuk melakukan pembayaran, karena masa aktif akan langsung bertambah serta tidak ada denda ya kak\nTerimakasih, salam hangat dari Biznet Branch Campang Raya`;
+        }
+
+        // Template pesan WhatsApp khusus untuk tabel "Pencapaian Sales per Sales Code"
+        // (ucapan terima kasih ke customer aktif, dipakai saat klik angka Penjualan)
+        function salesPerformanceWaMessage(customer) {
+            const name = customer.BP_FULLNAME || 'Bapak/Ibu';
+            return `Halo Bapak/Ibu ${name}, \n\nTerima kasih karena telah mempercayakan Biznet sebagai layanan internet di rumah Anda. \nKami berharap koneksi internet yang kami berikan dapat mendukung aktivitas sehari-hari, baik untuk bekerja, belajar, hiburan, maupun kebutuhan keluarga.\nApabila selama penggunaan terdapat kendala jangan ragu untuk menghubungi kami. \nTerima kasih atas kepercayaannya. Semoga kami dapat terus memberikan layanan terbaik untuk Anda.\nSalam hangat,\nBiznet Branch Campang Raya`;
+        }
+
+        // Template pesan WhatsApp khusus untuk klik angka Terminasi di tabel
+        // "Pencapaian Sales per Sales Code" (ajakan reaktivasi, beda dari pesan Penjualan)
+        function salesPerformanceTerminationWaMessage(customer) {
+            return `Halo Kak, apa kabar? \nKami lihat layanan Biznet Kakak sudah tidak aktif.\nKalau ada rencana pasang internet lagi, kami siap bantu prosesnya ya. \nTerima kasih, semoga harinya menyenangkan! 🙏`;
+        }
+
+        function buildWhatsAppLink(customer, messageBuilder) {
             const waNumber = formatWhatsAppNumber(customer.BILLING_PHONE);
             if (!waNumber) return null;
-            const name = customer.BP_FULLNAME || 'Kak';
-            const message = `Halo Kak ${name},\nTerimakasih telah menjadi pelanggan setia #Biznet,\nDibantu untuk konfirmasinya kak, Wifi dirumahnya sudah tidak aktif, apakah ada kendala kak? Jika ada kendala kami siap membantu!\nJangan lupa untuk melakukan pembayaran, karena masa aktif akan langsung bertambah serta tidak ada denda ya kak\nTerimakasih, salam hangat dari Biznet Branch Campang Raya`;
+            const builder = messageBuilder || defaultWaMessage;
+            const message = builder(customer);
             return `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
         }
 
-        function waActionCellHtml(customer) {
-            const link = buildWhatsAppLink(customer);
+        function waActionCellHtml(customer, messageBuilder) {
+            const link = buildWhatsAppLink(customer, messageBuilder);
             if (link) {
                 return `<a href="${link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-500 hover:text-white transition-colors" title="Chat WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
             }
@@ -2135,7 +2251,9 @@
         ];
 
         // Menampilkan modal detail customer (dipakai oleh chart Terminasi per Sales Code & Umur Customer Suspend)
-        function showOverviewDetailModal(customers, modalTitle, showWhatsApp, columns) {
+        // waMessageBuilder (opsional): function(customer) => string, untuk mengganti redaksi WhatsApp
+        // khusus pemanggilan ini saja (mis. dipakai oleh tabel Pencapaian Sales per Sales Code).
+        function showOverviewDetailModal(customers, modalTitle, showWhatsApp, columns, waMessageBuilder) {
             columns = columns || DEFAULT_DETAIL_COLUMNS;
             const headRow = document.getElementById('overviewDetailTableHeadRow');
             const modalBodyTable = document.querySelector('#overviewDetailModal #overviewDetailTable tbody');
@@ -2166,7 +2284,7 @@
                     const row = modalBodyTable.insertRow();
                     columns.forEach(col => { row.insertCell().textContent = col.get(customer); });
                     if (showWhatsApp) {
-                        row.insertCell().innerHTML = waActionCellHtml(customer);
+                        row.insertCell().innerHTML = waActionCellHtml(customer, waMessageBuilder);
                     }
                     row.classList.add('hover:bg-gray-50');
                     row.querySelectorAll('td').forEach(cell => cell.classList.add('py-2', 'px-4', 'text-sm', 'text-gray-700', 'whitespace-nowrap'));
@@ -2318,19 +2436,28 @@
             { label: 'Promo Code', get: c => c.PROMO_CODE || '-' }
         ];
 
-        // 9. Status modem customer terminate bulan ini (pie chart, 3 klasifikasi)
+        // 9. Status modem customer suspend & terminate bulan ini (pie chart, 3 klasifikasi)
         function renderModemStatusTerminateChart(startOfThisMonth, today) {
             const ctx = document.getElementById('modemStatusTerminateChart');
             if (!ctx) return;
             const context = ctx.getContext('2d');
             if (modemStatusTerminateChartInstance) modemStatusTerminateChartInstance.destroy();
 
+            const endOfThisMonth = new Date(startOfThisMonth.getFullYear(), startOfThisMonth.getMonth() + 1, 0);
+            endOfThisMonth.setHours(23, 59, 59, 999);
+
             const counts = {};
             const customersByClass = {};
             allCustomers.forEach(c => {
-                if (!c.STATUS || c.STATUS.toUpperCase() !== 'TERMINATED') return;
+                if (!c.STATUS) return;
+                const statusUpper = c.STATUS.toUpperCase();
+                // Sertakan customer yang sudah TERMINATED maupun yang SUSPENDED
+                // (calon terminasi/forecast) bulan berjalan, karena TERMDATE
+                // menyimpan tanggal aktual (terminated) atau tanggal
+                // perkiraan (suspended) untuk kedua status ini.
+                if (statusUpper !== 'TERMINATED' && statusUpper !== 'SUSPENDED') return;
                 const d = parseDate(c.TERMDATE);
-                if (!d || d < startOfThisMonth || d > today) return;
+                if (!d || d < startOfThisMonth || d > endOfThisMonth) return;
                 const modemClass = classifyModemStatus(c);
                 counts[modemClass] = (counts[modemClass] || 0) + 1;
                 (customersByClass[modemClass] = customersByClass[modemClass] || []).push(c);
@@ -2340,7 +2467,7 @@
             const labels = Object.keys(counts);
             if (labels.length === 0) {
                 context.clearRect(0, 0, ctx.width, ctx.height);
-                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = 'Belum ada data status modem untuk terminasi bulan ini.'; }
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = 'Belum ada data status modem untuk suspend/terminasi bulan ini.'; }
                 return;
             }
             if (errorEl) errorEl.classList.add('hidden');
@@ -2358,7 +2485,7 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const label = labels[elements[0].index];
-                            showOverviewDetailModal(customersByClass[label] || [], `Status Modem Terminate Bulan Ini - ${label}`, true, MODEM_SUBDISTRICT_DETAIL_COLUMNS);
+                            showOverviewDetailModal(customersByClass[label] || [], `Status Modem Suspend & Terminate Bulan Ini - ${label}`, true, MODEM_SUBDISTRICT_DETAIL_COLUMNS);
                         }
                     }
                 }
@@ -3458,15 +3585,109 @@
             });
         }
 
-        // Populate Month and Year Selectors for Forecast and New Subs
+        // Tabel Pencapaian Sales per Sales Code: Penjualan (Instalasi), Terminasi, dan Net Subs,
+        // disaring berdasarkan bulan & tahun yang dipilih (bisa dipakai untuk lihat pencapaian
+        // bulan mana pun, tidak hanya bulan berjalan).
+        function renderSalesPerformanceTable() {
+            const tbody = document.getElementById('salesPerformanceBody');
+            const monthSelect = document.getElementById('salesPerfMonthSelect');
+            const yearSelect = document.getElementById('salesPerfYearSelect');
+            if (!tbody || !monthSelect || !yearSelect || monthSelect.value === '' || yearSelect.value === '') return;
+
+            const selectedMonth = parseInt(monthSelect.value, 10);
+            const selectedYear = parseInt(yearSelect.value, 10);
+            const periodLabel = `${getMonthName(selectedMonth)} ${selectedYear}`;
+
+            // { salesCode: { installs: [customer,...], terminations: [customer,...] } }
+            const statsByCode = {};
+            const ensureCode = code => (statsByCode[code] = statsByCode[code] || { installs: [], terminations: [] });
+
+            allCustomers.forEach(c => {
+                const code = c.SALESCODE || 'Tidak Diketahui';
+
+                const installDate = parseDate(c.CONTRACTSTARTDATE);
+                if (installDate && installDate.getFullYear() === selectedYear && installDate.getMonth() === selectedMonth) {
+                    ensureCode(code).installs.push(c);
+                }
+
+                if (c.STATUS && c.STATUS.toUpperCase() === 'TERMINATED') {
+                    const termDate = parseDate(c.TERMDATE);
+                    if (termDate && termDate.getFullYear() === selectedYear && termDate.getMonth() === selectedMonth) {
+                        ensureCode(code).terminations.push(c);
+                    }
+                }
+            });
+
+            const codes = Object.keys(statsByCode).filter(code =>
+                statsByCode[code].installs.length > 0 || statsByCode[code].terminations.length > 0
+            );
+
+            if (codes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-4">Belum ada data penjualan/terminasi untuk ${periodLabel}.</td></tr>`;
+                return;
+            }
+
+            // Urutkan berdasarkan jumlah penjualan (instalasi) terbanyak
+            codes.sort((a, b) => statsByCode[b].installs.length - statsByCode[a].installs.length);
+
+            tbody.innerHTML = '';
+            codes.forEach((code, index) => {
+                const stats = statsByCode[code];
+                const installCount = stats.installs.length;
+                const termCount = stats.terminations.length;
+                const netSubs = installCount - termCount;
+                const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+
+                const row = tbody.insertRow();
+                row.className = 'hover:bg-gray-50';
+
+                const rankCell = row.insertCell();
+                rankCell.innerHTML = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-700 font-bold text-sm">${index + 1}</span>`;
+
+                const nameCell = row.insertCell();
+                nameCell.textContent = name;
+                nameCell.classList.add('font-semibold', 'text-gray-800');
+
+                const installCell = row.insertCell();
+                installCell.textContent = formatNumber(installCount);
+                installCell.classList.add('text-right', 'font-bold', 'text-blue-600');
+                if (installCount > 0) {
+                    installCell.classList.add('cursor-pointer', 'hover:underline');
+                    installCell.title = 'Klik untuk melihat daftar customer';
+                    installCell.onclick = () => showOverviewDetailModal(stats.installs, `Penjualan ${name} - ${periodLabel}`, true, DEFAULT_DETAIL_COLUMNS, salesPerformanceWaMessage);
+                }
+
+                const termCell = row.insertCell();
+                termCell.textContent = formatNumber(termCount);
+                termCell.classList.add('text-right', 'font-bold', 'text-red-600');
+                if (termCount > 0) {
+                    termCell.classList.add('cursor-pointer', 'hover:underline');
+                    termCell.title = 'Klik untuk melihat daftar customer';
+                    termCell.onclick = () => showOverviewDetailModal(stats.terminations, `Terminasi ${name} - ${periodLabel}`, true, DEFAULT_DETAIL_COLUMNS, salesPerformanceTerminationWaMessage);
+                }
+
+                const netCell = row.insertCell();
+                const netColorClass = netSubs > 0 ? 'text-green-600' : (netSubs < 0 ? 'text-red-600' : 'text-gray-500');
+                const netIcon = netSubs > 0 ? '<i class="fas fa-arrow-up mr-1"></i>' : (netSubs < 0 ? '<i class="fas fa-arrow-down mr-1"></i>' : '');
+                netCell.innerHTML = `<span class="${netColorClass} font-bold">${netIcon}${netSubs > 0 ? '+' : ''}${formatNumber(netSubs)}</span>`;
+                netCell.classList.add('text-right');
+
+                row.querySelectorAll('td').forEach(cell => cell.classList.add('py-3', 'px-4', 'text-sm'));
+            });
+        }
+
+
+        // Populate Month and Year Selectors for Forecast, New Subs, dan Sales Performance
         function populateMonthYearSelectors() {
             const monthSelectors = [
                 document.getElementById('forecastMonthSelect'),
-                document.getElementById('newSubsMonthSelect')
+                document.getElementById('newSubsMonthSelect'),
+                document.getElementById('salesPerfMonthSelect')
             ];
             const yearSelectors = [
                 document.getElementById('forecastYearSelect'),
-                document.getElementById('newSubsYearSelect')
+                document.getElementById('newSubsYearSelect'),
+                document.getElementById('salesPerfYearSelect')
             ];
             const currentYear = new Date().getFullYear();
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -3584,6 +3805,9 @@
         document.getElementById('applyForecastFilterBtn').addEventListener('click', renderForecastTerminationChart);
         document.getElementById('forecastMonthSelect').addEventListener('change', renderForecastTerminationChart);
         document.getElementById('forecastYearSelect').addEventListener('change', renderForecastTerminationChart);
+        document.getElementById('applySalesPerfFilterBtn').addEventListener('click', renderSalesPerformanceTable);
+        document.getElementById('salesPerfMonthSelect').addEventListener('change', renderSalesPerformanceTable);
+        document.getElementById('salesPerfYearSelect').addEventListener('change', renderSalesPerformanceTable);
 
     </script>
 </body>
