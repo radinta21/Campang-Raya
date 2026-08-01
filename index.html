@@ -866,17 +866,18 @@
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Target Bulan Ini</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue Tercapai (Recurring + New)</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Forecast Revenue (Recurring + New)</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">% Pencapaian</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right rounded-tr-lg">Selisih</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Selisih</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-center rounded-tr-lg">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="forecastRevenueTargetPerCodeBody">
-                                <tr><td colspan="6" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                                <tr><td colspan="7" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-center text-xs text-gray-400 mt-3">*Sales Code tanpa target individu yang ditentukan akan ditampilkan tanpa target (-).</p>
+                    <p class="text-center text-xs text-gray-400 mt-3">*Sales Code tanpa target individu yang ditentukan akan ditampilkan tanpa target (-). Klik tombol <i class="fas fa-calculator text-blue-600"></i> pada kolom "Aksi" untuk mensimulasikan produk apa &amp; berapa unit yang perlu terjual (termasuk skema bundling) agar selisih tertutup.</p>
                 </div>
             </section>
 
@@ -1170,6 +1171,139 @@
                             </div>
                             <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
                                 <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('overviewDetailModal')">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Calculator Modal: Simulasi mengejar Selisih Target Revenue per Sales Code,
+                         baik lewat penjualan produk baru (new subscriber) maupun bundling/upsell pelanggan existing. -->
+                    <div id="revenueCalculatorModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1080] p-2">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full md:w-11/12 lg:w-4/5 xl:w-3/4 max-h-[92vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="flex justify-between items-start border-b pb-3 mb-4">
+                                <div>
+                                    <h5 class="text-base sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-calculator text-blue-600"></i> Kalkulator Simulasi Revenue
+                                    </h5>
+                                    <p class="text-xs sm:text-sm text-gray-500 mt-0.5" id="calcSalesCodeName">Sales Code</p>
+                                </div>
+                                <button type="button" class="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2" onclick="closeModal('revenueCalculatorModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <!-- Ringkasan Target -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                                    <p class="text-[10px] sm:text-xs text-gray-400 uppercase font-semibold">Target Bulan Ini</p>
+                                    <p class="text-sm sm:text-base font-bold text-gray-800" id="calcTargetValue">-</p>
+                                </div>
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                                    <p class="text-[10px] sm:text-xs text-gray-400 uppercase font-semibold">Forecast Revenue</p>
+                                    <p class="text-sm sm:text-base font-bold text-gray-800" id="calcAchievedValue">-</p>
+                                </div>
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                                    <p class="text-[10px] sm:text-xs text-gray-400 uppercase font-semibold">Selisih Saat Ini</p>
+                                    <p class="text-sm sm:text-base font-bold" id="calcGapValue">-</p>
+                                </div>
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                                    <p class="text-[10px] sm:text-xs text-blue-500 uppercase font-semibold">Kekurangan Revenue</p>
+                                    <p class="text-sm sm:text-base font-bold text-blue-700" id="calcRequiredValue">Rp 0</p>
+                                </div>
+                            </div>
+
+                            <!-- Section 1: Simulasi Produk Baru -->
+                            <div class="mb-6">
+                                <h6 class="text-sm sm:text-base font-bold text-gray-800 mb-1 flex items-center gap-2">
+                                    <span class="bg-blue-600 text-white rounded-full w-5 h-5 inline-flex items-center justify-center text-xs flex-shrink-0">1</span>
+                                    Simulasi Penjualan Produk Baru (New Subscriber)
+                                </h6>
+                                <p class="text-xs text-gray-400 mb-2">Masukkan estimasi jumlah unit yang akan terjual per produk untuk melihat kontribusi revenue-nya.</p>
+                                <div class="overflow-x-auto rounded-lg shadow-md">
+                                    <table class="min-w-full bg-white table-custom" id="calcProductTable">
+                                        <thead class="bg-gray-700 text-white">
+                                            <tr>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs rounded-tl-lg">Produk</th>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs text-right">Harga Dasar</th>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs text-center">Jumlah Unit</th>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs text-right rounded-tr-lg">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="calcProductBody"></tbody>
+                                        <tfoot>
+                                            <tr class="bg-gray-50 font-bold text-gray-800 border-t-2 border-gray-200">
+                                                <td class="py-2 px-3 text-sm" colspan="3">TOTAL PRODUK BARU</td>
+                                                <td class="py-2 px-3 text-sm text-right text-blue-700" id="calcProductTotal">Rp 0</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Section 2: Simulasi Bundling -->
+                            <div class="mb-6">
+                                <h6 class="text-sm sm:text-base font-bold text-gray-800 mb-1 flex items-center gap-2">
+                                    <span class="bg-orange-500 text-white rounded-full w-5 h-5 inline-flex items-center justify-center text-xs flex-shrink-0">2</span>
+                                    Simulasi Bundling (Upsell Pelanggan Existing)
+                                </h6>
+                                <p class="text-xs text-gray-400 mb-2">Bundling mempercepat penerimaan revenue karena pelanggan membayar beberapa bulan sekaligus di muka (bulan gratis tidak dibayar, hanya bonus masa aktif). Hanya berlaku untuk produk Home &amp; Metronet.</p>
+                                <div class="overflow-x-auto rounded-lg shadow-md">
+                                    <table class="min-w-full bg-white table-custom" id="calcBundlingTable">
+                                        <thead class="bg-gray-700 text-white">
+                                            <tr>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs rounded-tl-lg">Produk</th>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs">Paket Bundling</th>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs text-center">Jumlah Pelanggan</th>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs text-right">Revenue Diterima</th>
+                                                <th class="py-2 px-3 uppercase font-semibold text-xs text-center rounded-tr-lg">-</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="calcBundlingBody"></tbody>
+                                        <tfoot>
+                                            <tr class="bg-gray-50 font-bold text-gray-800 border-t-2 border-gray-200">
+                                                <td class="py-2 px-3 text-sm" colspan="3">TOTAL BUNDLING</td>
+                                                <td class="py-2 px-3 text-sm text-right text-orange-600" id="calcBundlingTotal">Rp 0</td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                                <button type="button" id="calcAddBundlingRowBtn" class="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1">
+                                    <i class="fas fa-plus-circle"></i> Tambah Baris Bundling
+                                </button>
+                            </div>
+
+                            <!-- Ringkasan Simulasi -->
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <h6 class="text-sm font-bold text-gray-800 mb-3 text-center">Ringkasan Simulasi</h6>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3 text-center">
+                                    <div>
+                                        <p class="text-[10px] sm:text-xs text-gray-400 uppercase font-semibold">Total Simulasi Revenue</p>
+                                        <p class="text-base sm:text-lg font-bold text-gray-800" id="calcGrandTotal">Rp 0</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] sm:text-xs text-gray-400 uppercase font-semibold">Kekurangan Revenue</p>
+                                        <p class="text-base sm:text-lg font-bold text-gray-800" id="calcRequiredValue2">Rp 0</p>
+                                    </div>
+                                    <div class="col-span-2 sm:col-span-1">
+                                        <p class="text-[10px] sm:text-xs text-gray-400 uppercase font-semibold">Sisa / Status</p>
+                                        <p class="text-base sm:text-lg font-bold" id="calcRemainingValue">-</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-4 overflow-hidden">
+                                        <div class="h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2" id="calcProgressBar" style="width:0%; background-color:#2563EB;">
+                                            <span class="text-[10px] text-white font-bold" id="calcProgressLabel"></span>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-semibold text-gray-600 w-14 text-right" id="calcProgressPct">0%</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
+                                <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-semibold" onclick="resetRevenueCalculator()">
+                                    <i class="fas fa-undo mr-1"></i> Reset Simulasi
+                                </button>
+                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('revenueCalculatorModal')">Tutup</button>
                             </div>
                         </div>
                     </div>
@@ -2357,7 +2491,7 @@
         // (ucapan terima kasih ke customer aktif, dipakai saat klik angka Penjualan)
         function salesPerformanceWaMessage(customer) {
             const name = customer.BP_FULLNAME || 'Bapak/Ibu';
-            return `Halo Bapak/Ibu ${name}, \n\nTerima kasih karena telah mempercayakan Biznet sebagai layanan internet di rumah Anda. \nKami berharap koneksi internet yang kami berikan dapat mendukung aktivitas sehari-hari, baik untuk bekerja, belajar, hiburan, maupun kebutuhan keluarga.\nApabila selama penggunaan terdapat kendala jangan ragu untuk menghubungi kami. \nTerima kasih atas kepercayaannya. Semoga kami dapat terus memberikan layanan terbaik untuk Anda.\nSalam hangat,\nBiznet Branch Campang Raya`;
+            return `Halo Bapak/Ibu ${name}\n\nTerima kasih karena telah mempercayakan Biznet sebagai layanan internet di rumah Anda. \nKami berharap koneksi internet yang kami berikan dapat mendukung aktivitas sehari-hari, baik untuk bekerja, belajar, hiburan, maupun kebutuhan keluarga.\nApabila selama penggunaan terdapat kendala jangan ragu untuk menghubungi kami. \nTerima kasih atas kepercayaannya. Semoga kami dapat terus memberikan layanan terbaik untuk Anda.\nSalam hangat,\nBiznet Branch Campang Raya`;
         }
 
         // Template pesan WhatsApp khusus untuk klik angka Terminasi di tabel
@@ -3913,6 +4047,231 @@
             { label: 'Promo Code', get: c => c.PROMO_CODE || '-' }
         ];
 
+        // =====================================================================================
+        // KALKULATOR SIMULASI REVENUE (Aksi pada tabel "Target Revenue vs Pencapaian per Sales Code")
+        // Membantu Area Coordinator memperkirakan produk apa & berapa unit yang perlu terjual untuk
+        // mengejar selisih target, ditambah opsi boosting revenue lewat skema bundling upsell
+        // pelanggan existing (bayar beberapa bulan sekaligus di muka, dapat bonus bulan gratis).
+        // =====================================================================================
+
+        // Daftar produk & harga dasar yang bisa disimulasikan sebagai penjualan baru
+        const CALC_PRODUCTS = [
+            { key: 'HOME 0D', category: 'HOME', price: 150000 },
+            { key: 'HOME 1D', category: 'HOME', price: 375000 },
+            { key: 'HOME 2D', category: 'HOME', price: 575000 },
+            { key: 'HOME 3D', category: 'HOME', price: 700000 },
+            { key: 'METRONET 1D', category: 'METRONET', price: 1000000 },
+            { key: 'METRONET 2D', category: 'METRONET', price: 1700000 },
+            { key: 'METRONET 3D', category: 'METRONET', price: 2700000 },
+            { key: 'METRONET 4D', category: 'METRONET', price: 6500000 },
+            { key: 'METRONET 5D', category: 'METRONET', price: 12500000 },
+            { key: 'DEDICATED INTERNET', category: 'DEDICATED', price: 6500000 }
+        ];
+
+        // Skema bundling: hanya berlaku untuk produk Home & Metronet. "bayar" = jumlah bulan yang
+        // ditagihkan/dibayar di muka (inilah yang tercatat sebagai revenue), "gratis" = bonus bulan
+        // masa aktif tambahan yang tidak menambah revenue.
+        const CALC_BUNDLING_PLANS = {
+            HOME: [
+                { label: 'Bayar 3 Bulan, Gratis 1 Bulan', bayar: 3, gratis: 1 },
+                { label: 'Bayar 6 Bulan, Gratis 2 Bulan', bayar: 6, gratis: 2 },
+                { label: 'Bayar 9 Bulan, Gratis 3 Bulan', bayar: 9, gratis: 3 },
+                { label: 'Bayar 12 Bulan, Gratis 5 Bulan', bayar: 12, gratis: 5 }
+            ],
+            METRONET: [
+                { label: 'Bayar 6 Bulan, Gratis 1 Bulan', bayar: 6, gratis: 1 },
+                { label: 'Bayar 12 Bulan, Gratis 2 Bulan', bayar: 12, gratis: 2 }
+            ]
+        };
+        const CALC_BUNDLING_PRODUCTS = CALC_PRODUCTS.filter(p => p.category === 'HOME' || p.category === 'METRONET');
+
+        let calcRequiredAmount = 0; // Kebutuhan revenue yang perlu ditutup untuk simulasi saat ini
+        let calcBundlingRowSeq = 0; // Penomor unik untuk tiap baris bundling yang ditambahkan
+
+        // Bangun baris tabel produk baru sekali saja (qty di-reset tiap modal dibuka)
+        function buildCalcProductRows() {
+            const body = document.getElementById('calcProductBody');
+            if (!body) return;
+            body.innerHTML = '';
+            CALC_PRODUCTS.forEach((p, idx) => {
+                const row = body.insertRow();
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-3 text-sm font-semibold text-gray-800">${p.key}</td>
+                    <td class="py-2 px-3 text-sm text-right">${formatRupiah(p.price)}</td>
+                    <td class="py-2 px-3 text-sm text-center">
+                        <input type="number" min="0" step="1" value="0" data-price="${p.price}" class="calc-product-qty w-20 text-center border border-gray-300 rounded-lg py-1 px-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                    </td>
+                    <td class="py-2 px-3 text-sm text-right font-semibold text-gray-700 calc-product-subtotal" data-idx="${idx}">Rp 0</td>
+                `;
+                row.querySelector('.calc-product-qty').addEventListener('input', updateRevenueCalculator);
+            });
+        }
+
+        // Tambah satu baris simulasi bundling (kategori -> produk -> paket -> jumlah pelanggan)
+        function addCalcBundlingRow() {
+            const body = document.getElementById('calcBundlingBody');
+            if (!body) return;
+            calcBundlingRowSeq += 1;
+            const rowId = `calcBundlingRow${calcBundlingRowSeq}`;
+            const row = body.insertRow();
+            row.id = rowId;
+            row.className = 'hover:bg-gray-50';
+
+            const productOptions = CALC_BUNDLING_PRODUCTS.map(p => `<option value="${p.key}">${p.key}</option>`).join('');
+
+            row.innerHTML = `
+                <td class="py-2 px-3 text-sm">
+                    <select class="calc-bundling-product w-full border border-gray-300 rounded-lg py-1.5 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        ${productOptions}
+                    </select>
+                </td>
+                <td class="py-2 px-3 text-sm">
+                    <select class="calc-bundling-plan w-full border border-gray-300 rounded-lg py-1.5 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
+                </td>
+                <td class="py-2 px-3 text-sm text-center">
+                    <input type="number" min="0" step="1" value="1" class="calc-bundling-qty w-20 text-center border border-gray-300 rounded-lg py-1 px-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </td>
+                <td class="py-2 px-3 text-sm text-right font-semibold text-orange-600 calc-bundling-subtotal">Rp 0</td>
+                <td class="py-2 px-3 text-sm text-center">
+                    <button type="button" class="text-red-500 hover:text-red-700" title="Hapus baris">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+
+            const productSelect = row.querySelector('.calc-bundling-product');
+            const planSelect = row.querySelector('.calc-bundling-plan');
+            const qtyInput = row.querySelector('.calc-bundling-qty');
+            const removeBtn = row.querySelector('button');
+
+            const refreshPlanOptions = () => {
+                const product = CALC_BUNDLING_PRODUCTS.find(p => p.key === productSelect.value);
+                const plans = product ? (CALC_BUNDLING_PLANS[product.category] || []) : [];
+                planSelect.innerHTML = plans.map((pl, i) => `<option value="${i}">${pl.label}</option>`).join('');
+            };
+
+            productSelect.addEventListener('change', () => { refreshPlanOptions(); updateRevenueCalculator(); });
+            planSelect.addEventListener('change', updateRevenueCalculator);
+            qtyInput.addEventListener('input', updateRevenueCalculator);
+            removeBtn.addEventListener('click', () => { row.remove(); updateRevenueCalculator(); });
+
+            refreshPlanOptions();
+            updateRevenueCalculator();
+        }
+
+        // Hitung ulang seluruh total (produk baru + bundling) dan bandingkan dengan kebutuhan
+        function updateRevenueCalculator() {
+            // Total produk baru
+            let productTotal = 0;
+            document.querySelectorAll('#calcProductBody tr').forEach(row => {
+                const input = row.querySelector('.calc-product-qty');
+                const subtotalCell = row.querySelector('.calc-product-subtotal');
+                const qty = Math.max(0, parseInt(input.value, 10) || 0);
+                const price = parseFloat(input.dataset.price) || 0;
+                const subtotal = qty * price;
+                productTotal += subtotal;
+                subtotalCell.textContent = formatRupiah(subtotal);
+            });
+            const productTotalEl = document.getElementById('calcProductTotal');
+            if (productTotalEl) productTotalEl.textContent = formatRupiah(productTotal);
+
+            // Total bundling
+            let bundlingTotal = 0;
+            document.querySelectorAll('#calcBundlingBody tr').forEach(row => {
+                const productSelect = row.querySelector('.calc-bundling-product');
+                const planSelect = row.querySelector('.calc-bundling-plan');
+                const qtyInput = row.querySelector('.calc-bundling-qty');
+                const subtotalCell = row.querySelector('.calc-bundling-subtotal');
+                const product = CALC_BUNDLING_PRODUCTS.find(p => p.key === productSelect.value);
+                const plans = product ? (CALC_BUNDLING_PLANS[product.category] || []) : [];
+                const plan = plans[parseInt(planSelect.value, 10)];
+                const qty = Math.max(0, parseInt(qtyInput.value, 10) || 0);
+                const subtotal = (product && plan) ? product.price * plan.bayar * qty : 0;
+                bundlingTotal += subtotal;
+                subtotalCell.textContent = formatRupiah(subtotal);
+            });
+            const bundlingTotalEl = document.getElementById('calcBundlingTotal');
+            if (bundlingTotalEl) bundlingTotalEl.textContent = formatRupiah(bundlingTotal);
+
+            // Ringkasan gabungan vs kebutuhan
+            const grandTotal = productTotal + bundlingTotal;
+            const remaining = calcRequiredAmount - grandTotal;
+            const progressPct = calcRequiredAmount > 0 ? (grandTotal / calcRequiredAmount) * 100 : (grandTotal > 0 ? 100 : 0);
+            const barWidth = Math.min(100, Math.max(0, progressPct));
+            const barColor = progressPct >= 100 ? '#16A34A' : (progressPct >= 60 ? '#2563EB' : '#F59E0B');
+
+            const grandTotalEl = document.getElementById('calcGrandTotal');
+            if (grandTotalEl) grandTotalEl.textContent = formatRupiah(grandTotal);
+
+            const remainingEl = document.getElementById('calcRemainingValue');
+            if (remainingEl) {
+                if (calcRequiredAmount <= 0) {
+                    remainingEl.textContent = grandTotal > 0 ? 'Target sudah tercapai, ini bonus' : 'Belum ada simulasi';
+                    remainingEl.className = 'text-base sm:text-lg font-bold text-green-600';
+                } else if (remaining <= 0) {
+                    remainingEl.textContent = `Tercapai (+${formatRupiah(Math.abs(remaining))})`;
+                    remainingEl.className = 'text-base sm:text-lg font-bold text-green-600';
+                } else {
+                    remainingEl.textContent = `Kurang ${formatRupiah(remaining)}`;
+                    remainingEl.className = 'text-base sm:text-lg font-bold text-red-600';
+                }
+            }
+
+            const progressBar = document.getElementById('calcProgressBar');
+            if (progressBar) {
+                progressBar.style.width = `${barWidth}%`;
+                progressBar.style.backgroundColor = barColor;
+            }
+            const progressLabel = document.getElementById('calcProgressLabel');
+            if (progressLabel) progressLabel.textContent = progressPct >= 15 ? `${Math.min(progressPct, 999).toFixed(0)}%` : '';
+            const progressPctEl = document.getElementById('calcProgressPct');
+            if (progressPctEl) progressPctEl.textContent = `${Math.min(progressPct, 999).toFixed(0)}%`;
+        }
+
+        // Reset simulasi (qty produk baru -> 0, baris bundling -> 1 baris kosong)
+        function resetRevenueCalculator() {
+            document.querySelectorAll('#calcProductBody .calc-product-qty').forEach(input => { input.value = 0; });
+            const bundlingBody = document.getElementById('calcBundlingBody');
+            if (bundlingBody) bundlingBody.innerHTML = '';
+            addCalcBundlingRow();
+            updateRevenueCalculator();
+        }
+
+        // Buka modal kalkulator untuk satu Sales Code tertentu.
+        // target === null berarti Sales Code tidak punya target individu; simulasi tetap bisa
+        // dipakai untuk melihat potensi tambahan revenue (kebutuhan dianggap 0 / bebas eksplorasi).
+        function openRevenueCalculator(code, name, target, achieved) {
+            document.getElementById('calcSalesCodeName').textContent = name;
+            document.getElementById('calcTargetValue').textContent = target === null ? '-' : formatRupiah(target);
+            document.getElementById('calcAchievedValue').textContent = formatRupiah(achieved);
+
+            const gapEl = document.getElementById('calcGapValue');
+            if (target === null) {
+                gapEl.textContent = '-';
+                gapEl.className = 'text-sm sm:text-base font-bold text-gray-400';
+                calcRequiredAmount = 0;
+            } else {
+                const gap = achieved - target;
+                gapEl.textContent = `${gap >= 0 ? '+' : '-'}${formatRupiah(Math.abs(gap))}`;
+                gapEl.className = `text-sm sm:text-base font-bold ${gap >= 0 ? 'text-green-600' : 'text-red-600'}`;
+                calcRequiredAmount = gap < 0 ? Math.abs(gap) : 0;
+            }
+            document.getElementById('calcRequiredValue').textContent = formatRupiah(calcRequiredAmount);
+            document.getElementById('calcRequiredValue2').textContent = formatRupiah(calcRequiredAmount);
+
+            if (!document.getElementById('calcProductBody').children.length) buildCalcProductRows();
+            resetRevenueCalculator();
+            showModal('revenueCalculatorModal');
+        }
+
+        // Tombol "+ Tambah Baris Bundling"
+        document.addEventListener('DOMContentLoaded', () => {
+            const addBtn = document.getElementById('calcAddBundlingRowBtn');
+            if (addBtn) addBtn.addEventListener('click', addCalcBundlingRow);
+            buildCalcProductRows();
+        });
+
         // Render seluruh tab Forecast Revenue Bulan Berjalan: ringkasan target vs forecast,
         // rincian per segmen produk, dan customer belum bayar per Sales Code.
         function renderForecastRevenue() {
@@ -4099,7 +4458,7 @@
 
                 targetPerCodeBody.innerHTML = '';
                 if (rankedCodes.length === 0) {
-                    targetPerCodeBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Belum ada data untuk ${periodLabel}.</td></tr>`;
+                    targetPerCodeBody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500 py-4">Belum ada data untuk ${periodLabel}.</td></tr>`;
                 } else {
                     rankedCodes.forEach((code, index) => {
                         const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
@@ -4117,7 +4476,13 @@
                                 <td class="py-3 px-4 text-sm text-right font-bold text-gray-800">${formatRupiah(achieved)}</td>
                                 <td class="py-3 px-4 text-sm text-gray-400">-</td>
                                 <td class="py-3 px-4 text-sm text-right text-gray-400">-</td>
+                                <td class="py-3 px-4 text-sm text-center">
+                                    <button type="button" class="bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors duration-200 inline-flex items-center gap-1" title="Simulasikan cara mengejar/menambah revenue">
+                                        <i class="fas fa-calculator"></i> Simulasi
+                                    </button>
+                                </td>
                             `;
+                            row.querySelector('button').onclick = () => openRevenueCalculator(code, name, null, achieved);
                         } else {
                             const codeGap = achieved - codeTarget;
                             const codeProgressPct = codeTarget > 0 ? (achieved / codeTarget) * 100 : 0;
@@ -4137,7 +4502,13 @@
                                     </div>
                                 </td>
                                 <td class="py-3 px-4 text-sm text-right font-bold ${codeGap >= 0 ? 'text-green-600' : 'text-red-600'}">${codeGap >= 0 ? '+' : '-'}${formatRupiah(Math.abs(codeGap))}</td>
+                                <td class="py-3 px-4 text-sm text-center">
+                                    <button type="button" class="${codeGap >= 0 ? 'bg-green-50 hover:bg-green-100 text-green-600' : 'bg-red-50 hover:bg-red-100 text-red-600'} text-xs font-semibold py-1.5 px-3 rounded-lg transition-colors duration-200 inline-flex items-center gap-1" title="Simulasikan cara mengejar selisih">
+                                        <i class="fas fa-calculator"></i> Simulasi
+                                    </button>
+                                </td>
                             `;
+                            row.querySelector('button').onclick = () => openRevenueCalculator(code, name, codeTarget, achieved);
                         }
                     });
                 }
