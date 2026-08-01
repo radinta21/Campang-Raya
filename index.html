@@ -343,6 +343,11 @@
                         <i class="fas fa-trophy mr-3"></i> Sales Ranking
                     </a>
                 </li>
+                <li>
+                    <a href="#" onclick="showSection('forecastRevenue')" class="flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-600 hover:text-white transition-colors duration-200">
+                        <i class="fas fa-coins mr-3"></i> Forecast Revenue Bulan Berjalan
+                    </a>
+                </li>
             </ul>
         </nav>
         <button id="logoutBtn" class="flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors duration-200 mt-4" style="display:none;">
@@ -729,6 +734,149 @@
                         </table>
                     </div>
                     <p class="text-center text-xs text-gray-400 mt-3">Klik angka Penjualan atau Terminasi untuk melihat daftar customer-nya (termasuk tombol WhatsApp).</p>
+                </div>
+            </section>
+
+            <section id="forecastRevenue" class="content-section hidden">
+                <!-- Filter Bulan & Tahun -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-1 text-center">Forecast Revenue Bulan Berjalan</h2>
+                    <p class="text-center text-xs text-gray-400 mb-4">Estimasi revenue berdasarkan customer dengan <strong>EXPIREDDATE</strong> pada bulan &amp; tahun yang dipilih, dengan asumsi seluruh customer membayar tepat waktu.</p>
+                    <div class="mb-2 flex flex-wrap gap-4 items-center justify-center">
+                        <div>
+                            <label for="forecastRevenueMonthSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Bulan:</label>
+                            <select id="forecastRevenueMonthSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="forecastRevenueYearSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Tahun:</label>
+                            <select id="forecastRevenueYearSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <button id="applyForecastRevenueFilterBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 self-end">
+                            <i class="fas fa-sync-alt mr-2"></i> Terapkan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ringkasan Target vs Forecast -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="metric-card bg-white p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="icon-box icon-blue"><i class="fas fa-bullseye"></i></div>
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase font-semibold">Target Revenue - <span id="forecastRevenuePeriodLabelTarget"></span></p>
+                                <p class="text-xl font-bold text-gray-800" id="forecastRevenueTargetValue">Rp 0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-card bg-white p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="icon-box icon-orange"><i class="fas fa-coins"></i></div>
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase font-semibold">Forecast Revenue (Jika Semua Bayar)</p>
+                                <p class="text-xl font-bold text-gray-800" id="forecastRevenueTotalValue">Rp 0</p>
+                                <p class="text-xs text-gray-400 mt-0.5"><span id="forecastRevenueCustomerCount">0</span> customer akan expired bulan ini</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-card bg-white p-6">
+                        <div class="flex items-center gap-4">
+                            <div class="icon-box icon-gray" id="forecastRevenueGapIconBox"><i class="fas fa-chart-line"></i></div>
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase font-semibold">Selisih vs Target</p>
+                                <p class="text-xl font-bold" id="forecastRevenueGapValue">Rp 0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                            <div class="h-5 rounded-full transition-all duration-500 flex items-center justify-end pr-2" id="forecastRevenueProgressBar" style="width:0%; background-color:#2563EB;">
+                                <span class="text-[10px] text-white font-bold" id="forecastRevenueProgressLabel"></span>
+                            </div>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-600 w-16 text-right" id="forecastRevenueProgressPct">0%</span>
+                    </div>
+                    <p class="text-center text-[11px] text-gray-400 mt-2">Progress forecast revenue terhadap target bulan berjalan (jika semua customer membayar sampai akhir bulan).</p>
+                </div>
+
+                <!-- Rincian per Segmen Produk -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Rincian Forecast per Segmen Produk</h3>
+                    <p class="text-center text-xs text-gray-400 mb-4">Jumlah customer, harga per bulan, dan total revenue tiap segmen berdasarkan produk (BUNDLE_NAME) untuk periode yang dipilih.</p>
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white table-custom" id="forecastRevenueSegmentTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Segmen Produk</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Jumlah Customer</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Harga Dasar/Bulan</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right rounded-tr-lg">Total Revenue Segmen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forecastRevenueSegmentBody">
+                                <tr><td colspan="5" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                            </tbody>
+                            <tfoot id="forecastRevenueSegmentFoot"></tfoot>
+                        </table>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 mt-3">*Total revenue segmen sudah termasuk tambahan Rp50.000 untuk customer dengan Status Modem RENT.</p>
+                </div>
+
+                <!-- Customer Belum Bayar per Sales Code -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Customer Belum Bayar per Sales Code</h3>
+                    <p class="text-center text-xs text-gray-400 mb-4">Seluruh customer dengan EXPIREDDATE di bulan berjalan (hingga akhir bulan) per Sales Code/ARCO, beserta rincian revenue yang sudah dikumpulkan dari customer baru (New) maupun pelanggan lama (Recurring).</p>
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white table-custom" id="forecastRevenueUnpaidTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue New</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue Recurring</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Total Revenue</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Jumlah Expired Bulan Ini</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Sudah Lewat / Belum Bayar</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right rounded-tr-lg">Metronet Expired Bulan Ini</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forecastRevenueUnpaidBody">
+                                <tr><td colspan="8" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 mt-3">Klik angka pada kolom "Jumlah Expired Bulan Ini", "Sudah Lewat / Belum Bayar", atau "Metronet Expired Bulan Ini" untuk melihat daftar customer-nya (diurutkan berdasarkan tanggal expired terdekat, termasuk tombol WhatsApp).</p>
+                </div>
+
+                <!-- Target vs Revenue per Sales Code (Recurring + New) -->
+                <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Target Revenue vs Pencapaian per Sales Code</h3>
+                    <p class="text-center text-xs text-gray-400 mb-4">Target revenue individu bulan berjalan (naik Rp15.000.000 setiap bulan) dibandingkan dengan revenue Recurring + New yang sudah terkumpul dari customer yang expired bulan ini.</p>
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white table-custom" id="forecastRevenueTargetPerCodeTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Target Bulan Ini</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue Tercapai (Recurring + New)</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">% Pencapaian</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right rounded-tr-lg">Selisih</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forecastRevenueTargetPerCodeBody">
+                                <tr><td colspan="6" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 mt-3">*Sales Code tanpa target individu yang ditentukan akan ditampilkan tanpa target (-).</p>
                 </div>
             </section>
 
@@ -1247,6 +1395,14 @@
             if (sectionId === 'bundleNameAnalysis') renderBundleNameChart();
             if (sectionId === 'modemStatusAnalysis') renderModemStatusChart();
             if (sectionId === 'salesRanking') { renderSalesRanking(); renderSalesPerformanceTable(); } // Render sales ranking
+            if (sectionId === 'forecastRevenue') { // Render Forecast Revenue Bulan Berjalan
+                const now = new Date();
+                const monthSelect = document.getElementById('forecastRevenueMonthSelect');
+                const yearSelect = document.getElementById('forecastRevenueYearSelect');
+                if (monthSelect && monthSelect.value === '') monthSelect.value = now.getMonth().toString();
+                if (yearSelect && yearSelect.value === '') yearSelect.value = now.getFullYear().toString();
+                renderForecastRevenue();
+            }
             if (sectionId === 'dailyNewSubscribersAnalysis') { // New section for daily new subscribers
                 // Initialize month and year filter for daily new subscribers
                 const now = new Date();
@@ -3677,17 +3833,330 @@
         }
 
 
+        // --- FORECAST REVENUE BULAN BERJALAN ---
+        // Harga per produk (per bulan), dipakai untuk menghitung estimasi forecast revenue.
+        const FORECAST_PRODUCT_PRICES = {
+            'HOME 0D': 150000,
+            'HOME 1D': 375000,
+            'HOME 2D': 575000,
+            'HOME 3D': 700000,
+            'GAMERS 3D': 700000,
+            'METRONET 1D': 1000000,
+            'METRONET 2D': 1700000,
+            'METRONET 3D': 2700000,
+            'METRONET 4D': 6500000,
+            'METRONET 5D': 12500000,
+            'DEDICATED INTERNET': 6500000,
+            'DEDICATED INETERNET': 6500000 // antisipasi variasi penulisan yang sudah ada di data lain
+        };
+        // Urutan tampilan segmen di tabel (mengikuti urutan bisnis, bukan abjad)
+        const FORECAST_SEGMENT_ORDER = [
+            'HOME 0D', 'HOME 1D', 'HOME 2D', 'HOME 3D', 'GAMERS 3D',
+            'METRONET 1D', 'METRONET 2D', 'METRONET 3D', 'METRONET 4D', 'METRONET 5D',
+            'DEDICATED INTERNET'
+        ];
+        const FORECAST_MODEM_RENT_FEE = 50000; // Tambahan revenue jika MODEM_STATUS = RENT
+
+        // Target revenue bulan berjalan: Rp356.610.000, bertambah Rp15.000.000 setiap bulan
+        // berikutnya, dihitung relatif terhadap bulan acuan (Agustus 2026).
+        const REVENUE_TARGET_BASE = 356610000;
+        const REVENUE_TARGET_MONTHLY_INCREMENT = 15000000;
+        const REVENUE_TARGET_ANCHOR_YEAR = 2026;
+        const REVENUE_TARGET_ANCHOR_MONTH = 7; // 0-based -> Agustus
+
+        function getForecastRevenueTarget(year, monthIndex) {
+            const diffMonths = (year * 12 + monthIndex) - (REVENUE_TARGET_ANCHOR_YEAR * 12 + REVENUE_TARGET_ANCHOR_MONTH);
+            return REVENUE_TARGET_BASE + (diffMonths * REVENUE_TARGET_MONTHLY_INCREMENT);
+        }
+
+        // Target revenue individu per Sales Code untuk bulan acuan (Agustus 2026), naik Rp15.000.000
+        // setiap bulan berikutnya (mengikuti pola yang sama dengan target keseluruhan).
+        const INDIVIDUAL_REVENUE_TARGETS_BASE = {
+            '200241': 180000000, // M Iqbal Saputra
+            '200244': 120000000  // Mahmud Farizi
+            // Tambahkan sales code lain di sini jika ada target individu yang ditentukan
+        };
+
+        function getIndividualRevenueTarget(salesCode, year, monthIndex) {
+            const base = INDIVIDUAL_REVENUE_TARGETS_BASE[salesCode];
+            if (base === undefined) return null; // Tidak ada target individu yang ditentukan
+            const diffMonths = (year * 12 + monthIndex) - (REVENUE_TARGET_ANCHOR_YEAR * 12 + REVENUE_TARGET_ANCHOR_MONTH);
+            return base + (diffMonths * REVENUE_TARGET_MONTHLY_INCREMENT);
+        }
+
+        // Hitung estimasi revenue satu customer: harga dasar produk + tambahan Rp50.000 jika modem RENT
+        function calculateForecastRevenueForCustomer(customer) {
+            const key = (customer.BUNDLE_NAME || '').toUpperCase().trim();
+            let base = FORECAST_PRODUCT_PRICES[key];
+            if (base === undefined) base = 0;
+            let total = base;
+            if ((customer.MODEM_STATUS || '').toUpperCase().trim() === 'RENT') {
+                total += FORECAST_MODEM_RENT_FEE;
+            }
+            return total;
+        }
+
+        // Template pesan WhatsApp khusus pengingat pembayaran (dipakai di tabel Belum Bayar per Sales Code)
+        function forecastUnpaidWaMessage(customer) {
+            const name = customer.BP_FULLNAME || 'Kak';
+            return `Halo Kak ${name},\nMohon izin mengingatkan bahwa masa aktif layanan Biznet Kakak berakhir pada ${customer.EXPIREDDATE || '-'}.\nMohon untuk segera melakukan pembayaran agar layanan internetnya tetap aktif tanpa kendala ya kak.\nJika sudah melakukan pembayaran, mohon abaikan pesan ini. Terima kasih, salam hangat dari Biznet Branch Campang Raya`;
+        }
+
+        // Kolom detail untuk modal drill-down "Customer Belum Bayar per Sales Code"
+        const FORECAST_UNPAID_DETAIL_COLUMNS = [
+            { label: 'Nama Lengkap', get: c => c.BP_FULLNAME || '-' },
+            { label: 'Akun Kontrak', get: c => c.CONTRACTACCOUNT || '-' },
+            { label: 'Sales Code', get: c => salesCodeNames[c.SALESCODE] ? `${salesCodeNames[c.SALESCODE]} (${c.SALESCODE})` : (c.SALESCODE || '-') },
+            { label: 'Tgl Berakhir', get: c => c.EXPIREDDATE || '-' },
+            { label: 'Subdistrict', get: c => c.SUBDISTRICT_INST || '-' },
+            { label: 'Status Modem', get: c => c.MODEM_STATUS || '-' },
+            { label: 'Promo Code', get: c => c.PROMO_CODE || '-' }
+        ];
+
+        // Render seluruh tab Forecast Revenue Bulan Berjalan: ringkasan target vs forecast,
+        // rincian per segmen produk, dan customer belum bayar per Sales Code.
+        function renderForecastRevenue() {
+            const monthSelect = document.getElementById('forecastRevenueMonthSelect');
+            const yearSelect = document.getElementById('forecastRevenueYearSelect');
+            const segmentBody = document.getElementById('forecastRevenueSegmentBody');
+            const segmentFoot = document.getElementById('forecastRevenueSegmentFoot');
+            const unpaidBody = document.getElementById('forecastRevenueUnpaidBody');
+            if (!monthSelect || !yearSelect || !segmentBody || !unpaidBody || monthSelect.value === '' || yearSelect.value === '') return;
+
+            const selectedMonth = parseInt(monthSelect.value, 10);
+            const selectedYear = parseInt(yearSelect.value, 10);
+            const periodLabel = `${getMonthName(selectedMonth)} ${selectedYear}`;
+            const periodLabelTargetEl = document.getElementById('forecastRevenuePeriodLabelTarget');
+            if (periodLabelTargetEl) periodLabelTargetEl.textContent = periodLabel;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Customer dengan EXPIREDDATE pada bulan & tahun terpilih (basis forecast revenue)
+            const customersThisMonth = allCustomers.filter(c => {
+                const d = parseDate(c.EXPIREDDATE);
+                return d && d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+            });
+
+            // Kelompokkan per segmen produk (BUNDLE_NAME)
+            const segmentMap = {}; // key -> { customers: [...], revenue: number }
+            customersThisMonth.forEach(c => {
+                const rawKey = (c.BUNDLE_NAME || '').toUpperCase().trim();
+                const key = FORECAST_PRODUCT_PRICES[rawKey] !== undefined ? rawKey : (c.BUNDLE_NAME || 'Tidak Diketahui');
+                if (!segmentMap[key]) segmentMap[key] = { customers: [], revenue: 0 };
+                segmentMap[key].customers.push(c);
+                segmentMap[key].revenue += calculateForecastRevenueForCustomer(c);
+            });
+
+            const knownKeys = FORECAST_SEGMENT_ORDER.filter(k => segmentMap[k]);
+            const otherKeys = Object.keys(segmentMap).filter(k => !FORECAST_SEGMENT_ORDER.includes(k)).sort();
+            const orderedKeys = [...knownKeys, ...otherKeys];
+
+            segmentBody.innerHTML = '';
+            let totalCustomers = 0;
+            let totalRevenue = 0;
+            if (orderedKeys.length === 0) {
+                segmentBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-4">Tidak ada customer dengan EXPIREDDATE pada ${periodLabel}.</td></tr>`;
+            } else {
+                orderedKeys.forEach((key, index) => {
+                    const seg = segmentMap[key];
+                    const count = seg.customers.length;
+                    const basePrice = FORECAST_PRODUCT_PRICES[key] !== undefined ? FORECAST_PRODUCT_PRICES[key] : 0;
+                    totalCustomers += count;
+                    totalRevenue += seg.revenue;
+                    const row = segmentBody.insertRow();
+                    row.className = 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 text-sm">${index + 1}</td>
+                        <td class="py-3 px-4 text-sm font-semibold text-gray-800">${key}</td>
+                        <td class="py-3 px-4 text-sm text-right">${formatNumber(count)}</td>
+                        <td class="py-3 px-4 text-sm text-right">${formatRupiah(basePrice)}</td>
+                        <td class="py-3 px-4 text-sm text-right font-bold text-blue-600">${formatRupiah(seg.revenue)}</td>
+                    `;
+                });
+            }
+
+            if (segmentFoot) {
+                segmentFoot.innerHTML = orderedKeys.length === 0 ? '' : `
+                    <tr class="bg-gray-50 font-bold text-gray-800 border-t-2 border-gray-200">
+                        <td class="py-3 px-4 text-sm" colspan="2">TOTAL</td>
+                        <td class="py-3 px-4 text-sm text-right">${formatNumber(totalCustomers)}</td>
+                        <td class="py-3 px-4 text-sm text-right">-</td>
+                        <td class="py-3 px-4 text-sm text-right text-blue-700">${formatRupiah(totalRevenue)}</td>
+                    </tr>
+                `;
+            }
+
+            // Ringkasan Target vs Forecast
+            const target = getForecastRevenueTarget(selectedYear, selectedMonth);
+            const gap = totalRevenue - target;
+            const progressPct = target > 0 ? (totalRevenue / target) * 100 : 0;
+            const barWidth = Math.min(100, Math.max(0, progressPct));
+            const barColor = progressPct >= 100 ? '#16A34A' : (progressPct >= 60 ? '#2563EB' : '#F59E0B');
+
+            document.getElementById('forecastRevenueTargetValue').textContent = formatRupiah(target);
+            document.getElementById('forecastRevenueTotalValue').textContent = formatRupiah(totalRevenue);
+            document.getElementById('forecastRevenueCustomerCount').textContent = formatNumber(totalCustomers);
+
+            const gapEl = document.getElementById('forecastRevenueGapValue');
+            gapEl.textContent = `${gap >= 0 ? '+' : '-'}${formatRupiah(Math.abs(gap))}`;
+            gapEl.className = `text-xl font-bold ${gap >= 0 ? 'text-green-600' : 'text-red-600'}`;
+            const gapIconBox = document.getElementById('forecastRevenueGapIconBox');
+            if (gapIconBox) gapIconBox.className = `icon-box ${gap >= 0 ? 'icon-blue' : 'icon-red'}`;
+
+            const progressBar = document.getElementById('forecastRevenueProgressBar');
+            progressBar.style.width = `${barWidth}%`;
+            progressBar.style.backgroundColor = barColor;
+            document.getElementById('forecastRevenueProgressLabel').textContent = progressPct >= 15 ? `${progressPct.toFixed(0)}%` : '';
+            document.getElementById('forecastRevenueProgressPct').textContent = `${progressPct.toFixed(0)}%`;
+
+            // Customer per Sales Code untuk seluruh bulan berjalan (semua yang EXPIREDDATE di bulan ini,
+            // sampai akhir bulan, dan belum berstatus TERMINATED). Direvisi agar tidak hanya yang
+            // sudah lewat tanggal, tapi seluruh pelanggan yang akan expired di bulan ini.
+            const codeGroups = {}; // code -> [customer, ...]
+            customersThisMonth.forEach(c => {
+                const status = (c.STATUS || '').toUpperCase();
+                if (status !== 'TERMINATED') {
+                    const code = c.SALESCODE || 'Tidak Diketahui';
+                    (codeGroups[code] = codeGroups[code] || []).push(c);
+                }
+            });
+
+            const unpaidCodes = Object.keys(codeGroups).sort((a, b) => codeGroups[b].length - codeGroups[a].length);
+            const codeRevenueSummary = {}; // code -> { newRevenue, recurringRevenue, total }
+
+            // Helper: urutkan customer berdasarkan EXPIREDDATE terdekat (ascending), lalu tampilkan modal
+            const openForecastCustomerModal = (customers, title) => {
+                const sortedCustomers = customers.slice().sort((a, b) => {
+                    const da = parseDate(a.EXPIREDDATE);
+                    const db = parseDate(b.EXPIREDDATE);
+                    return (da ? da.getTime() : 0) - (db ? db.getTime() : 0);
+                });
+                showOverviewDetailModal(sortedCustomers, title, true, FORECAST_UNPAID_DETAIL_COLUMNS, forecastUnpaidWaMessage);
+            };
+
+            unpaidBody.innerHTML = '';
+            if (unpaidCodes.length === 0) {
+                unpaidBody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500 py-4">Tidak ada customer yang akan expired untuk ${periodLabel}.</td></tr>`;
+            } else {
+                unpaidCodes.forEach((code, index) => {
+                    const customers = codeGroups[code];
+                    const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+
+                    // Pisahkan revenue New (customer baru aktif bulan ini) vs Recurring (pelanggan lama)
+                    let newRevenue = 0;
+                    let recurringRevenue = 0;
+                    customers.forEach(c => {
+                        const revenue = calculateForecastRevenueForCustomer(c);
+                        const installDate = parseDate(c.CONTRACTSTARTDATE);
+                        const isNewThisMonth = installDate && installDate.getFullYear() === selectedYear && installDate.getMonth() === selectedMonth;
+                        if (isNewThisMonth) newRevenue += revenue; else recurringRevenue += revenue;
+                    });
+                    const totalRevenueCode = newRevenue + recurringRevenue;
+                    codeRevenueSummary[code] = { newRevenue, recurringRevenue, total: totalRevenueCode };
+
+                    // Sudah lewat tanggal expired namun belum bayar (belum TERMINATED)
+                    const overdueCustomers = customers.filter(c => {
+                        const d = parseDate(c.EXPIREDDATE);
+                        return d && d <= today;
+                    });
+
+                    // Customer segmen METRONET yang expired di bulan berjalan
+                    const metronetCustomers = customers.filter(c => (c.BUNDLE_NAME || '').toUpperCase().includes('METRONET'));
+
+                    const row = unpaidBody.insertRow();
+                    row.className = 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 text-sm">${index + 1}</td>
+                        <td class="py-3 px-4 text-sm font-semibold text-gray-800">${name}</td>
+                        <td class="py-3 px-4 text-sm text-right text-green-600">${formatRupiah(newRevenue)}</td>
+                        <td class="py-3 px-4 text-sm text-right text-blue-600">${formatRupiah(recurringRevenue)}</td>
+                        <td class="py-3 px-4 text-sm text-right font-bold text-gray-800">${formatRupiah(totalRevenueCode)}</td>
+                        <td class="py-3 px-4 text-sm text-right font-bold text-red-600 cursor-pointer hover:underline" title="Klik untuk melihat daftar customer">${formatNumber(customers.length)}</td>
+                        <td class="py-3 px-4 text-sm text-right font-bold text-orange-600 cursor-pointer hover:underline" title="Klik untuk melihat daftar customer">${formatNumber(overdueCustomers.length)}</td>
+                        <td class="py-3 px-4 text-sm text-right font-bold text-purple-600 cursor-pointer hover:underline" title="Klik untuk melihat daftar customer">${formatNumber(metronetCustomers.length)}</td>
+                    `;
+                    row.querySelector('td:nth-child(6)').onclick = () => openForecastCustomerModal(customers, `Customer Expired Bulan Ini - ${name} (${periodLabel})`);
+                    row.querySelector('td:nth-child(7)').onclick = () => openForecastCustomerModal(overdueCustomers, `Sudah Lewat / Belum Bayar - ${name} (${periodLabel})`);
+                    row.querySelector('td:nth-child(8)').onclick = () => openForecastCustomerModal(metronetCustomers, `Metronet Expired Bulan Ini - ${name} (${periodLabel})`);
+                });
+            }
+
+            // Target Revenue vs Pencapaian per Sales Code (Recurring + New)
+            const targetPerCodeBody = document.getElementById('forecastRevenueTargetPerCodeBody');
+            if (targetPerCodeBody) {
+                // Gabungkan semua sales code yang punya target individu maupun yang punya data revenue bulan ini
+                const allRelevantCodes = new Set([...Object.keys(INDIVIDUAL_REVENUE_TARGETS_BASE), ...unpaidCodes]);
+                const rankedCodes = Array.from(allRelevantCodes).sort((a, b) => {
+                    const targetA = getIndividualRevenueTarget(a, selectedYear, selectedMonth);
+                    const targetB = getIndividualRevenueTarget(b, selectedYear, selectedMonth);
+                    // Urutkan: yang punya target dulu, lalu berdasarkan revenue tercapai terbesar
+                    if ((targetA !== null) !== (targetB !== null)) return targetA !== null ? -1 : 1;
+                    const revA = codeRevenueSummary[a] ? codeRevenueSummary[a].total : 0;
+                    const revB = codeRevenueSummary[b] ? codeRevenueSummary[b].total : 0;
+                    return revB - revA;
+                });
+
+                targetPerCodeBody.innerHTML = '';
+                if (rankedCodes.length === 0) {
+                    targetPerCodeBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Belum ada data untuk ${periodLabel}.</td></tr>`;
+                } else {
+                    rankedCodes.forEach((code, index) => {
+                        const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+                        const codeTarget = getIndividualRevenueTarget(code, selectedYear, selectedMonth);
+                        const achieved = codeRevenueSummary[code] ? codeRevenueSummary[code].total : 0;
+
+                        const row = targetPerCodeBody.insertRow();
+                        row.className = 'hover:bg-gray-50';
+
+                        if (codeTarget === null) {
+                            row.innerHTML = `
+                                <td class="py-3 px-4 text-sm">${index + 1}</td>
+                                <td class="py-3 px-4 text-sm font-semibold text-gray-800">${name}</td>
+                                <td class="py-3 px-4 text-sm text-right text-gray-400">-</td>
+                                <td class="py-3 px-4 text-sm text-right font-bold text-gray-800">${formatRupiah(achieved)}</td>
+                                <td class="py-3 px-4 text-sm text-gray-400">-</td>
+                                <td class="py-3 px-4 text-sm text-right text-gray-400">-</td>
+                            `;
+                        } else {
+                            const codeGap = achieved - codeTarget;
+                            const codeProgressPct = codeTarget > 0 ? (achieved / codeTarget) * 100 : 0;
+                            const codeBarWidth = Math.min(100, Math.max(0, codeProgressPct));
+                            const codeBarColor = codeProgressPct >= 100 ? '#16A34A' : (codeProgressPct >= 60 ? '#2563EB' : '#F59E0B');
+                            row.innerHTML = `
+                                <td class="py-3 px-4 text-sm">${index + 1}</td>
+                                <td class="py-3 px-4 text-sm font-semibold text-gray-800">${name}</td>
+                                <td class="py-3 px-4 text-sm text-right">${formatRupiah(codeTarget)}</td>
+                                <td class="py-3 px-4 text-sm text-right font-bold text-gray-800">${formatRupiah(achieved)}</td>
+                                <td class="py-3 px-4 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1 bg-gray-100 rounded-full h-3.5 overflow-hidden min-w-[80px]">
+                                            <div class="h-3.5 rounded-full transition-all duration-500" style="width:${codeBarWidth}%; background-color:${codeBarColor};"></div>
+                                        </div>
+                                        <span class="text-xs font-semibold text-gray-600 w-10 text-right">${codeProgressPct.toFixed(0)}%</span>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 text-sm text-right font-bold ${codeGap >= 0 ? 'text-green-600' : 'text-red-600'}">${codeGap >= 0 ? '+' : '-'}${formatRupiah(Math.abs(codeGap))}</td>
+                            `;
+                        }
+                    });
+                }
+            }
+        }
+
         // Populate Month and Year Selectors for Forecast, New Subs, dan Sales Performance
         function populateMonthYearSelectors() {
             const monthSelectors = [
                 document.getElementById('forecastMonthSelect'),
                 document.getElementById('newSubsMonthSelect'),
-                document.getElementById('salesPerfMonthSelect')
+                document.getElementById('salesPerfMonthSelect'),
+                document.getElementById('forecastRevenueMonthSelect')
             ];
             const yearSelectors = [
                 document.getElementById('forecastYearSelect'),
                 document.getElementById('newSubsYearSelect'),
-                document.getElementById('salesPerfYearSelect')
+                document.getElementById('salesPerfYearSelect'),
+                document.getElementById('forecastRevenueYearSelect')
             ];
             const currentYear = new Date().getFullYear();
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -3808,6 +4277,11 @@
         document.getElementById('applySalesPerfFilterBtn').addEventListener('click', renderSalesPerformanceTable);
         document.getElementById('salesPerfMonthSelect').addEventListener('change', renderSalesPerformanceTable);
         document.getElementById('salesPerfYearSelect').addEventListener('change', renderSalesPerformanceTable);
+
+        // Pendengar Acara untuk Filter Forecast Revenue Bulan Berjalan
+        document.getElementById('applyForecastRevenueFilterBtn').addEventListener('click', renderForecastRevenue);
+        document.getElementById('forecastRevenueMonthSelect').addEventListener('change', renderForecastRevenue);
+        document.getElementById('forecastRevenueYearSelect').addEventListener('change', renderForecastRevenue);
 
     </script>
 </body>
