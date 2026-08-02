@@ -1878,9 +1878,14 @@
             'HOME 1D': 375000,
             'HOME 2D': 575000,
             'HOME 3D': 700000,
+            'GAMERS 3D': 700000,
             'METRONET 1D': 1000000,
             'METRONET 2D': 1700000,
-            'DEDICATED INETERNET': 4940000
+            'METRONET 3D': 2700000,
+            'METRONET 4D': 6500000,
+            'METRONET 5D': 12500000,
+            'DEDICATED INTERNET': 6500000,
+            'DEDICATED INETERNET': 6500000 // antisipasi variasi penulisan yang sudah ada di data
         };
         const VAT_RATE = 0.11; // 11% PPN
         const MODEM_RENT_FEE = 50000; // Biaya sewa modem 50rb
@@ -3756,12 +3761,21 @@
 
             const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
             const prevMonthYear = `${prevMonthDate.getFullYear()}-${(prevMonthDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+            // Tren dibandingkan "apples-to-apples": jumlah kumulatif new-install dari tanggal 1 sampai
+            // tanggal hari ini (bulan berjalan) vs jumlah kumulatif dari tanggal 1 sampai tanggal yang
+            // SAMA di bulan lalu. Contoh: 1 Agustus vs 1 Juli. Namun jika tanggal hari ini melebihi
+            // jumlah hari di bulan lalu (mis. hari ini tanggal 31, tapi bulan lalu cuma 30 hari), batasi
+            // pembandingnya ke hari terakhir bulan lalu (30) - bukan "meluber" ke bulan berikutnya.
+            const todayDayOfMonth = now.getDate();
+            const daysInPrevMonth = new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth() + 1, 0).getDate();
+            const compareDayInPrevMonth = Math.min(todayDayOfMonth, daysInPrevMonth);
             
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             rankingMonthYearSpan.textContent = `${monthNames[now.getMonth()]} ${currentYear}`;
 
             const salesStats = {};
-            const salesStatsPrevMonth = {}; // { salescode: newCountBulanLalu }
+            const salesStatsPrevMonth = {}; // { salescode: newCountBulanLalu (kumulatif s.d. tanggal pembanding) }
             const salesCustomersThisMonth = {}; // { salescode: [customer, ...] } - untuk drill-down klik
 
             allCustomers.forEach(customer => {
@@ -3779,7 +3793,7 @@
                     if (customerMonthYear === currentMonthYear) {
                         salesStats[salesCode].New++;
                         (salesCustomersThisMonth[salesCode] = salesCustomersThisMonth[salesCode] || []).push(customer);
-                    } else if (customerMonthYear === prevMonthYear) {
+                    } else if (customerMonthYear === prevMonthYear && contractDate.getDate() <= compareDayInPrevMonth) {
                         salesStatsPrevMonth[salesCode] = (salesStatsPrevMonth[salesCode] || 0) + 1;
                     }
                 }
@@ -3989,7 +4003,132 @@
             'METRONET 1D', 'METRONET 2D', 'METRONET 3D', 'METRONET 4D', 'METRONET 5D',
             'DEDICATED INTERNET'
         ];
-        const FORECAST_MODEM_RENT_FEE = 50000; // Tambahan revenue jika MODEM_STATUS = RENT
+        const FORECAST_MODEM_RENT_FEE = 50000; // Biaya sewa modem/bulan (baru & existing) jika MODEM_STATUS = RENT
+
+        // --- KONFIGURASI REVENUE CUSTOMER BARU (INSTALASI) ---
+        // Biaya instalasi & harga beli modem berbeda-beda tergantung skema promo yang dipakai.
+        // Default untuk customer baru TANPA kode promo ("Blanks"):
+        //   (Harga Dasar x 1 bulan) + Biaya Instalasi 250.000 + Sewa Modem 50.000 (jika RENT) / Beli Modem 500.000 (jika BUY)
+        const DEFAULT_NEW_INSTALL_FEE = 250000;
+        const DEFAULT_NEW_MODEM_BUY_PRICE = 500000;
+        const DEFAULT_NEW_PAID_MONTHS = 1;
+
+        // Peta kode promo -> { installFee, modemBuyPrice, paidMonths }
+        //   installFee     : biaya instalasi one-time customer baru (0 = Free Installasi)
+        //   modemBuyPrice  : harga beli modem one-time jika MODEM_STATUS = BUY (skema "Beli")
+        //                    (null = modem dipinjamkan/tidak dijual -> skema "Dipinjamkan", tidak ada revenue pembelian modem)
+        //   paidMonths     : jumlah bulan yang DIBAYAR DI MUKA saat instalasi untuk skema
+        //                    "Bayar X Bulan Gratis Y Bulan" (mis. Bayar 8 Gratis 4 -> paidMonths = 8).
+        //                    Bulan gratis (Y) tidak ditagih sama sekali sehingga tidak masuk revenue.
+        //                    Default 1 untuk promo tanpa skema bayar-dimuka.
+        //
+        // PENTING - New Revenue vs Recurring Revenue:
+        //   - New Revenue hanya berlaku SEKALI (one-time) pada bulan instalasi (CONTRACTSTARTDATE):
+        //     (Harga Dasar x paidMonths) + installFee + (modemBuyPrice jika skema Beli, atau +50.000
+        //     sewa modem bulan pertama jika skema Sewa/RENT).
+        //   - Mulai bulan berikutnya, customer hanya dihitung sebagai Recurring Revenue biasa:
+        //     Harga Dasar (+ 50.000/bulan jika masih sewa modem/RENT). Biaya instalasi & beli modem
+        //     tidak diulang lagi karena sifatnya one-time.
+        //
+        // Contoh BZBACKTOSCHOOL840726 (Bayar 8 Gratis 4, skema Beli Modem, Free Installasi), BUNDLE_NAME HOME 0D:
+        //   Harga Dasar (150.000) x paidMonths (8) = 1.200.000
+        //   Beli Modem                             =   300.000
+        //   Biaya Instalasi (FREE INSTALASI)       =         0
+        //   Total New Revenue                      = 1.500.000
+        const PROMO_REVENUE_CONFIG = {
+            '2025H-3PLUS1':          { installFee: 0,      modemBuyPrice: 300000, paidMonths: 3 },  // Bayar 3 Gratis 1
+            '2026H-12PLUS5':         { installFee: 0,      modemBuyPrice: 300000, paidMonths: 12 }, // Bayar 12 Gratis 5
+            '2026H-3PLUS1':          { installFee: 0,      modemBuyPrice: 300000, paidMonths: 3 },  // Bayar 3 Gratis 1
+            '2026H-9PLUS3':          { installFee: 0,      modemBuyPrice: 300000, paidMonths: 9 },  // Bayar 9 Gratis 3
+            '25THPAKEBIZNET':        { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'BIZNETHOME2026':        { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'BIZNETPROMO0526':       { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'BIZNETPROMO0626':       { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'BIZNETPROMO66':         { installFee: 0,      modemBuyPrice: 300000, paidMonths: 6 },  // Bayar 6 Gratis 6
+            'BZBACKTOSCHOOL0726':    { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'BZBACKTOSCHOOL840726':  { installFee: 0,      modemBuyPrice: 300000, paidMonths: 8 },  // Bayar 8 Gratis 4
+            'IMLEKPAKEBIZNET2026':   { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'LEBARANPAKEBIZNET':     { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'MERDEKAPAKEBIZNET17':   { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'MERDEKAPAKEBIZNET8':    { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'MODEM300':              { installFee: 0,      modemBuyPrice: 300000, paidMonths: 1 },
+            'MODEMPROMO25':          { installFee: 100000, modemBuyPrice: null,   paidMonths: 1 },  // modem dipinjamkan
+            'MODEMPROMO26':          { installFee: 100000, modemBuyPrice: null,   paidMonths: 1 },
+            'MODEMWIFIPROMO':        { installFee: 100000, modemBuyPrice: null,   paidMonths: 1 },
+            'NOVEMBURST11':          { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'NOVEMBURST31':          { installFee: 0,      modemBuyPrice: 300000, paidMonths: 3 },  // Bayar 3 Gratis 1
+            'NOVEMBURSTT11':         { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'PAKEBIZNET12PLUS5':     { installFee: 0,      modemBuyPrice: 300000, paidMonths: 12 }, // Bayar 12 Gratis 5
+            'PAKEBIZNET2025':        { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'PAKEBIZNET2026':        { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'PAKEBIZNET21':          { installFee: 0,      modemBuyPrice: 300000, paidMonths: 2 },  // Bayar 2 Gratis 1
+            'PAKEBIZNET24':          { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'PAKEBIZNET25125':       { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'PAKEBIZNET2593':        { installFee: 0,      modemBuyPrice: 300000, paidMonths: 9 },  // Bayar 9 Gratis 3
+            'PAKEBIZNET25TH':        { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 },
+            'PAKEBIZNET3PLUS1':      { installFee: 0,      modemBuyPrice: 300000, paidMonths: 3 },  // Bayar 3 Gratis 1
+            'PAKEBIZNET9PLUS3':      { installFee: 0,      modemBuyPrice: 300000, paidMonths: 9 },  // Bayar 9 Gratis 3
+            'SPEEDTEMBER0925':       { installFee: 0,      modemBuyPrice: 500000, paidMonths: 1 }
+        };
+
+        // Ambil konfigurasi promo (installFee, modemBuyPrice & paidMonths) untuk sebuah kode promo.
+        // Kode promo yang tidak dikenali/kosong ("Blanks") memakai nilai default customer baru.
+        function getPromoRevenueConfig(promoCode) {
+            const key = (promoCode || '').trim().toUpperCase().replace(/\s+/g, '');
+            if (key && PROMO_REVENUE_CONFIG[key]) return PROMO_REVENUE_CONFIG[key];
+            return { installFee: DEFAULT_NEW_INSTALL_FEE, modemBuyPrice: DEFAULT_NEW_MODEM_BUY_PRICE, paidMonths: DEFAULT_NEW_PAID_MONTHS };
+        }
+
+        // Ambil harga dasar bulanan berdasarkan BUNDLE_NAME.
+        function getBasePriceForCustomer(customer) {
+            const key = (customer.BUNDLE_NAME || '').toUpperCase().trim();
+            const base = FORECAST_PRODUCT_PRICES[key];
+            return base === undefined ? 0 : base;
+        }
+
+        // --- RECURRING REVENUE (pelanggan existing / bulan berjalan tanpa instalasi baru) ---
+        // Formula: Harga Dasar + Biaya Sewa Modem 50.000 (jika MODEM_STATUS = RENT)
+        function calculateRecurringRevenueForCustomer(customer) {
+            let total = getBasePriceForCustomer(customer);
+            if ((customer.MODEM_STATUS || '').toUpperCase().trim() === 'RENT') {
+                total += FORECAST_MODEM_RENT_FEE;
+            }
+            return total;
+        }
+
+        // --- NEW REVENUE (customer baru, di bulan instalasi/CONTRACTSTARTDATE) ---
+        // Skema kode promo "Bayar X Bulan Gratis Y Bulan" berarti X bulan Harga Dasar DIBAYAR DI MUKA
+        // pada saat instalasi (bulan gratis Y tidak ditagih), sehingga bagian Harga Dasar dikalikan
+        // dengan jumlah bulan yang dibayar (paidMonths), bukan hanya 1x.
+        //
+        // Formula: (Harga Dasar x paidMonths) + Biaya Instalasi (one-time, tergantung promo)
+        //          + [skema Sewa/RENT: Sewa Modem 50.000 (bulan pertama)]
+        //          + [skema Beli/BUY: Harga Beli Modem one-time, tergantung promo]
+        //          + [skema Dipinjamkan: tidak ada tambahan biaya modem]
+        // Catatan: ini murni New Revenue (one-time bulan instalasi). Bulan berikutnya customer
+        // dihitung sebagai Recurring Revenue biasa (lihat calculateRecurringRevenueForCustomer).
+        function calculateNewRevenueForCustomer(customer) {
+            const base = getBasePriceForCustomer(customer);
+            const modemStatus = (customer.MODEM_STATUS || '').toUpperCase().trim();
+            const promoConfig = getPromoRevenueConfig(customer.PROMO_CODE);
+            const paidMonths = promoConfig.paidMonths || DEFAULT_NEW_PAID_MONTHS;
+
+            let total = (base * paidMonths) + promoConfig.installFee;
+
+            if (modemStatus === 'RENT') {
+                total += FORECAST_MODEM_RENT_FEE;
+            } else if (modemStatus === 'BUY' && promoConfig.modemBuyPrice) {
+                total += promoConfig.modemBuyPrice;
+            }
+            return total;
+        }
+
+        // Cek apakah customer tergolong instalasi baru pada periode (tahun/bulan) yang dipilih,
+        // berdasarkan CONTRACTSTARTDATE.
+        function isCustomerNewInPeriod(customer, year, monthIndex) {
+            const installDate = parseDate(customer.CONTRACTSTARTDATE);
+            return !!(installDate && installDate.getFullYear() === year && installDate.getMonth() === monthIndex);
+        }
 
         // Target revenue bulan berjalan: Rp356.610.000, bertambah Rp15.000.000 setiap bulan
         // berikutnya, dihitung relatif terhadap bulan acuan (Agustus 2026).
@@ -4018,16 +4157,14 @@
             return base + (diffMonths * REVENUE_TARGET_MONTHLY_INCREMENT);
         }
 
-        // Hitung estimasi revenue satu customer: harga dasar produk + tambahan Rp50.000 jika modem RENT
-        function calculateForecastRevenueForCustomer(customer) {
-            const key = (customer.BUNDLE_NAME || '').toUpperCase().trim();
-            let base = FORECAST_PRODUCT_PRICES[key];
-            if (base === undefined) base = 0;
-            let total = base;
-            if ((customer.MODEM_STATUS || '').toUpperCase().trim() === 'RENT') {
-                total += FORECAST_MODEM_RENT_FEE;
+        // Hitung estimasi revenue satu customer untuk periode (tahun/bulan) tertentu.
+        // Jika customer baru terinstal pada periode tsb -> pakai formula New Revenue (+ instalasi/modem beli).
+        // Jika bukan (pelanggan lama/recurring) -> pakai formula Recurring Revenue.
+        function calculateForecastRevenueForCustomer(customer, year, monthIndex) {
+            if (year !== undefined && monthIndex !== undefined && isCustomerNewInPeriod(customer, year, monthIndex)) {
+                return calculateNewRevenueForCustomer(customer);
             }
-            return total;
+            return calculateRecurringRevenueForCustomer(customer);
         }
 
         // Template pesan WhatsApp khusus pengingat pembayaran (dipakai di tabel Belum Bayar per Sales Code)
@@ -4045,6 +4182,23 @@
             { label: 'Subdistrict', get: c => c.SUBDISTRICT_INST || '-' },
             { label: 'Status Modem', get: c => c.MODEM_STATUS || '-' },
             { label: 'Promo Code', get: c => c.PROMO_CODE || '-' }
+        ];
+
+        // Kolom detail untuk modal drill-down "Revenue New" per Sales Code (customer baru bulan ini)
+        const FORECAST_NEW_REVENUE_DETAIL_COLUMNS = [
+            { label: 'Nama Pelanggan', get: c => c.BP_FULLNAME || '-' },
+            { label: 'Tgl Mulai Kontrak', get: c => c.CONTRACTSTARTDATE || '-' },
+            { label: 'Skema Modem', get: c => {
+                const status = (c.MODEM_STATUS || '-').toUpperCase().trim();
+                const promo = (c.PROMO_CODE || '').trim();
+                const statusLabel = status === 'RENT' ? 'Sewa' : (status === 'BUY' ? (getPromoRevenueConfig(c.PROMO_CODE).modemBuyPrice ? 'Beli' : 'Dipinjamkan') : (c.MODEM_STATUS || '-'));
+                return promo ? `${statusLabel} (${promo})` : statusLabel;
+            } },
+            { label: 'Skema Bayar', get: c => {
+                const paidMonths = getPromoRevenueConfig(c.PROMO_CODE).paidMonths || DEFAULT_NEW_PAID_MONTHS;
+                return paidMonths > 1 ? `Bayar ${paidMonths} Bulan` : '1 Bulan';
+            } },
+            { label: 'Revenue', get: c => formatRupiah(calculateNewRevenueForCustomer(c)) }
         ];
 
         // =====================================================================================
@@ -4304,7 +4458,7 @@
                 const key = FORECAST_PRODUCT_PRICES[rawKey] !== undefined ? rawKey : (c.BUNDLE_NAME || 'Tidak Diketahui');
                 if (!segmentMap[key]) segmentMap[key] = { customers: [], revenue: 0 };
                 segmentMap[key].customers.push(c);
-                segmentMap[key].revenue += calculateForecastRevenueForCustomer(c);
+                segmentMap[key].revenue += calculateForecastRevenueForCustomer(c, selectedYear, selectedMonth);
             });
 
             const knownKeys = FORECAST_SEGMENT_ORDER.filter(k => segmentMap[k]);
@@ -4372,6 +4526,8 @@
             // Customer per Sales Code untuk seluruh bulan berjalan (semua yang EXPIREDDATE di bulan ini,
             // sampai akhir bulan, dan belum berstatus TERMINATED). Direvisi agar tidak hanya yang
             // sudah lewat tanggal, tapi seluruh pelanggan yang akan expired di bulan ini.
+            // Grup ini dipakai untuk kolom "Jumlah Expired", "Sudah Lewat/Belum Bayar", "Metronet Expired",
+            // dan basis Revenue Recurring.
             const codeGroups = {}; // code -> [customer, ...]
             customersThisMonth.forEach(c => {
                 const status = (c.STATUS || '').toUpperCase();
@@ -4381,7 +4537,23 @@
                 }
             });
 
-            const unpaidCodes = Object.keys(codeGroups).sort((a, b) => codeGroups[b].length - codeGroups[a].length);
+            // Revenue New dihitung TERPISAH dari EXPIREDDATE: seluruh customer baru bulan ini
+            // (berdasarkan CONTRACTSTARTDATE) harus dijumlahkan revenue-nya, walaupun EXPIREDDATE
+            // pertamanya belum tentu jatuh di bulan yang sama dengan CONTRACTSTARTDATE-nya.
+            // Sebelumnya New Revenue hanya menghitung customer baru yang KEBETULAN juga punya
+            // EXPIREDDATE di bulan ini, sehingga customer baru lain jadi tidak terhitung sama sekali.
+            const newCustomersBySalesCode = {}; // code -> [customer, ...]
+            allCustomers.forEach(c => {
+                const status = (c.STATUS || '').toUpperCase();
+                if (status === 'TERMINATED') return;
+                if (isCustomerNewInPeriod(c, selectedYear, selectedMonth)) {
+                    const code = c.SALESCODE || 'Tidak Diketahui';
+                    (newCustomersBySalesCode[code] = newCustomersBySalesCode[code] || []).push(c);
+                }
+            });
+
+            const unpaidCodes = Array.from(new Set([...Object.keys(codeGroups), ...Object.keys(newCustomersBySalesCode)]))
+                .sort((a, b) => (codeGroups[b] ? codeGroups[b].length : 0) - (codeGroups[a] ? codeGroups[a].length : 0));
             const codeRevenueSummary = {}; // code -> { newRevenue, recurringRevenue, total }
 
             // Helper: urutkan customer berdasarkan EXPIREDDATE terdekat (ascending), lalu tampilkan modal
@@ -4399,17 +4571,22 @@
                 unpaidBody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500 py-4">Tidak ada customer yang akan expired untuk ${periodLabel}.</td></tr>`;
             } else {
                 unpaidCodes.forEach((code, index) => {
-                    const customers = codeGroups[code];
+                    const customers = codeGroups[code] || [];
+                    const newCustomersForCode = newCustomersBySalesCode[code] || [];
                     const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
 
-                    // Pisahkan revenue New (customer baru aktif bulan ini) vs Recurring (pelanggan lama)
+                    // Revenue New: seluruh customer baru bulan ini (by CONTRACTSTARTDATE), dijumlahkan semua.
                     let newRevenue = 0;
+                    newCustomersForCode.forEach(c => { newRevenue += calculateNewRevenueForCustomer(c); });
+
+                    // Revenue Recurring: customer existing (bukan new bulan ini) yang EXPIREDDATE-nya di bulan ini.
+                    // Cek isCustomerNewInPeriod lagi di sini untuk menghindari double-count kalau kebetulan
+                    // seorang customer baru juga muncul di grup EXPIREDDATE bulan ini.
                     let recurringRevenue = 0;
                     customers.forEach(c => {
-                        const revenue = calculateForecastRevenueForCustomer(c);
-                        const installDate = parseDate(c.CONTRACTSTARTDATE);
-                        const isNewThisMonth = installDate && installDate.getFullYear() === selectedYear && installDate.getMonth() === selectedMonth;
-                        if (isNewThisMonth) newRevenue += revenue; else recurringRevenue += revenue;
+                        if (!isCustomerNewInPeriod(c, selectedYear, selectedMonth)) {
+                            recurringRevenue += calculateRecurringRevenueForCustomer(c);
+                        }
                     });
                     const totalRevenueCode = newRevenue + recurringRevenue;
                     codeRevenueSummary[code] = { newRevenue, recurringRevenue, total: totalRevenueCode };
@@ -4428,13 +4605,23 @@
                     row.innerHTML = `
                         <td class="py-3 px-4 text-sm">${index + 1}</td>
                         <td class="py-3 px-4 text-sm font-semibold text-gray-800">${name}</td>
-                        <td class="py-3 px-4 text-sm text-right text-green-600">${formatRupiah(newRevenue)}</td>
+                        <td class="py-3 px-4 text-sm text-right text-green-600 ${newCustomersForCode.length > 0 ? 'font-bold cursor-pointer hover:underline' : ''}" title="${newCustomersForCode.length > 0 ? 'Klik untuk melihat rincian customer baru' : ''}">${formatRupiah(newRevenue)}</td>
                         <td class="py-3 px-4 text-sm text-right text-blue-600">${formatRupiah(recurringRevenue)}</td>
                         <td class="py-3 px-4 text-sm text-right font-bold text-gray-800">${formatRupiah(totalRevenueCode)}</td>
                         <td class="py-3 px-4 text-sm text-right font-bold text-red-600 cursor-pointer hover:underline" title="Klik untuk melihat daftar customer">${formatNumber(customers.length)}</td>
                         <td class="py-3 px-4 text-sm text-right font-bold text-orange-600 cursor-pointer hover:underline" title="Klik untuk melihat daftar customer">${formatNumber(overdueCustomers.length)}</td>
                         <td class="py-3 px-4 text-sm text-right font-bold text-purple-600 cursor-pointer hover:underline" title="Klik untuk melihat daftar customer">${formatNumber(metronetCustomers.length)}</td>
                     `;
+                    if (newCustomersForCode.length > 0) {
+                        row.querySelector('td:nth-child(3)').onclick = () => {
+                            const sorted = newCustomersForCode.slice().sort((a, b) => {
+                                const da = parseDate(a.CONTRACTSTARTDATE);
+                                const db = parseDate(b.CONTRACTSTARTDATE);
+                                return (da ? da.getTime() : 0) - (db ? db.getTime() : 0);
+                            });
+                            showOverviewDetailModal(sorted, `Revenue New - ${name} (${periodLabel})`, false, FORECAST_NEW_REVENUE_DETAIL_COLUMNS);
+                        };
+                    }
                     row.querySelector('td:nth-child(6)').onclick = () => openForecastCustomerModal(customers, `Customer Expired Bulan Ini - ${name} (${periodLabel})`);
                     row.querySelector('td:nth-child(7)').onclick = () => openForecastCustomerModal(overdueCustomers, `Sudah Lewat / Belum Bayar - ${name} (${periodLabel})`);
                     row.querySelector('td:nth-child(8)').onclick = () => openForecastCustomerModal(metronetCustomers, `Metronet Expired Bulan Ini - ${name} (${periodLabel})`);
