@@ -4305,6 +4305,46 @@
                 delete store[code][dateStr];
             }
             saveManualRevenueStore(store);
+            sendManualRevenueToSheet(code, dateStr, amount);
+        }
+
+        // Mengirim satu entri input manual revenue ke Google Apps Script (doPost) agar
+        // ikut tercatat permanen di sheet "Realisasi_Revenue_Manual" pada spreadsheet,
+        // tidak hanya tersimpan di localStorage browser ini.
+        // Catatan: memakai Content-Type 'text/plain' (bukan 'application/json') supaya
+        // browser TIDAK mengirim CORS preflight (OPTIONS) terlebih dahulu -- Apps Script
+        // Web App tidak menangani preflight OPTIONS, sehingga request akan gagal diam-diam
+        // kalau pakai 'application/json'. Isi body tetap JSON string biasa dan tetap bisa
+        // dibaca dengan JSON.parse(e.postData.contents) di sisi doPost.
+        function sendManualRevenueToSheet(code, dateStr, amount) {
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const [yearStr, monthStr] = dateStr.split('-');
+            const monthIndex = parseInt(monthStr, 10) - 1;
+
+            const payload = {
+                action: 'saveManualRevenue',
+                bulanNama: monthNames[monthIndex] || '',
+                tahun: yearStr,
+                salesCode: code,
+                salesCodeName: salesCodeNames[code] || '',
+                nilaiRevenue: amount,
+                catatan: `Input tanggal ${dateStr}`
+            };
+
+            fetch(customerWebAppUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status !== 'success') {
+                    console.error('Gagal menyimpan revenue ke spreadsheet:', res.message);
+                }
+            })
+            .catch(err => {
+                console.error('Gagal terhubung ke Apps Script saat menyimpan revenue:', err);
+            });
         }
 
         function getManualRevenueForCodeDate(code, dateStr) {
