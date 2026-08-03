@@ -4281,18 +4281,48 @@
             return `${y}-${m}-${day}`;
         }
 
-        function getManualRevenueStore() {
+        // manualRevenueStore adalah SUMBER DATA AKTIF di memori (bukan langsung localStorage).
+        // Diisi awal dari localStorage (agar tetap ada tampilan walau offline/gagal fetch),
+        // lalu ditimpa oleh data dari spreadsheet lewat syncManualRevenueFromServer() saat
+        // dashboard dibuka -- supaya SEMUA device melihat data yang sama, bukan cache lokal
+        // masing-masing browser.
+        let manualRevenueStore = (function () {
             try {
                 return JSON.parse(localStorage.getItem(MANUAL_REVENUE_STORAGE_KEY) || '{}');
             } catch (e) {
                 return {};
             }
+        })();
+
+        function getManualRevenueStore() {
+            return manualRevenueStore;
         }
 
         function saveManualRevenueStore(store) {
+            manualRevenueStore = store;
             try {
                 localStorage.setItem(MANUAL_REVENUE_STORAGE_KEY, JSON.stringify(store));
             } catch (e) { /* abaikan jika localStorage penuh/diblokir browser */ }
+        }
+
+        // Mengambil data revenue manual TERBARU dari spreadsheet (lewat doGet?action=getManualRevenue)
+        // agar dashboard di device manapun menampilkan angka yang sama. Dipanggil saat dashboard
+        // dibuka, dan diulang setiap beberapa menit agar input dari device lain ikut muncul tanpa
+        // perlu reload manual.
+        async function syncManualRevenueFromServer() {
+            try {
+                const res = await fetch(`${customerWebAppUrl}?action=getManualRevenue`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const serverStore = await res.json();
+                if (serverStore && typeof serverStore === 'object' && !Array.isArray(serverStore)) {
+                    saveManualRevenueStore(serverStore);
+                    if (typeof renderForecastRevenue === 'function') {
+                        try { renderForecastRevenue(); } catch (e) { /* elemen belum siap, aman diabaikan */ }
+                    }
+                }
+            } catch (err) {
+                console.error('Gagal mengambil data revenue manual dari server, memakai cache lokal:', err);
+            }
         }
 
         // amount <= 0 akan menghapus entry tanggal tsb (dianggap belum/tidak ada input).
@@ -4323,12 +4353,12 @@
 
             const payload = {
                 action: 'saveManualRevenue',
+                tanggal: dateStr,
                 bulanNama: monthNames[monthIndex] || '',
                 tahun: yearStr,
                 salesCode: code,
                 salesCodeName: salesCodeNames[code] || '',
-                nilaiRevenue: amount,
-                catatan: `Input tanggal ${dateStr}`
+                nilaiRevenue: amount
             };
 
             fetch(customerWebAppUrl, {
@@ -5220,6 +5250,8 @@
         // --- PENDENGAR ACARA & MUATAN AWAL ---
         document.addEventListener('DOMContentLoaded', () => {
             fetchCustomerData();
+            syncManualRevenueFromServer(); // Ambil revenue manual terbaru dari spreadsheet (lintas device)
+            setInterval(syncManualRevenueFromServer, 120000); // Ulangi setiap 2 menit agar tetap sinkron
             populateMonthYearSelectors(); // Panggil fungsi ini saat DOM dimuat
             updateClock(); // Update clock immediately
             setInterval(updateClock, 1000); // Update clock every second
