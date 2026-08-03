@@ -741,7 +741,8 @@
                 <!-- Filter Bulan & Tahun -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-1 text-center">Forecast Revenue Bulan Berjalan</h2>
-                    <p class="text-center text-xs text-gray-400 mb-4">Estimasi revenue berdasarkan customer dengan <strong>EXPIREDDATE</strong> pada bulan &amp; tahun yang dipilih, dengan asumsi seluruh customer membayar tepat waktu.</p>
+                    <p class="text-center text-xs text-gray-400 mb-2">Total Forecast = Total Terkumpul (input manual harian) + Forecast sisa dari customer recurring yang belum expired/direnew sampai akhir bulan.</p>
+                    <p class="text-center text-[11px] text-green-600 mb-4"><i class="fas fa-circle-check mr-1"></i>"Total Terkumpul" kini berasal dari <strong>input manual</strong> Anda setiap hari (bukan lagi estimasi otomatis), sehingga perhitungan forecast lebih akurat.</p>
                     <div class="mb-2 flex flex-wrap gap-4 items-center justify-center">
                         <div>
                             <label for="forecastRevenueMonthSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Bulan:</label>
@@ -761,6 +762,40 @@
                     </div>
                 </div>
 
+                <!-- Revenue Terkumpul Bulan Ini (Input Manual) -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4" style="border-left-color:#16A34A;">
+                    <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-gray-800">Revenue Terkumpul Bulan Ini <span class="text-xs font-normal text-green-600">(Input Manual)</span></h3>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-gray-400" id="forecastRevenueCollectedAsOf"></span>
+                            <button type="button" onclick="openManualRevenueModal()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold py-1.5 px-3 rounded-lg shadow-sm transition-colors duration-200 inline-flex items-center gap-1">
+                                <i class="fas fa-pen-to-square"></i> Input Manual
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="icon-box icon-blue"><i class="fas fa-wallet"></i></div>
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase font-semibold">Total Terkumpul (Input Manual)</p>
+                                <p class="text-xl font-bold text-green-600" id="forecastRevenueCollectedTotalValue">Rp 0</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="icon-box icon-gray"><i class="fas fa-user-plus"></i></div>
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase font-semibold">New Install (Awal Bulan - Hari Ini) <span class="text-amber-600">(Estimasi)</span></p>
+                                <p class="text-lg font-bold text-gray-800" id="forecastRevenueCollectedNewValue">Rp 0</p>
+                                <p class="text-xs text-gray-400 mt-0.5"><span id="forecastRevenueCollectedNewCount">0</span> customer</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-4 pt-3 border-t border-gray-100">
+                        <i class="fas fa-circle-info mr-1"></i>
+                        "Total Terkumpul" sekarang murni berasal dari input manual (bukan estimasi otomatis) yang Anda masukkan setiap hari lewat tombol "Input Manual" di atas, atau lewat kolom "Revenue Hari Ini" pada tabel "Target Revenue vs Pencapaian per Sales Code" di bawah. Nilai harian yang Anda masukkan otomatis terakumulasi menjadi Total Terkumpul bulan berjalan dan langsung dipakai untuk menghitung ulang Forecast Revenue, % Pencapaian, dan Selisih. "New Install" tetap ditampilkan sebagai referensi/estimasi (dari CONTRACTSTARTDATE) dan tidak lagi dijumlahkan otomatis ke Total Terkumpul.
+                    </p>
+                </div>
+
                 <!-- Ringkasan Target vs Forecast -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div class="metric-card bg-white p-6">
@@ -776,9 +811,9 @@
                         <div class="flex items-center gap-4">
                             <div class="icon-box icon-orange"><i class="fas fa-coins"></i></div>
                             <div>
-                                <p class="text-xs text-gray-400 uppercase font-semibold">Forecast Revenue (Jika Semua Bayar)</p>
+                                <p class="text-xs text-gray-400 uppercase font-semibold">Total Forecast Revenue Bulan Berjalan</p>
                                 <p class="text-xl font-bold text-gray-800" id="forecastRevenueTotalValue">Rp 0</p>
-                                <p class="text-xs text-gray-400 mt-0.5"><span id="forecastRevenueCustomerCount">0</span> customer akan expired bulan ini</p>
+                                <p class="text-xs text-gray-400 mt-0.5"><span id="forecastRevenueCustomerCount">0</span> customer belum bayar akan expired bulan ini</p>
                             </div>
                         </div>
                     </div>
@@ -829,6 +864,30 @@
                     <p class="text-center text-xs text-gray-400 mt-3">*Total revenue segmen sudah termasuk tambahan Rp50.000 untuk customer dengan Status Modem RENT.</p>
                 </div>
 
+                <!-- Revenue Terkumpul Hari Ini per Sales Code -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Revenue Terkumpul Bulan Ini per Sales Code <span class="text-xs font-normal text-green-600">(Input Manual)</span></h3>
+                    <p class="text-center text-xs text-gray-400 mb-4">Revenue yang sudah masuk dari awal bulan sampai hari ini per Sales Code/ARCO, berdasarkan input manual harian Anda. "New Install" tetap ditampilkan sebagai referensi estimasi terpisah.</p>
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white table-custom" id="forecastRevenueCollectedTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue Hari Ini (Manual)</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">New Install (Estimasi)</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right rounded-tr-lg">Total Terkumpul Bulan Ini</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forecastRevenueCollectedBody">
+                                <tr><td colspan="5" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                            </tbody>
+                            <tfoot id="forecastRevenueCollectedFoot"></tfoot>
+                        </table>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 mt-3">Klik nilai pada kolom "Revenue Hari Ini (Manual)" untuk input/ubah nominal hari ini, atau klik "New Install" untuk melihat daftar customer-nya.</p>
+                </div>
+
                 <!-- Customer Belum Bayar per Sales Code -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Customer Belum Bayar per Sales Code</h3>
@@ -858,7 +917,7 @@
                 <!-- Target vs Revenue per Sales Code (Recurring + New) -->
                 <div class="bg-white p-6 rounded-lg shadow-md mt-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Target Revenue vs Pencapaian per Sales Code</h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Target revenue individu bulan berjalan (naik Rp15.000.000 setiap bulan) dibandingkan dengan revenue Recurring + New yang sudah terkumpul dari customer yang expired bulan ini.</p>
+                    <p class="text-center text-xs text-gray-400 mb-4">Target revenue individu bulan berjalan (naik Rp15.000.000 setiap bulan) dibandingkan dengan Forecast Revenue = input manual "Revenue Hari Ini" (terakumulasi bulan ini) + sisa forecast recurring dari customer yang belum expired/direnew bulan ini.</p>
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueTargetPerCodeTable">
                             <thead class="bg-gray-700 text-white">
@@ -866,18 +925,19 @@
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Target Bulan Ini</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Forecast Revenue (Recurring + New)</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue Hari Ini <span class="normal-case font-normal text-[10px] text-green-300">(Manual)</span></th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Forecast Revenue</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">% Pencapaian</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Selisih</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm text-center rounded-tr-lg">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="forecastRevenueTargetPerCodeBody">
-                                <tr><td colspan="7" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                                <tr><td colspan="8" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-center text-xs text-gray-400 mt-3">*Sales Code tanpa target individu yang ditentukan akan ditampilkan tanpa target (-). Klik tombol <i class="fas fa-calculator text-blue-600"></i> pada kolom "Aksi" untuk mensimulasikan produk apa &amp; berapa unit yang perlu terjual (termasuk skema bundling) agar selisih tertutup.</p>
+                    <p class="text-center text-xs text-gray-400 mt-3">*Sales Code tanpa target individu yang ditentukan akan ditampilkan tanpa target (-). Klik ikon <i class="fas fa-pen-to-square text-blue-500"></i> pada kolom "Revenue Hari Ini" untuk input/ubah nominal revenue yang terkumpul hari ini (otomatis terakumulasi ke Forecast Revenue). Klik tombol <i class="fas fa-calculator text-blue-600"></i> pada kolom "Aksi" untuk mensimulasikan produk apa &amp; berapa unit yang perlu terjual (termasuk skema bundling) agar selisih tertutup.</p>
                 </div>
             </section>
 
@@ -1304,6 +1364,44 @@
                                     <i class="fas fa-undo mr-1"></i> Reset Simulasi
                                 </button>
                                 <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('revenueCalculatorModal')">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Input Manual Revenue Terkumpul -->
+                    <div id="manualRevenueModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1090] p-2">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full md:w-4/5 lg:w-2/3 max-h-[92vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="flex justify-between items-start border-b pb-3 mb-4">
+                                <div>
+                                    <h5 class="text-base sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-pen-to-square text-green-600"></i> Input Manual Revenue Terkumpul Hari Ini
+                                    </h5>
+                                    <p class="text-xs sm:text-sm text-gray-500 mt-0.5" id="manualRevenueDateLabel">Tanggal: -</p>
+                                </div>
+                                <button type="button" class="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2" onclick="closeModal('manualRevenueModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-3">Masukkan nominal revenue yang benar-benar terkumpul (cash-in) hari ini untuk masing-masing Sales Code. Nilai ini otomatis terakumulasi setiap hari menjadi Total Terkumpul bulan berjalan &amp; menjadi basis perhitungan Forecast Revenue, % Pencapaian, dan Selisih.</p>
+                            <div class="overflow-x-auto rounded-lg shadow-md mb-4">
+                                <table class="min-w-full bg-white table-custom" id="manualRevenueTable">
+                                    <thead class="bg-gray-700 text-white">
+                                        <tr>
+                                            <th class="py-2 px-3 uppercase font-semibold text-xs rounded-tl-lg">Sales Code</th>
+                                            <th class="py-2 px-3 uppercase font-semibold text-xs text-right">Sudah Terkumpul Bulan Ini</th>
+                                            <th class="py-2 px-3 uppercase font-semibold text-xs text-right rounded-tr-lg">Input Hari Ini (Rp)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="manualRevenueBody">
+                                        <tr><td colspan="3" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="flex justify-end space-x-3 border-t pt-4">
+                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('manualRevenueModal')">Batal</button>
+                                <button type="button" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors duration-200" onclick="saveManualRevenueModal()">
+                                    <i class="fas fa-save mr-1"></i> Simpan &amp; Hitung Ulang
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -4167,6 +4265,167 @@
             return calculateRecurringRevenueForCustomer(customer);
         }
 
+        // --- REVENUE TERKUMPUL: INPUT MANUAL HARIAN (menggantikan estimasi otomatis lama) ---
+        // Sebelumnya "Existing (Sudah Bayar)" ditebak dari pergeseran EXPIREDDATE, tapi hasilnya
+        // jauh dari akurat. Sekarang revenue yang benar-benar terkumpul (cash-in) diinput manual
+        // setiap hari oleh Area Coordinator per Sales Code, disimpan di localStorage browser ini,
+        // lalu diakumulasikan otomatis menjadi Total Terkumpul bulan berjalan.
+        const MANUAL_REVENUE_STORAGE_KEY = 'biznetManualRevenueDailyV1';
+
+        // Format tanggal lokal (bukan UTC) -> 'YYYY-MM-DD', dipakai sebagai key harian.
+        function todayDateStr() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function getManualRevenueStore() {
+            try {
+                return JSON.parse(localStorage.getItem(MANUAL_REVENUE_STORAGE_KEY) || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveManualRevenueStore(store) {
+            try {
+                localStorage.setItem(MANUAL_REVENUE_STORAGE_KEY, JSON.stringify(store));
+            } catch (e) { /* abaikan jika localStorage penuh/diblokir browser */ }
+        }
+
+        // amount <= 0 akan menghapus entry tanggal tsb (dianggap belum/tidak ada input).
+        function setManualRevenueForCodeDate(code, dateStr, amount) {
+            const store = getManualRevenueStore();
+            if (!store[code]) store[code] = {};
+            if (amount > 0) {
+                store[code][dateStr] = amount;
+            } else if (store[code][dateStr] !== undefined) {
+                delete store[code][dateStr];
+            }
+            saveManualRevenueStore(store);
+        }
+
+        function getManualRevenueForCodeDate(code, dateStr) {
+            const store = getManualRevenueStore();
+            return (store[code] && store[code][dateStr]) || 0;
+        }
+
+        // Total input manual untuk satu Sales Code, dijumlahkan dari seluruh tanggal yang
+        // jatuh pada bulan & tahun terpilih (akumulasi harian -> total bulan berjalan).
+        function getManualRevenueMonthTotal(code, year, monthIndex) {
+            const store = getManualRevenueStore();
+            const entries = store[code] || {};
+            let total = 0;
+            Object.keys(entries).forEach(dateStr => {
+                const d = new Date(`${dateStr}T00:00:00`);
+                if (d.getFullYear() === year && d.getMonth() === monthIndex) total += entries[dateStr];
+            });
+            return total;
+        }
+
+        // Total input manual seluruh Sales Code untuk bulan & tahun terpilih (dipakai sebagai
+        // "Total Terkumpul" di kartu ringkasan atas).
+        function getManualRevenueGlobalMonthTotal(year, monthIndex) {
+            const store = getManualRevenueStore();
+            let total = 0;
+            Object.keys(store).forEach(code => {
+                total += getManualRevenueMonthTotal(code, year, monthIndex);
+            });
+            return total;
+        }
+
+        // Kumpulan seluruh Sales Code yang dikenal sistem: dari mapping nama, target individu,
+        // data customer, maupun yang sudah pernah diinput manual sebelumnya.
+        function getAllKnownSalesCodes() {
+            const codes = new Set();
+            Object.keys(salesCodeNames).forEach(c => codes.add(c));
+            Object.keys(INDIVIDUAL_REVENUE_TARGETS_BASE).forEach(c => codes.add(c));
+            allCustomers.forEach(c => { if (c.SALESCODE) codes.add(c.SALESCODE); });
+            Object.keys(getManualRevenueStore()).forEach(c => codes.add(c));
+            return Array.from(codes).sort();
+        }
+
+        // Buka modal input manual. Jika focusCode diisi, baris Sales Code tsb akan di-highlight
+        // & auto-focus (dipanggil dari tombol aksi per-baris tabel Target Revenue vs Pencapaian).
+        function openManualRevenueModal(focusCode) {
+            const monthSelect = document.getElementById('forecastRevenueMonthSelect');
+            const yearSelect = document.getElementById('forecastRevenueYearSelect');
+            const now = new Date();
+            const selectedMonth = (monthSelect && monthSelect.value !== '') ? parseInt(monthSelect.value, 10) : now.getMonth();
+            const selectedYear = (yearSelect && yearSelect.value !== '') ? parseInt(yearSelect.value, 10) : now.getFullYear();
+            const dateStr = todayDateStr();
+
+            const dateLabelEl = document.getElementById('manualRevenueDateLabel');
+            if (dateLabelEl) dateLabelEl.textContent = `Tanggal: ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+
+            const body = document.getElementById('manualRevenueBody');
+            if (!body) return;
+            body.innerHTML = '';
+            const codes = getAllKnownSalesCodes();
+            if (codes.length === 0) {
+                body.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Belum ada data Sales Code.</td></tr>';
+            } else {
+                codes.forEach(code => {
+                    const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+                    const monthTotal = getManualRevenueMonthTotal(code, selectedYear, selectedMonth);
+                    const todayValue = getManualRevenueForCodeDate(code, dateStr);
+                    const row = body.insertRow();
+                    row.dataset.code = code;
+                    row.className = focusCode && code === focusCode ? 'bg-green-50' : 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="py-2 px-3 text-sm font-semibold text-gray-800">${name}</td>
+                        <td class="py-2 px-3 text-sm text-right text-gray-600">${formatRupiah(monthTotal)}</td>
+                        <td class="py-2 px-3 text-sm text-right">
+                            <input type="number" min="0" step="1000" value="${todayValue || ''}" placeholder="0" class="manual-revenue-input w-36 sm:w-40 text-right border border-gray-300 rounded-lg py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-green-400" />
+                        </td>
+                    `;
+                });
+            }
+
+            showModal('manualRevenueModal');
+            if (focusCode) {
+                setTimeout(() => {
+                    const targetRow = body.querySelector(`tr[data-code="${focusCode}"]`);
+                    if (targetRow) {
+                        targetRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        const input = targetRow.querySelector('.manual-revenue-input');
+                        if (input) input.focus();
+                    }
+                }, 150);
+            }
+        }
+
+        // Simpan seluruh input pada modal (untuk tanggal hari ini), lalu hitung ulang seluruh
+        // tab Forecast Revenue supaya Total Terkumpul, Forecast Revenue, % Pencapaian & Selisih
+        // langsung menyesuaikan.
+        function saveManualRevenueModal() {
+            const dateStr = todayDateStr();
+            const body = document.getElementById('manualRevenueBody');
+            if (!body) { closeModal('manualRevenueModal'); return; }
+            body.querySelectorAll('tr[data-code]').forEach(row => {
+                const code = row.dataset.code;
+                const input = row.querySelector('.manual-revenue-input');
+                if (!code || !input) return;
+                const amount = Math.max(0, parseInt(input.value, 10) || 0);
+                setManualRevenueForCodeDate(code, dateStr, amount);
+            });
+            closeModal('manualRevenueModal');
+            renderForecastRevenue();
+        }
+
+        // Customer baru (instalasi) yang CONTRACTSTARTDATE-nya sejak awal bulan terpilih s/d hari ini.
+        function getNewCustomersCollectedSoFar(selectedYear, selectedMonth, today) {
+            return allCustomers.filter(c => {
+                const status = (c.STATUS || '').toUpperCase();
+                if (status === 'TERMINATED') return false;
+                if (!isCustomerNewInPeriod(c, selectedYear, selectedMonth)) return false;
+                const installDate = parseDate(c.CONTRACTSTARTDATE);
+                return installDate && installDate <= today;
+            });
+        }
+
         // Template pesan WhatsApp khusus pengingat pembayaran (dipakai di tabel Belum Bayar per Sales Code)
         function forecastUnpaidWaMessage(customer) {
             const name = customer.BP_FULLNAME || 'Kak';
@@ -4500,16 +4759,125 @@
                 `;
             }
 
-            // Ringkasan Target vs Forecast
+            // --- REVENUE TERKUMPUL BULAN INI (INPUT MANUAL) ---
+            const todayStr = todayDateStr();
+            // New install yang sudah terjadi dari awal bulan sampai hari ini (tetap estimasi,
+            // hanya ditampilkan sebagai referensi, tidak lagi dijumlahkan ke Total Terkumpul).
+            const newCollectedSoFar = getNewCustomersCollectedSoFar(selectedYear, selectedMonth, today);
+
+            const collectedBySalesCode = {}; // code -> { manualToday, manualMonthTotal, newRevenue, newCustomers:[] }
+            const getCollectedBucket = (code) => {
+                if (!collectedBySalesCode[code]) {
+                    collectedBySalesCode[code] = {
+                        manualToday: getManualRevenueForCodeDate(code, todayStr),
+                        manualMonthTotal: getManualRevenueMonthTotal(code, selectedYear, selectedMonth),
+                        newRevenue: 0,
+                        newCustomers: []
+                    };
+                }
+                return collectedBySalesCode[code];
+            };
+
+            let collectedNewRevenue = 0;
+            newCollectedSoFar.forEach(c => {
+                const rev = calculateNewRevenueForCustomer(c);
+                collectedNewRevenue += rev;
+                const bucket = getCollectedBucket(c.SALESCODE || 'Tidak Diketahui');
+                bucket.newRevenue += rev;
+                bucket.newCustomers.push(c);
+            });
+
+            // Pastikan Sales Code yang sudah punya input manual bulan ini tetap muncul di tabel
+            // walaupun kebetulan tidak ada New Install untuk kode tsb.
+            getAllKnownSalesCodes().forEach(code => {
+                if (getManualRevenueMonthTotal(code, selectedYear, selectedMonth) > 0) getCollectedBucket(code);
+            });
+
+            const manualCollectedMonthTotal = getManualRevenueGlobalMonthTotal(selectedYear, selectedMonth);
+
+            // Sisa forecast: customer EXISTING (recurring) yang EXPIREDDATE-nya bulan ini dan
+            // belum expired/direnew. New-in-period customer TIDAK dimasukkan di sini karena
+            // asumsinya sudah tercakup dalam input manual Total Terkumpul begitu benar-benar
+            // terjadi transaksinya.
+            let sisaForecastRevenue = 0;
+            let sisaForecastCustomerCount = 0;
+            customersThisMonth.forEach(c => {
+                if (!isCustomerNewInPeriod(c, selectedYear, selectedMonth)) {
+                    sisaForecastRevenue += calculateRecurringRevenueForCustomer(c);
+                    sisaForecastCustomerCount++;
+                }
+            });
+
+            const trueForecastTotal = manualCollectedMonthTotal + sisaForecastRevenue;
+
+            // Render kartu Revenue Terkumpul Bulan Ini
+            const collectedAsOfEl = document.getElementById('forecastRevenueCollectedAsOf');
+            if (collectedAsOfEl) {
+                collectedAsOfEl.textContent = `Per ${today.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+            }
+            document.getElementById('forecastRevenueCollectedTotalValue').textContent = formatRupiah(manualCollectedMonthTotal);
+            document.getElementById('forecastRevenueCollectedNewValue').textContent = formatRupiah(collectedNewRevenue);
+            document.getElementById('forecastRevenueCollectedNewCount').textContent = formatNumber(newCollectedSoFar.length);
+
+            // Render tabel Revenue Terkumpul Bulan Ini per Sales Code
+            const collectedBody = document.getElementById('forecastRevenueCollectedBody');
+            const collectedFoot = document.getElementById('forecastRevenueCollectedFoot');
+            if (collectedBody) {
+                const collectedCodes = Object.keys(collectedBySalesCode).sort((a, b) => {
+                    return collectedBySalesCode[b].manualMonthTotal - collectedBySalesCode[a].manualMonthTotal;
+                });
+                collectedBody.innerHTML = '';
+                if (collectedCodes.length === 0) {
+                    collectedBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-4">Belum ada revenue yang terkumpul untuk ${periodLabel}. Klik "Input Manual" untuk mulai mencatat.</td></tr>`;
+                    if (collectedFoot) collectedFoot.innerHTML = '';
+                } else {
+                    let sumToday = 0, sumNew = 0, sumMonthTotal = 0;
+                    collectedCodes.forEach((code, index) => {
+                        const bucket = collectedBySalesCode[code];
+                        const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+                        sumToday += bucket.manualToday;
+                        sumNew += bucket.newRevenue;
+                        sumMonthTotal += bucket.manualMonthTotal;
+                        const row = collectedBody.insertRow();
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="py-3 px-4 text-sm">${index + 1}</td>
+                            <td class="py-3 px-4 text-sm font-semibold text-gray-800">${name}</td>
+                            <td class="py-3 px-4 text-sm text-right text-green-600 font-bold cursor-pointer hover:underline" title="Klik untuk input manual">${formatRupiah(bucket.manualToday)}</td>
+                            <td class="py-3 px-4 text-sm text-right text-blue-600 ${bucket.newCustomers.length > 0 ? 'font-bold cursor-pointer hover:underline' : ''}">${formatRupiah(bucket.newRevenue)}</td>
+                            <td class="py-3 px-4 text-sm text-right font-bold text-gray-800">${formatRupiah(bucket.manualMonthTotal)}</td>
+                        `;
+                        row.querySelector('td:nth-child(3)').onclick = () => openManualRevenueModal(code);
+                        if (bucket.newCustomers.length > 0) {
+                            row.querySelector('td:nth-child(4)').onclick = () => {
+                                showOverviewDetailModal(bucket.newCustomers, `New Install Terkumpul - ${name} (${periodLabel})`, false, FORECAST_NEW_REVENUE_DETAIL_COLUMNS);
+                            };
+                        }
+                    });
+                    if (collectedFoot) {
+                        collectedFoot.innerHTML = `
+                            <tr class="bg-gray-50 font-bold text-gray-800 border-t-2 border-gray-200">
+                                <td class="py-3 px-4 text-sm" colspan="2">TOTAL</td>
+                                <td class="py-3 px-4 text-sm text-right text-green-700">${formatRupiah(sumToday)}</td>
+                                <td class="py-3 px-4 text-sm text-right text-blue-700">${formatRupiah(sumNew)}</td>
+                                <td class="py-3 px-4 text-sm text-right text-gray-900">${formatRupiah(sumMonthTotal)}</td>
+                            </tr>
+                        `;
+                    }
+                }
+            }
+
+            // Ringkasan Target vs Forecast (memakai Total Forecast yang sudah dikoreksi:
+            // Revenue Terkumpul + Sisa Forecast dari customer existing yang belum bayar)
             const target = getForecastRevenueTarget(selectedYear, selectedMonth);
-            const gap = totalRevenue - target;
-            const progressPct = target > 0 ? (totalRevenue / target) * 100 : 0;
+            const gap = trueForecastTotal - target;
+            const progressPct = target > 0 ? (trueForecastTotal / target) * 100 : 0;
             const barWidth = Math.min(100, Math.max(0, progressPct));
             const barColor = progressPct >= 100 ? '#16A34A' : (progressPct >= 60 ? '#2563EB' : '#F59E0B');
 
             document.getElementById('forecastRevenueTargetValue').textContent = formatRupiah(target);
-            document.getElementById('forecastRevenueTotalValue').textContent = formatRupiah(totalRevenue);
-            document.getElementById('forecastRevenueCustomerCount').textContent = formatNumber(totalCustomers);
+            document.getElementById('forecastRevenueTotalValue').textContent = formatRupiah(trueForecastTotal);
+            document.getElementById('forecastRevenueCustomerCount').textContent = formatNumber(sisaForecastCustomerCount);
 
             const gapEl = document.getElementById('forecastRevenueGapValue');
             gapEl.textContent = `${gap >= 0 ? '+' : '-'}${formatRupiah(Math.abs(gap))}`;
@@ -4554,7 +4922,10 @@
 
             const unpaidCodes = Array.from(new Set([...Object.keys(codeGroups), ...Object.keys(newCustomersBySalesCode)]))
                 .sort((a, b) => (codeGroups[b] ? codeGroups[b].length : 0) - (codeGroups[a] ? codeGroups[a].length : 0));
-            const codeRevenueSummary = {}; // code -> { newRevenue, recurringRevenue, total }
+            const codeRevenueSummary = {}; // code -> { newRevenue, recurringRevenue, total } (dipakai tabel "Customer Belum Bayar")
+            // Forecast Revenue untuk tabel "Target Revenue vs Pencapaian" = input manual "Revenue Hari Ini"
+            // (terakumulasi bulan ini) + sisa forecast recurring (customer yang belum expired/direnew).
+            const codeAchievedForTarget = {}; // code -> number
 
             // Helper: urutkan customer berdasarkan EXPIREDDATE terdekat (ascending), lalu tampilkan modal
             const openForecastCustomerModal = (customers, title) => {
@@ -4590,6 +4961,9 @@
                     });
                     const totalRevenueCode = newRevenue + recurringRevenue;
                     codeRevenueSummary[code] = { newRevenue, recurringRevenue, total: totalRevenueCode };
+
+                    // Forecast Revenue (untuk tabel Target vs Pencapaian) = input manual bulan ini + sisa recurring.
+                    codeAchievedForTarget[code] = getManualRevenueMonthTotal(code, selectedYear, selectedMonth) + recurringRevenue;
 
                     // Sudah lewat tanggal expired namun belum bayar (belum TERMINATED)
                     const overdueCustomers = customers.filter(c => {
@@ -4628,29 +5002,44 @@
                 });
             }
 
-            // Target Revenue vs Pencapaian per Sales Code (Recurring + New)
+            // Target Revenue vs Pencapaian per Sales Code
+            // Forecast Revenue = input manual "Revenue Hari Ini" (terakumulasi bulan ini) + sisa forecast recurring.
             const targetPerCodeBody = document.getElementById('forecastRevenueTargetPerCodeBody');
             if (targetPerCodeBody) {
-                // Gabungkan semua sales code yang punya target individu maupun yang punya data revenue bulan ini
-                const allRelevantCodes = new Set([...Object.keys(INDIVIDUAL_REVENUE_TARGETS_BASE), ...unpaidCodes]);
+                // Gabungkan semua sales code yang punya target individu, data revenue bulan ini, maupun yang
+                // sudah pernah diinput manual (walau kebetulan tidak punya customer expired bulan ini).
+                const allRelevantCodes = new Set([...Object.keys(INDIVIDUAL_REVENUE_TARGETS_BASE), ...unpaidCodes, ...getAllKnownSalesCodes().filter(c => getManualRevenueMonthTotal(c, selectedYear, selectedMonth) > 0)]);
                 const rankedCodes = Array.from(allRelevantCodes).sort((a, b) => {
                     const targetA = getIndividualRevenueTarget(a, selectedYear, selectedMonth);
                     const targetB = getIndividualRevenueTarget(b, selectedYear, selectedMonth);
                     // Urutkan: yang punya target dulu, lalu berdasarkan revenue tercapai terbesar
                     if ((targetA !== null) !== (targetB !== null)) return targetA !== null ? -1 : 1;
-                    const revA = codeRevenueSummary[a] ? codeRevenueSummary[a].total : 0;
-                    const revB = codeRevenueSummary[b] ? codeRevenueSummary[b].total : 0;
+                    const revA = codeAchievedForTarget[a] !== undefined ? codeAchievedForTarget[a] : getManualRevenueMonthTotal(a, selectedYear, selectedMonth);
+                    const revB = codeAchievedForTarget[b] !== undefined ? codeAchievedForTarget[b] : getManualRevenueMonthTotal(b, selectedYear, selectedMonth);
                     return revB - revA;
                 });
 
                 targetPerCodeBody.innerHTML = '';
                 if (rankedCodes.length === 0) {
-                    targetPerCodeBody.innerHTML = `<tr><td colspan="7" class="text-center text-gray-500 py-4">Belum ada data untuk ${periodLabel}.</td></tr>`;
+                    targetPerCodeBody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500 py-4">Belum ada data untuk ${periodLabel}.</td></tr>`;
                 } else {
                     rankedCodes.forEach((code, index) => {
                         const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
                         const codeTarget = getIndividualRevenueTarget(code, selectedYear, selectedMonth);
-                        const achieved = codeRevenueSummary[code] ? codeRevenueSummary[code].total : 0;
+                        // achieved = Forecast Revenue (manual "Revenue Hari Ini" terakumulasi + sisa recurring)
+                        const achieved = codeAchievedForTarget[code] !== undefined ? codeAchievedForTarget[code] : getManualRevenueMonthTotal(code, selectedYear, selectedMonth);
+                        const manualTodayForCode = getManualRevenueForCodeDate(code, todayStr);
+
+                        const revenueTodayCell = `
+                            <td class="py-3 px-4 text-sm text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <span class="font-semibold text-green-600">${formatRupiah(manualTodayForCode)}</span>
+                                    <button type="button" class="text-blue-500 hover:text-blue-700" title="Input/ubah revenue hari ini">
+                                        <i class="fas fa-pen-to-square"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
 
                         const row = targetPerCodeBody.insertRow();
                         row.className = 'hover:bg-gray-50';
@@ -4660,6 +5049,7 @@
                                 <td class="py-3 px-4 text-sm">${index + 1}</td>
                                 <td class="py-3 px-4 text-sm font-semibold text-gray-800">${name}</td>
                                 <td class="py-3 px-4 text-sm text-right text-gray-400">-</td>
+                                ${revenueTodayCell}
                                 <td class="py-3 px-4 text-sm text-right font-bold text-gray-800">${formatRupiah(achieved)}</td>
                                 <td class="py-3 px-4 text-sm text-gray-400">-</td>
                                 <td class="py-3 px-4 text-sm text-right text-gray-400">-</td>
@@ -4669,7 +5059,9 @@
                                     </button>
                                 </td>
                             `;
-                            row.querySelector('button').onclick = () => openRevenueCalculator(code, name, null, achieved);
+                            const buttons = row.querySelectorAll('button');
+                            buttons[0].onclick = () => openManualRevenueModal(code);
+                            buttons[1].onclick = () => openRevenueCalculator(code, name, null, achieved);
                         } else {
                             const codeGap = achieved - codeTarget;
                             const codeProgressPct = codeTarget > 0 ? (achieved / codeTarget) * 100 : 0;
@@ -4679,6 +5071,7 @@
                                 <td class="py-3 px-4 text-sm">${index + 1}</td>
                                 <td class="py-3 px-4 text-sm font-semibold text-gray-800">${name}</td>
                                 <td class="py-3 px-4 text-sm text-right">${formatRupiah(codeTarget)}</td>
+                                ${revenueTodayCell}
                                 <td class="py-3 px-4 text-sm text-right font-bold text-gray-800">${formatRupiah(achieved)}</td>
                                 <td class="py-3 px-4 text-sm">
                                     <div class="flex items-center gap-2">
@@ -4695,7 +5088,9 @@
                                     </button>
                                 </td>
                             `;
-                            row.querySelector('button').onclick = () => openRevenueCalculator(code, name, codeTarget, achieved);
+                            const buttons = row.querySelectorAll('button');
+                            buttons[0].onclick = () => openManualRevenueModal(code);
+                            buttons[1].onclick = () => openRevenueCalculator(code, name, codeTarget, achieved);
                         }
                     });
                 }
