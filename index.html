@@ -28,6 +28,16 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #707070;
         }
+        /* Animasi pulsa halus untuk progress bar saat forecast MELEBIHI target (>100%),
+           supaya terlihat "masih terus bergerak/naik" walau lebar bar sudah penuh -
+           bukan diam statis seperti waktu baru mencapai 100%. */
+        @keyframes progressOverflowPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.75; }
+        }
+        .progress-overflow {
+            animation: progressOverflowPulse 1.4s ease-in-out infinite;
+        }
         /* Warna utama Biznet (disesuaikan agar tidak terlalu mencolok jika diperlukan) */
         .biznet-blue {
             background-color: #007bff; /* Contoh biru primer */
@@ -741,8 +751,6 @@
                 <!-- Filter Bulan & Tahun -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-1 text-center">Forecast Revenue Bulan Berjalan</h2>
-                    <p class="text-center text-xs text-gray-400 mb-2">Total Forecast = Total Terkumpul (input manual harian) + Forecast sisa dari customer recurring yang belum expired/direnew sampai akhir bulan.</p>
-                    <p class="text-center text-[11px] text-green-600 mb-4"><i class="fas fa-circle-check mr-1"></i>"Total Terkumpul" kini berasal dari <strong>input manual</strong> Anda setiap hari (bukan lagi estimasi otomatis), sehingga perhitungan forecast lebih akurat.</p>
                     <div class="mb-2 flex flex-wrap gap-4 items-center justify-center">
                         <div>
                             <label for="forecastRevenueMonthSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Bulan:</label>
@@ -790,10 +798,6 @@
                             </div>
                         </div>
                     </div>
-                    <p class="text-[11px] text-gray-400 mt-4 pt-3 border-t border-gray-100">
-                        <i class="fas fa-circle-info mr-1"></i>
-                        "Total Terkumpul" sekarang murni berasal dari input manual (bukan estimasi otomatis) yang Anda masukkan setiap hari lewat tombol "Input Manual" di atas, atau lewat kolom "Revenue Hari Ini" pada tabel "Target Revenue vs Pencapaian per Sales Code" di bawah. Nilai harian yang Anda masukkan otomatis terakumulasi menjadi Total Terkumpul bulan berjalan dan langsung dipakai untuk menghitung ulang Forecast Revenue, % Pencapaian, dan Selisih. "New Install" tetap ditampilkan sebagai referensi/estimasi (dari CONTRACTSTARTDATE) dan tidak lagi dijumlahkan otomatis ke Total Terkumpul.
-                    </p>
                 </div>
 
                 <!-- Ringkasan Target vs Forecast -->
@@ -843,7 +847,6 @@
                 <!-- Rincian per Segmen Produk -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Rincian Forecast per Segmen Produk</h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Jumlah customer, harga per bulan, dan total revenue tiap segmen berdasarkan produk (BUNDLE_NAME) untuk periode yang dipilih.</p>
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueSegmentTable">
                             <thead class="bg-gray-700 text-white">
@@ -867,7 +870,6 @@
                 <!-- Revenue Terkumpul Hari Ini per Sales Code -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Revenue Terkumpul Bulan Ini per Sales Code <span class="text-xs font-normal text-green-600">(Input Manual)</span></h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Revenue yang sudah masuk dari awal bulan sampai hari ini per Sales Code/ARCO, berdasarkan input manual harian Anda. "New Install" tetap ditampilkan sebagai referensi estimasi terpisah.</p>
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueCollectedTable">
                             <thead class="bg-gray-700 text-white">
@@ -891,7 +893,6 @@
                 <!-- Customer Belum Bayar per Sales Code -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Customer Belum Bayar per Sales Code</h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Seluruh customer dengan EXPIREDDATE di bulan berjalan (hingga akhir bulan) per Sales Code/ARCO, beserta rincian revenue yang sudah dikumpulkan dari customer baru (New) maupun pelanggan lama (Recurring).</p>
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueUnpaidTable">
                             <thead class="bg-gray-700 text-white">
@@ -917,7 +918,6 @@
                 <!-- Target vs Revenue per Sales Code (Recurring + New) -->
                 <div class="bg-white p-6 rounded-lg shadow-md mt-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Target Revenue vs Pencapaian per Sales Code</h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Target revenue individu bulan berjalan (naik Rp15.000.000 setiap bulan) dibandingkan dengan Forecast Revenue = input manual "Revenue Hari Ini" (terakumulasi bulan ini) + sisa forecast recurring dari customer yang belum expired/direnew bulan ini.</p>
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueTargetPerCodeTable">
                             <thead class="bg-gray-700 text-white">
@@ -937,7 +937,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-center text-xs text-gray-400 mt-3">*Sales Code tanpa target individu yang ditentukan akan ditampilkan tanpa target (-). Klik ikon <i class="fas fa-pen-to-square text-blue-500"></i> pada kolom "Revenue Hari Ini" untuk input/ubah nominal revenue yang terkumpul hari ini (otomatis terakumulasi ke Forecast Revenue). Klik tombol <i class="fas fa-calculator text-blue-600"></i> pada kolom "Aksi" untuk mensimulasikan produk apa &amp; berapa unit yang perlu terjual (termasuk skema bundling) agar selisih tertutup.</p>
+                    <p class="text-center text-xs text-gray-400 mt-3">Klik ikon <i class="fas fa-pen-to-square text-blue-500"></i> pada kolom "Revenue Hari Ini" untuk input/ubah nominal revenue yang terkumpul hari ini (otomatis terakumulasi ke Forecast Revenue). Klik tombol <i class="fas fa-calculator text-blue-600"></i> pada kolom "Aksi" untuk mensimulasikan produk apa &amp; berapa unit yang perlu terjual (termasuk skema bundling) agar selisih tertutup.</p>
                 </div>
             </section>
 
@@ -2995,7 +2995,10 @@
 
             const statusBySalesCode = {};
             filteredCustomers.forEach(customer => {
-                const salesCode = customer.SALESCODE || 'Tidak Diketahui';
+                // Exclude customers without a known Sales Code so they don't skew the analysis
+                if (!customer.SALESCODE) return;
+
+                const salesCode = customer.SALESCODE;
                 const status = customer.STATUS ? customer.STATUS.toUpperCase() : 'Tidak Diketahui';
 
                 if (!statusBySalesCode[salesCode]) {
@@ -3298,7 +3301,9 @@
                     // This handles cases where MODEM_STATUS is 'RENT' but not a promo
                     status = 'RENT';
                 }
-                // Other statuses remain as they are or as 'Tidak Diketahui'
+
+                // Exclude customers with unknown modem status so they don't skew the analysis
+                if (status === 'Tidak Diketahui'.toUpperCase()) return;
 
                 modemStatusCounts[status] = (modemStatusCounts[status] || 0) + 1;
             });
@@ -4994,8 +4999,14 @@
             const target = getForecastRevenueTarget(selectedYear, selectedMonth);
             const gap = trueForecastTotal - target;
             const progressPct = target > 0 ? (trueForecastTotal / target) * 100 : 0;
+            const isOverTarget = progressPct > 100;
+            // Lebar bar tetap dibatasi 100% (batas fisik container), tapi warna & animasi
+            // MENYESUAIKAN kalau forecast sudah melebihi target -- bar berubah biru dan
+            // berdenyut halus supaya terlihat masih "bergerak/naik", bukan diam statis
+            // seolah berhenti di 100%. Angka persentase yang ditampilkan TIDAK dibatasi
+            // 100%, jadi 105%, 130%, dst tetap ditampilkan apa adanya.
             const barWidth = Math.min(100, Math.max(0, progressPct));
-            const barColor = progressPct >= 100 ? '#16A34A' : (progressPct >= 60 ? '#2563EB' : '#F59E0B');
+            const barColor = isOverTarget ? '#2563EB' : (progressPct >= 100 ? '#16A34A' : (progressPct >= 60 ? '#2563EB' : '#F59E0B'));
 
             document.getElementById('forecastRevenueTargetValue').textContent = formatRupiah(target);
             document.getElementById('forecastRevenueTotalValue').textContent = formatRupiah(trueForecastTotal);
@@ -5010,6 +5021,7 @@
             const progressBar = document.getElementById('forecastRevenueProgressBar');
             progressBar.style.width = `${barWidth}%`;
             progressBar.style.backgroundColor = barColor;
+            progressBar.classList.toggle('progress-overflow', isOverTarget);
             document.getElementById('forecastRevenueProgressLabel').textContent = progressPct >= 15 ? `${progressPct.toFixed(0)}%` : '';
             document.getElementById('forecastRevenueProgressPct').textContent = `${progressPct.toFixed(0)}%`;
 
