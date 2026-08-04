@@ -4335,7 +4335,7 @@
                 delete store[code][dateStr];
             }
             saveManualRevenueStore(store);
-            sendManualRevenueToSheet(code, dateStr, amount);
+            return sendManualRevenueToSheet(code, dateStr, amount);
         }
 
         // Mengirim satu entri input manual revenue ke Google Apps Script (doPost) agar
@@ -4346,6 +4346,11 @@
         // Web App tidak menangani preflight OPTIONS, sehingga request akan gagal diam-diam
         // kalau pakai 'application/json'. Isi body tetap JSON string biasa dan tetap bisa
         // dibaca dengan JSON.parse(e.postData.contents) di sisi doPost.
+        // Mengembalikan Promise supaya pemanggil (saveManualRevenueModal) bisa MENUNGGU
+        // hasil sebenarnya dari server sebelum menganggap data tersimpan -- sebelumnya
+        // fungsi ini "fire-and-forget" sehingga kalau pengiriman ke Apps Script gagal
+        // (deployment belum di-update, jaringan bermasalah, dsb), pengguna tidak pernah
+        // diberi tahu dan mengira datanya sudah aman padahal belum tercatat di sheet.
         function sendManualRevenueToSheet(code, dateStr, amount) {
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
             const [yearStr, monthStr] = dateStr.split('-');
@@ -4361,7 +4366,7 @@
                 nilaiRevenue: amount
             };
 
-            fetch(customerWebAppUrl, {
+            return fetch(customerWebAppUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(payload)
@@ -4370,10 +4375,13 @@
             .then(res => {
                 if (res.status !== 'success') {
                     console.error('Gagal menyimpan revenue ke spreadsheet:', res.message);
+                    throw new Error(res.message || 'Server menolak permintaan simpan.');
                 }
+                return res;
             })
             .catch(err => {
                 console.error('Gagal terhubung ke Apps Script saat menyimpan revenue:', err);
+                throw err;
             });
         }
 
@@ -4470,19 +4478,43 @@
         // Simpan seluruh input pada modal (untuk tanggal hari ini), lalu hitung ulang seluruh
         // tab Forecast Revenue supaya Total Terkumpul, Forecast Revenue, % Pencapaian & Selisih
         // langsung menyesuaikan.
-        function saveManualRevenueModal() {
+        async function saveManualRevenueModal() {
             const dateStr = todayDateStr();
             const body = document.getElementById('manualRevenueBody');
             if (!body) { closeModal('manualRevenueModal'); return; }
+
+            const saveButton = document.querySelector('#manualRevenueModal button[onclick="saveManualRevenueModal()"]');
+            if (saveButton) { saveButton.disabled = true; saveButton.textContent = 'Menyimpan...'; }
+
+            const pending = [];
             body.querySelectorAll('tr[data-code]').forEach(row => {
                 const code = row.dataset.code;
                 const input = row.querySelector('.manual-revenue-input');
                 if (!code || !input) return;
                 const amount = Math.max(0, parseInt(input.value, 10) || 0);
-                setManualRevenueForCodeDate(code, dateStr, amount);
+                // Simpan lokal langsung (agar UI responsif), tapi tetap tunggu hasil
+                // pengiriman ke server sebelum kita anggap semuanya berhasil.
+                pending.push(
+                    setManualRevenueForCodeDate(code, dateStr, amount).catch(err => ({ __failed: code, err }))
+                );
             });
+
+            const results = await Promise.all(pending);
+            const failed = results.filter(r => r && r.__failed);
+
             closeModal('manualRevenueModal');
             renderForecastRevenue();
+
+            if (saveButton) { saveButton.disabled = false; saveButton.textContent = 'Simpan'; }
+
+            if (failed.length > 0) {
+                // PENTING: beri tahu pengguna secara eksplisit kalau ada yang gagal
+                // tersimpan ke spreadsheet -- sebelumnya kegagalan ini hanya tercatat
+                // diam-diam di console, sehingga pengguna mengira sudah tersimpan
+                // padahal akan hilang lagi saat sinkronisasi berikutnya.
+                const names = failed.map(f => salesCodeNames[f.__failed] || f.__failed).join(', ');
+                alert(`Perhatian: input untuk ${names} GAGAL tersimpan ke spreadsheet (kemungkinan masalah jaringan atau Web App belum di-deploy ulang). Data tsb tersimpan sementara di browser ini saja dan bisa hilang saat sinkronisasi berikutnya. Silakan coba simpan ulang.`);
+            }
         }
 
         // Customer baru (instalasi) yang CONTRACTSTARTDATE-nya sejak awal bulan terpilih s/d hari ini.
