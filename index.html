@@ -4326,6 +4326,11 @@
         }
 
         // amount <= 0 akan menghapus entry tanggal tsb (dianggap belum/tidak ada input).
+        // Fungsi ini HANYA mengubah data lokal (memori + localStorage) supaya UI responsif;
+        // pengiriman ke server dilakukan terpisah lewat sendManualRevenueBatchToSheet supaya
+        // banyak Sales Code bisa dikirim dalam SATU request batch, bukan banyak request
+        // paralel yang berisiko race condition di sisi Apps Script (lihat catatan di
+        // sendManualRevenueBatchToSheet).
         function setManualRevenueForCodeDate(code, dateStr, amount) {
             const store = getManualRevenueStore();
             if (!store[code]) store[code] = {};
@@ -4335,35 +4340,45 @@
                 delete store[code][dateStr];
             }
             saveManualRevenueStore(store);
-            return sendManualRevenueToSheet(code, dateStr, amount);
         }
 
-        // Mengirim satu entri input manual revenue ke Google Apps Script (doPost) agar
-        // ikut tercatat permanen di sheet "Realisasi_Revenue_Manual" pada spreadsheet,
-        // tidak hanya tersimpan di localStorage browser ini.
+        // Mengirim SEMUA entri input manual revenue (satu per Sales Code) ke Google Apps
+        // Script dalam SATU kali request POST (action: 'saveManualRevenueBatch'), supaya
+        // ikut tercatat permanen di sheet "Realisasi_Revenue_Manual" pada spreadsheet.
+        //
+        // PENTING - FIX RACE CONDITION: sebelumnya setiap Sales Code dikirim lewat request
+        // POST TERPISAH yang dijalankan PARALEL (Promise.all). Karena Apps Script bisa
+        // menjalankan beberapa eksekusi doPost() bersamaan, beberapa request yang berjalan
+        // di waktu yang nyaris sama bisa saling menyalip saat membaca & menulis sheet --
+        // akibatnya salah satu baris bisa gagal mendapat format Plain Text pada kolom
+        // Tanggal, sehingga tanggalnya berubah jadi angka serial Google Sheets alih-alih
+        // teks "yyyy-MM-dd", dan data tsb jadi tidak terbaca dashboard (terlihat reset ke 0).
+        // Dengan mengirim semua entri dalam SATU request, Apps Script memprosesnya secara
+        // berurutan di dalam satu kunci (lock) saja, jadi tidak ada lagi request lain yang
+        // bisa menyalip di tengah proses.
+        //
         // Catatan: memakai Content-Type 'text/plain' (bukan 'application/json') supaya
         // browser TIDAK mengirim CORS preflight (OPTIONS) terlebih dahulu -- Apps Script
         // Web App tidak menangani preflight OPTIONS, sehingga request akan gagal diam-diam
         // kalau pakai 'application/json'. Isi body tetap JSON string biasa dan tetap bisa
         // dibaca dengan JSON.parse(e.postData.contents) di sisi doPost.
-        // Mengembalikan Promise supaya pemanggil (saveManualRevenueModal) bisa MENUNGGU
-        // hasil sebenarnya dari server sebelum menganggap data tersimpan -- sebelumnya
-        // fungsi ini "fire-and-forget" sehingga kalau pengiriman ke Apps Script gagal
-        // (deployment belum di-update, jaringan bermasalah, dsb), pengguna tidak pernah
-        // diberi tahu dan mengira datanya sudah aman padahal belum tercatat di sheet.
-        function sendManualRevenueToSheet(code, dateStr, amount) {
+        function sendManualRevenueBatchToSheet(entries) {
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const [yearStr, monthStr] = dateStr.split('-');
-            const monthIndex = parseInt(monthStr, 10) - 1;
 
             const payload = {
-                action: 'saveManualRevenue',
-                tanggal: dateStr,
-                bulanNama: monthNames[monthIndex] || '',
-                tahun: yearStr,
-                salesCode: code,
-                salesCodeName: salesCodeNames[code] || '',
-                nilaiRevenue: amount
+                action: 'saveManualRevenueBatch',
+                entries: entries.map(({ code, dateStr, amount }) => {
+                    const [yearStr, monthStr] = dateStr.split('-');
+                    const monthIndex = parseInt(monthStr, 10) - 1;
+                    return {
+                        tanggal: dateStr,
+                        bulanNama: monthNames[monthIndex] || '',
+                        tahun: yearStr,
+                        salesCode: code,
+                        salesCodeName: salesCodeNames[code] || '',
+                        nilaiRevenue: amount
+                    };
+                })
             };
 
             return fetch(customerWebAppUrl, {
@@ -4486,34 +4501,39 @@
             const saveButton = document.querySelector('#manualRevenueModal button[onclick="saveManualRevenueModal()"]');
             if (saveButton) { saveButton.disabled = true; saveButton.textContent = 'Menyimpan...'; }
 
-            const pending = [];
+            const entries = [];
             body.querySelectorAll('tr[data-code]').forEach(row => {
                 const code = row.dataset.code;
                 const input = row.querySelector('.manual-revenue-input');
                 if (!code || !input) return;
                 const amount = Math.max(0, parseInt(input.value, 10) || 0);
-                // Simpan lokal langsung (agar UI responsif), tapi tetap tunggu hasil
-                // pengiriman ke server sebelum kita anggap semuanya berhasil.
-                pending.push(
-                    setManualRevenueForCodeDate(code, dateStr, amount).catch(err => ({ __failed: code, err }))
-                );
+                // Update lokal langsung dulu (agar UI responsif walau server belum menjawab).
+                setManualRevenueForCodeDate(code, dateStr, amount);
+                entries.push({ code, dateStr, amount });
             });
 
-            const results = await Promise.all(pending);
-            const failed = results.filter(r => r && r.__failed);
+            let failed = false;
+            let failMessage = '';
+            try {
+                // Kirim SEMUA entri sekaligus dalam satu request batch (lihat catatan di
+                // sendManualRevenueBatchToSheet soal kenapa ini menggantikan pengiriman paralel).
+                await sendManualRevenueBatchToSheet(entries);
+            } catch (err) {
+                failed = true;
+                failMessage = err && err.message ? err.message : String(err);
+            }
 
             closeModal('manualRevenueModal');
             renderForecastRevenue();
 
             if (saveButton) { saveButton.disabled = false; saveButton.textContent = 'Simpan'; }
 
-            if (failed.length > 0) {
-                // PENTING: beri tahu pengguna secara eksplisit kalau ada yang gagal
-                // tersimpan ke spreadsheet -- sebelumnya kegagalan ini hanya tercatat
-                // diam-diam di console, sehingga pengguna mengira sudah tersimpan
-                // padahal akan hilang lagi saat sinkronisasi berikutnya.
-                const names = failed.map(f => salesCodeNames[f.__failed] || f.__failed).join(', ');
-                alert(`Perhatian: input untuk ${names} GAGAL tersimpan ke spreadsheet (kemungkinan masalah jaringan atau Web App belum di-deploy ulang). Data tsb tersimpan sementara di browser ini saja dan bisa hilang saat sinkronisasi berikutnya. Silakan coba simpan ulang.`);
+            if (failed) {
+                // PENTING: beri tahu pengguna secara eksplisit kalau gagal tersimpan ke
+                // spreadsheet -- sebelumnya kegagalan ini hanya tercatat diam-diam di
+                // console, sehingga pengguna mengira sudah tersimpan padahal akan hilang
+                // lagi saat sinkronisasi berikutnya.
+                alert(`Perhatian: input GAGAL tersimpan ke spreadsheet (${failMessage}). Data tsb tersimpan sementara di browser ini saja dan bisa hilang saat sinkronisasi berikutnya. Silakan coba simpan ulang.`);
             }
         }
 
