@@ -741,8 +741,6 @@
                 <!-- Filter Bulan & Tahun -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-1 text-center">Forecast Revenue Bulan Berjalan</h2>
-                    <p class="text-center text-xs text-gray-400 mb-2">Total Forecast = Total Terkumpul (input manual harian) + Forecast sisa dari customer recurring yang belum expired/direnew sampai akhir bulan.</p>
-                    <p class="text-center text-[11px] text-green-600 mb-4"><i class="fas fa-circle-check mr-1"></i>"Total Terkumpul" kini berasal dari <strong>input manual</strong> Anda setiap hari (bukan lagi estimasi otomatis), sehingga perhitungan forecast lebih akurat.</p>
                     <div class="mb-2 flex flex-wrap gap-4 items-center justify-center">
                         <div>
                             <label for="forecastRevenueMonthSelect" class="block text-gray-700 text-sm font-bold mb-1">Pilih Bulan:</label>
@@ -784,7 +782,7 @@
                         <div class="flex items-center gap-4">
                             <div class="icon-box icon-gray"><i class="fas fa-user-plus"></i></div>
                             <div>
-                                <p class="text-xs text-gray-400 uppercase font-semibold">New Install (Awal Bulan - Hari Ini) <span class="text-amber-600">(Estimasi)</span></p>
+                                <p class="text-xs text-gray-400 uppercase font-semibold">New Revenue <span class="text-amber-600">(Estimasi)</span></p>
                                 <p class="text-lg font-bold text-gray-800" id="forecastRevenueCollectedNewValue">Rp 0</p>
                                 <p class="text-xs text-gray-400 mt-0.5"><span id="forecastRevenueCollectedNewCount">0</span> customer</p>
                             </div>
@@ -792,8 +790,6 @@
                     </div>
                     <p class="text-[11px] text-gray-400 mt-4 pt-3 border-t border-gray-100">
                         <i class="fas fa-circle-info mr-1"></i>
-                        "Total Terkumpul" sekarang murni berasal dari input manual (bukan estimasi otomatis) yang Anda masukkan setiap hari lewat tombol "Input Manual" di atas, atau lewat kolom "Revenue Hari Ini" pada tabel "Target Revenue vs Pencapaian per Sales Code" di bawah. Nilai harian yang Anda masukkan otomatis terakumulasi menjadi Total Terkumpul bulan berjalan dan langsung dipakai untuk menghitung ulang Forecast Revenue, % Pencapaian, dan Selisih. "New Install" tetap ditampilkan sebagai referensi/estimasi (dari CONTRACTSTARTDATE) dan tidak lagi dijumlahkan otomatis ke Total Terkumpul.
-                    </p>
                 </div>
 
                 <!-- Ringkasan Target vs Forecast -->
@@ -842,9 +838,7 @@
 
                 <!-- Rincian per Segmen Produk -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Rincian Forecast per Segmen Produk</h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Jumlah customer, harga per bulan, dan total revenue tiap segmen berdasarkan produk (BUNDLE_NAME) untuk periode yang dipilih.</p>
-                    <div class="overflow-x-auto rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Rincian Forecast Revenue</h3>
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueSegmentTable">
                             <thead class="bg-gray-700 text-white">
                                 <tr>
@@ -866,17 +860,15 @@
 
                 <!-- Revenue Terkumpul Hari Ini per Sales Code -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Revenue Terkumpul Bulan Ini per Sales Code <span class="text-xs font-normal text-green-600">(Input Manual)</span></h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Revenue yang sudah masuk dari awal bulan sampai hari ini per Sales Code/ARCO, berdasarkan input manual harian Anda. "New Install" tetap ditampilkan sebagai referensi estimasi terpisah.</p>
-                    <div class="overflow-x-auto rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Jumlah Revenue Bulan Ini per Sales Code <span class="text-xs font-normal text-green-600"></span></h3>
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueCollectedTable">
                             <thead class="bg-gray-700 text-white">
                                 <tr>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue Hari Ini (Manual)</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">New Install (Estimasi)</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right rounded-tr-lg">Total Terkumpul Bulan Ini</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue Hari Ini</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">New Revenue</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right rounded-tr-lg">Total Revenue Bulan Ini</th>
                                 </tr>
                             </thead>
                             <tbody id="forecastRevenueCollectedBody">
@@ -885,20 +877,19 @@
                             <tfoot id="forecastRevenueCollectedFoot"></tfoot>
                         </table>
                     </div>
-                    <p class="text-center text-xs text-gray-400 mt-3">Klik nilai pada kolom "Revenue Hari Ini (Manual)" untuk input/ubah nominal hari ini, atau klik "New Install" untuk melihat daftar customer-nya.</p>
+                    <p class="text-center text-xs text-gray-400 mt-3">Klik nilai pada kolom "Pencapaian Revenue" untuk input/ubah nominal hari ini, atau klik "New Install" untuk melihat daftar customer-nya.</p>
                 </div>
 
                 <!-- Customer Belum Bayar per Sales Code -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Customer Belum Bayar per Sales Code</h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Seluruh customer dengan EXPIREDDATE di bulan berjalan (hingga akhir bulan) per Sales Code/ARCO, beserta rincian revenue yang sudah dikumpulkan dari customer baru (New) maupun pelanggan lama (Recurring).</p>
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueUnpaidTable">
                             <thead class="bg-gray-700 text-white">
                                 <tr>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">#</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue New</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm text-right">New Revenue</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Revenue Recurring</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Total Revenue</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm text-right">Jumlah Expired Bulan Ini</th>
@@ -917,7 +908,6 @@
                 <!-- Target vs Revenue per Sales Code (Recurring + New) -->
                 <div class="bg-white p-6 rounded-lg shadow-md mt-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Target Revenue vs Pencapaian per Sales Code</h3>
-                    <p class="text-center text-xs text-gray-400 mb-4">Target revenue individu bulan berjalan (naik Rp15.000.000 setiap bulan) dibandingkan dengan Forecast Revenue = input manual "Revenue Hari Ini" (terakumulasi bulan ini) + sisa forecast recurring dari customer yang belum expired/direnew bulan ini.</p>
                     <div class="overflow-x-auto rounded-lg shadow-md">
                         <table class="min-w-full bg-white table-custom" id="forecastRevenueTargetPerCodeTable">
                             <thead class="bg-gray-700 text-white">
@@ -937,7 +927,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-center text-xs text-gray-400 mt-3">*Sales Code tanpa target individu yang ditentukan akan ditampilkan tanpa target (-). Klik ikon <i class="fas fa-pen-to-square text-blue-500"></i> pada kolom "Revenue Hari Ini" untuk input/ubah nominal revenue yang terkumpul hari ini (otomatis terakumulasi ke Forecast Revenue). Klik tombol <i class="fas fa-calculator text-blue-600"></i> pada kolom "Aksi" untuk mensimulasikan produk apa &amp; berapa unit yang perlu terjual (termasuk skema bundling) agar selisih tertutup.</p>
+                    <p class="text-center text-xs text-gray-400 mt-3">*Klik ikon <i class="fas fa-pen-to-square text-blue-500"></i> pada kolom "Revenue Hari Ini" untuk input/ubah nominal revenue yang terkumpul hari ini (otomatis terakumulasi ke Forecast Revenue). Klik tombol <i class="fas fa-calculator text-blue-600"></i> pada kolom "Aksi" untuk mensimulasikan produk apa &amp; berapa unit yang perlu terjual (termasuk skema bundling) agar selisih tertutup.</p>
                 </div>
             </section>
 
@@ -4881,7 +4871,7 @@
                 `;
             }
 
-            // --- REVENUE TERKUMPUL BULAN INI (INPUT MANUAL) ---
+            // --- REVENUE BULAN INI---
             const todayStr = todayDateStr();
             // New install yang sudah terjadi dari awal bulan sampai hari ini (tetap estimasi,
             // hanya ditampilkan sebagai referensi, tidak lagi dijumlahkan ke Total Terkumpul).
