@@ -4410,17 +4410,65 @@
             return (store[code] && store[code][dateStr]) || 0;
         }
 
-        // Total input manual untuk satu Sales Code, dijumlahkan dari seluruh tanggal yang
-        // jatuh pada bulan & tahun terpilih (akumulasi harian -> total bulan berjalan).
+        // PENTING - PERUBAHAN LOGIKA (lihat catatan panjang di getManualRevenueMonthTotal
+        // di bawah): setiap nilai yang diinput manual per tanggal BUKAN "revenue hari itu
+        // saja", melainkan TOTAL AKUMULASI dari awal bulan sampai tanggal tsb (sesuai data
+        // yang diperoleh dari laporan). Fungsi ini mengembalikan daftar tanggal (untuk satu
+        // Sales Code) yang jatuh pada bulan & tahun tertentu, terurut ASCENDING (lama -> baru).
+        function getManualRevenueSortedDatesInMonth(code, year, monthIndex) {
+            const store = getManualRevenueStore();
+            const entries = store[code] || {};
+            return Object.keys(entries)
+                .filter(dateStr => {
+                    const d = new Date(`${dateStr}T00:00:00`);
+                    return d.getFullYear() === year && d.getMonth() === monthIndex;
+                })
+                .sort(); // format 'YYYY-MM-DD' aman diurutkan sebagai string
+        }
+
+        // Total input manual untuk satu Sales Code pada bulan & tahun terpilih.
+        //
+        // CATATAN PENTING: sebelumnya fungsi ini MENJUMLAHKAN seluruh nilai yang diinput di
+        // setiap tanggal ("hari ke-1" + "hari ke-2" + ... + "hari ke-N"). Ini BENAR jika yang
+        // diinput adalah nominal revenue HARI ITU SAJA. Namun data yang tersedia untuk AC
+        // ternyata sudah berupa TOTAL TERKUMPUL KUMULATIF dari awal bulan sampai hari input
+        // (mis. tanggal 3 = total dari tgl 1-3, tanggal 4 = total dari tgl 1-4, dst). Kalau
+        // nilai-nilai kumulatif ini dijumlahkan lagi seperti sebelumnya, hasilnya jadi berkali-
+        // lipat lebih besar dari yang sebenarnya (double counting).
+        //
+        // FIX: karena setiap input sudah kumulatif, maka "Total Terkumpul Bulan Ini" yang benar
+        // untuk satu Sales Code cukup diambil dari input PALING BARU (tanggal terakhir yang
+        // diisi) pada bulan tsb -- bukan dijumlahkan semua.
         function getManualRevenueMonthTotal(code, year, monthIndex) {
             const store = getManualRevenueStore();
             const entries = store[code] || {};
-            let total = 0;
-            Object.keys(entries).forEach(dateStr => {
-                const d = new Date(`${dateStr}T00:00:00`);
-                if (d.getFullYear() === year && d.getMonth() === monthIndex) total += entries[dateStr];
-            });
-            return total;
+            const sortedDates = getManualRevenueSortedDatesInMonth(code, year, monthIndex);
+            if (sortedDates.length === 0) return 0;
+            const latestDate = sortedDates[sortedDates.length - 1];
+            return entries[latestDate] || 0;
+        }
+
+        // Selisih (delta) revenue harian yang SEBENARNYA untuk satu tanggal tertentu, dihitung
+        // otomatis dari: Total Terkumpul (tanggal ini, input kumulatif) - Total Terkumpul
+        // (input kumulatif tanggal sebelumnya yang tercatat pada bulan yang sama). Kalau ini
+        // input pertama di bulan tsb, baseline-nya dianggap 0 (awal bulan belum ada revenue).
+        // Inilah yang seharusnya ditampilkan sebagai "Revenue Hari Ini (Manual)", BUKAN nilai
+        // mentah yang diinput (karena nilai mentah = total dari awal bulan, bukan hari itu saja).
+        function getManualRevenueDailyDelta(code, dateStr) {
+            const store = getManualRevenueStore();
+            const entries = store[code] || {};
+            if (entries[dateStr] === undefined) return 0;
+
+            const d = new Date(`${dateStr}T00:00:00`);
+            const sortedDates = getManualRevenueSortedDatesInMonth(code, d.getFullYear(), d.getMonth());
+            const idx = sortedDates.indexOf(dateStr);
+            if (idx <= 0) {
+                // Input pertama bulan ini -> selisih dari baseline 0.
+                return entries[dateStr] || 0;
+            }
+            const previousDate = sortedDates[idx - 1];
+            const previousValue = entries[previousDate] || 0;
+            return (entries[dateStr] || 0) - previousValue;
         }
 
         // Total input manual seluruh Sales Code untuk bulan & tahun terpilih (dipakai sebagai
@@ -4896,7 +4944,7 @@
             const getCollectedBucket = (code) => {
                 if (!collectedBySalesCode[code]) {
                     collectedBySalesCode[code] = {
-                        manualToday: getManualRevenueForCodeDate(code, todayStr),
+                        manualToday: getManualRevenueDailyDelta(code, todayStr),
                         manualMonthTotal: getManualRevenueMonthTotal(code, selectedYear, selectedMonth),
                         newRevenue: 0,
                         newCustomers: []
@@ -5162,7 +5210,7 @@
                         const codeTarget = getIndividualRevenueTarget(code, selectedYear, selectedMonth);
                         // achieved = Forecast Revenue (manual "Revenue Hari Ini" terakumulasi + sisa recurring)
                         const achieved = codeAchievedForTarget[code] !== undefined ? codeAchievedForTarget[code] : getManualRevenueMonthTotal(code, selectedYear, selectedMonth);
-                        const manualTodayForCode = getManualRevenueForCodeDate(code, todayStr);
+                        const manualTodayForCode = getManualRevenueDailyDelta(code, todayStr);
 
                         const revenueTodayCell = `
                             <td class="py-3 px-4 text-sm text-right">
