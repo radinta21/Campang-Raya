@@ -358,6 +358,11 @@
                         <i class="fas fa-coins mr-3"></i> Forecast Revenue Bulan Berjalan
                     </a>
                 </li>
+                <li>
+                    <a href="#" onclick="showSection('prospectSection')" class="flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-600 hover:text-white transition-colors duration-200">
+                        <i class="fas fa-user-plus mr-3"></i> Prospect
+                    </a>
+                </li>
             </ul>
         </nav>
         <button id="logoutBtn" class="flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors duration-200 mt-4" style="display:none;">
@@ -1103,6 +1108,189 @@
                 </div>
             </section>
             
+            <!-- ================= PROSPECT SECTION (menggunakan Apps Script terpisah, tidak memengaruhi data Customer) ================= -->
+            <section id="prospectSection" class="content-section hidden">
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-user-plus text-blue-600 mr-2"></i>Prospect</h3>
+                        <button id="refreshProspectBtn" onclick="fetchProspectData()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh Data Prospect
+                        </button>
+                    </div>
+                    <div id="prospectTotalDisplay" class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 rounded-lg mb-2 text-center" role="alert">
+                        Memuat data prospect...
+                    </div>
+                    <div id="prospectChartError" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-2 hidden"></div>
+                </div>
+
+                <!-- 0. New Leads This Month (Gauge) + Progress per Sales Code -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Gauge: New Leads This Month -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="text-lg font-bold text-gray-800 mb-1 text-center">New Leads This Month</h4>
+                        <p class="text-xs text-gray-500 mb-2 text-center">Total prospect baru bulan berjalan &mdash; Target: <span id="prospectGaugeTargetLabel">300</span>/bulan</p>
+                        <div id="prospectGaugeContainer" class="flex items-center justify-center" style="min-height:220px;"></div>
+                    </div>
+
+                    <!-- Progress per Sales Code -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="text-lg font-bold text-gray-800 mb-1 text-center">Pencapaian Prospect per Sales Code</h4>
+                        <p class="text-xs text-gray-500 mb-4 text-center">Target: 5 prospect/hari &middot; minimal 150 prospect/bulan</p>
+                        <div id="prospectSalesCodeProgressContainer" class="space-y-4">
+                            <!-- Diisi otomatis oleh JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. Prospect Harian per Sales Code (kumulatif 1 bulan) -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h4 class="text-lg font-bold text-gray-800">Prospect Harian per Sales Code</h4>
+                        <div class="flex flex-wrap items-end gap-3">
+                            <div>
+                                <label for="prospectDailyMonthSelect" class="block text-gray-600 text-xs font-semibold mb-1">Bulan:</label>
+                                <select id="prospectDailyMonthSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
+                            </div>
+                            <div>
+                                <label for="prospectDailyYearSelect" class="block text-gray-600 text-xs font-semibold mb-1">Tahun:</label>
+                                <select id="prospectDailyYearSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
+                            </div>
+                            <div>
+                                <label for="prospectDailySalesCodeSelect" class="block text-gray-600 text-xs font-semibold mb-1">Sales Code:</label>
+                                <select id="prospectDailySalesCodeSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    <option value="">Semua Sales Code</option>
+                                </select>
+                            </div>
+                            <button id="applyProspectDailyFilterBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200">
+                                Terapkan
+                            </button>
+                        </div>
+                    </div>
+                    <div id="prospectDailyTotalDisplay" class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-3 rounded-lg mb-3 text-center text-sm" role="alert"></div>
+                    <p class="text-xs text-gray-500 mb-3"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Klik salah satu batang tanggal untuk melihat detail prospect hari itu.</p>
+                    <div class="chart-container">
+                        <canvas id="prospectDailyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- 2. Bar Chart Prospect per Kelurahan -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2 text-center">Prospect per Kelurahan</h4>
+                        <p class="text-xs text-gray-500 mb-3 text-center"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Klik salah satu batang untuk melihat detail prospect di kelurahan tersebut.</p>
+                        <div class="chart-container" style="height:320px;">
+                            <canvas id="prospectKelurahanChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 3. Chart Status Prospect -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2 text-center">Status Prospect</h4>
+                        <p class="text-xs text-gray-500 mb-3 text-center"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Klik salah satu irisan untuk melihat detail prospect dengan status tersebut.</p>
+                        <div class="chart-container" style="height:320px;">
+                            <canvas id="prospectStatusChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 4. Chart Kode DP -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2 text-center">Kode DP Penuh</h4>
+                        <p class="text-xs text-gray-500 mb-3 text-center"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Klik salah satu batang untuk melihat detail prospect berdasarkan kode DP.</p>
+                        <div class="chart-container" style="height:320px;">
+                            <canvas id="prospectDpChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 5. Chart WiFi Digunakan Prospect -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2 text-center">WiFi Bulanan yang Digunakan Prospect</h4>
+                        <p class="text-xs text-gray-500 mb-3 text-center"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Klik salah satu batang untuk melihat detail prospect dengan paket tersebut.</p>
+                        <div class="chart-container" style="height:320px;">
+                            <canvas id="prospectWifiChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Top Campaigns: Prospect dapat Darimana -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-2 text-center">Top Campaigns &mdash; Prospect dapat Darimana</h4>
+                    <p class="text-xs text-gray-500 mb-3 text-center"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Klik salah satu batang untuk melihat detail prospect dari sumber tersebut.</p>
+                    <div class="chart-container" style="height:340px;">
+                        <canvas id="prospectSumberChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 7. Pencarian & Daftar Prospect -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-search text-blue-600 mr-2"></i>Pencarian Prospect</h4>
+
+                    <!-- Prospect Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="col-span-1">
+                            <label for="searchProspect" class="block text-gray-700 text-sm font-bold mb-2">Pencarian Prospect:</label>
+                            <div class="relative">
+                                <input type="text" id="searchProspect" placeholder="Cari berdasarkan nama, no. telpon, alamat, atau kelurahan..."
+                                       class="shadow-sm appearance-none border rounded-lg w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent pl-10">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="filterProspectStatus" class="block text-gray-700 text-sm font-bold mb-2">Filter Status Prospect:</label>
+                            <select id="filterProspectStatus" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <option value="">Semua Status</option>
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="filterProspectSalesCode" class="block text-gray-700 text-sm font-bold mb-2">Filter Sales Code:</label>
+                            <select id="filterProspectSalesCode" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <option value="">Semua Sales Code</option>
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-span-1 flex items-end">
+                            <button id="applyProspectFiltersBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 w-full">
+                                <i class="fas fa-sync-alt mr-2"></i> Apply Filters
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Total Prospect (hasil pencarian) Display -->
+                    <div id="totalProspectSearchDisplay" class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 rounded-lg mb-6 text-center" role="alert">
+                        Memuat data prospect...
+                    </div>
+
+                    <!-- Prospect Table -->
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white table-custom" id="prospectSearchTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">Nama Prospect</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">No. HP</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Kelurahan</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Alamat</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Status Prospect</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Prospect data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination for prospect table -->
+                    <nav class="mt-6">
+                        <ul class="flex justify-center space-x-2" id="prospectSearchPagination">
+                            <!-- Pagination buttons will be inserted here -->
+                        </ul>
+                    </nav>
+                </div>
+            </section>
+
             <!-- Data Update History -->
             <div id="lastUpdateInfo" class="mt-8 text-center text-gray-600 text-sm p-4 bg-gray-50 rounded-lg shadow-sm">
                 Informasi Pembaruan Data: Belum ada pembaruan.
@@ -1231,6 +1419,37 @@
                             </div>
                             <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
                                 <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('overviewDetailModal')">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prospect Detail Modal (terpisah dari modal Customer, khusus untuk data dari Apps Script Prospect) -->
+                    <div id="prospectDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1075] p-2">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full md:w-11/12 lg:w-5/6 max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                                <h5 class="text-base sm:text-xl font-semibold text-gray-800" id="prospectDetailModalLabel">Detail Prospect</h5>
+                                <button type="button" class="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2" onclick="closeModal('prospectDetailModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <p id="prospectDetailModalHint" class="text-xs text-gray-500 mb-3 hidden">
+                                <i class="fas fa-info-circle text-green-600 mr-1"></i>
+                                Klik ikon <i class="fab fa-whatsapp text-green-600"></i> pada tiap baris untuk langsung membuka chat WhatsApp ke prospect.
+                            </p>
+                            <div class="overflow-x-auto rounded-lg shadow-md">
+                                <table class="min-w-full bg-white table-custom" id="prospectDetailTable">
+                                    <thead class="bg-gray-700 text-white">
+                                        <tr id="prospectDetailTableHeadRow">
+                                            <!-- Header kolom diisi otomatis lewat JS -->
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Data prospect akan dimuat di sini -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
+                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('prospectDetailModal')">Tutup</button>
                             </div>
                         </div>
                     </div>
@@ -1492,6 +1711,11 @@
         // --- KONFIGURASI URL APPS SCRIPT ---
         const customerWebAppUrl = 'https://script.google.com/macros/s/AKfycbz585rQFeVKHL0_RwJxkl04tUyWyoarroweGivt8_bqAH55wBSsDMQ60lsNXLXtzsDG/exec'; 
 
+        // Apps Script KHUSUS Prospect -- terpisah sepenuhnya dari customerWebAppUrl di atas.
+        // Tab "Prospect" HANYA memanggil URL ini, tidak pernah menyentuh customerWebAppUrl,
+        // supaya data & appscript Customer yang sudah berjalan tidak terganggu.
+        const prospectWebAppUrl = 'https://script.google.com/macros/s/AKfycbyf7xUwgZs8M59RALJTg2i-ZnXvRMSDxw_mTX_Bm6KvDr7NWYJN6uHrC-Gsi3aXXuXx/exec?action=getProspectData';
+
         // --- GLOBAL VARIABLES ---
         let allCustomers = [];
         let filteredCustomers = []; // Filtered for the Customer Overview table
@@ -1521,6 +1745,22 @@
         let modemStatusTerminateChartInstance = null;
         let subdistrictInstallChartInstance = null;
         let penetrationChartInstance = null;
+
+        // --- VARIABEL & CHART INSTANCE KHUSUS PROSPECT ---
+        let allProspects = []; // Data mentah dari prospectWebAppUrl
+        let filteredProspects = []; // Hasil pencarian/filter untuk tabel Pencarian Prospect
+        let prospectSearchCurrentPage = 1;
+        const prospectItemsPerPage = 10;
+        let prospectDailyChartInstance = null;
+        let prospectKelurahanChartInstance = null;
+        let prospectStatusChartInstance = null;
+        let prospectDpChartInstance = null;
+        let prospectWifiChartInstance = null;
+        let prospectSumberChartInstance = null;
+        let prospectGaugeCurrentValue = 0;
+        const PROSPECT_MONTHLY_TARGET = 300; // Target prospect per bulan (keseluruhan)
+        const PROSPECT_SALESCODE_DAILY_TARGET = 5;   // Target per sales code per hari
+        const PROSPECT_SALESCODE_MONTHLY_TARGET = 150; // Target per sales code per bulan
 
         // Data Homepass per Subdistrict (untuk perhitungan penetrasi)
         const subdistrictHomepass = {
@@ -1622,6 +1862,15 @@
 
             // Render grafik yang relevan dengan bagian saat ditampilkan
             if (sectionId === 'customerOverview') updateDashboardSummaryAndChart(); // Ganti nama fungsi
+            if (sectionId === 'prospectSection') {
+                // Data prospect diambil dari Apps Script TERPISAH (tidak menyentuh customerWebAppUrl).
+                // Hanya diambil ulang jika belum pernah dimuat, supaya tidak spam request tiap ganti tab.
+                if (!allProspects || allProspects.length === 0) {
+                    fetchProspectData();
+                } else {
+                    renderAllProspectCharts();
+                }
+            }
             if (sectionId === 'customerStatusAnalysis') renderCustomerStatusTable();
             if (sectionId === 'kecamatanAnalysis') renderKecamatanChart();
             if (sectionId === 'bundleNameAnalysis') renderBundleNameChart();
@@ -2643,32 +2892,103 @@
             { label: 'Promo Code', get: c => c.PROMO_CODE || '-' }
         ];
 
+        // Kolom yang berisi tanggal -- dipetakan ke nama field mentah pada objek customer supaya
+        // pengurutan (sort) memakai parseDate() yang benar, bukan sekadar string compare.
+        const OVERVIEW_DATE_COLUMN_FIELD_MAP = {
+            'Tgl Berakhir': 'TERMDATE',
+            'Mulai Kontrak': 'CONTRACTSTARTDATE'
+        };
+
+        // State tabel modal detail (dipakai untuk fitur sort ascending/descending klik-header)
+        let overviewModalState = { customers: [], columns: [], showWhatsApp: false, waMessageBuilder: null, sortColIndex: null, sortDir: 'asc' };
+
         // Menampilkan modal detail customer (dipakai oleh chart Terminasi per Sales Code & Umur Customer Suspend)
         // waMessageBuilder (opsional): function(customer) => string, untuk mengganti redaksi WhatsApp
         // khusus pemanggilan ini saja (mis. dipakai oleh tabel Pencapaian Sales per Sales Code).
         function showOverviewDetailModal(customers, modalTitle, showWhatsApp, columns, waMessageBuilder) {
             columns = columns || DEFAULT_DETAIL_COLUMNS;
-            const headRow = document.getElementById('overviewDetailTableHeadRow');
-            const modalBodyTable = document.querySelector('#overviewDetailModal #overviewDetailTable tbody');
-            const hintEl = document.getElementById('overviewDetailModalHint');
-            if (!modalBodyTable || !headRow) return;
+            overviewModalState = { customers: customers || [], columns, showWhatsApp, waMessageBuilder, sortColIndex: null, sortDir: 'asc' };
 
-            // Bangun header tabel secara dinamis sesuai kolom yang diberikan
+            // Jika salah satu kolom adalah kolom tanggal ("Tgl Berakhir"), urutkan dari yang
+            // paling dekat/terbaru ke yang terlama secara default supaya langsung informatif.
+            const defaultDateColIndex = columns.findIndex(c => OVERVIEW_DATE_COLUMN_FIELD_MAP[c.label]);
+            if (defaultDateColIndex !== -1) {
+                overviewModalState.sortColIndex = defaultDateColIndex;
+                overviewModalState.sortDir = 'desc'; // Terbaru/paling dekat dahulu
+            }
+
+            renderOverviewDetailTableHead();
+            renderOverviewDetailTableBody();
+
+            document.getElementById('overviewDetailModalLabel').textContent = modalTitle;
+            showModal('overviewDetailModal');
+        }
+
+        function renderOverviewDetailTableHead() {
+            const headRow = document.getElementById('overviewDetailTableHeadRow');
+            if (!headRow) return;
+            const { columns, showWhatsApp, sortColIndex, sortDir } = overviewModalState;
+
             let headHtml = columns.map((col, i) => {
-                const roundClass = i === 0 ? 'rounded-tl-lg' : '';
-                return `<th class="py-3 px-4 uppercase font-semibold text-sm ${roundClass}">${col.label}</th>`;
+                const roundTl = i === 0 ? 'rounded-tl-lg' : '';
+                const roundTr = (!showWhatsApp && i === columns.length - 1) ? 'rounded-tr-lg' : '';
+                const isSorted = i === sortColIndex;
+                const arrow = isSorted ? (sortDir === 'asc' ? ' <i class="fas fa-arrow-up text-xs"></i>' : ' <i class="fas fa-arrow-down text-xs"></i>') : ' <i class="fas fa-sort text-xs opacity-40"></i>';
+                return `<th data-col-index="${i}" class="py-3 px-4 uppercase font-semibold text-sm ${roundTl} ${roundTr} cursor-pointer select-none hover:bg-gray-600 transition-colors" title="Klik untuk urutkan">${col.label}${arrow}</th>`;
             }).join('');
             if (showWhatsApp) {
                 headHtml += `<th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Aksi</th>`;
-            } else if (columns.length > 0) {
-                // beri sudut kanan atas membulat pada kolom terakhir jika tidak ada kolom Aksi
-                headHtml = headHtml.replace(/<th class="py-3 px-4 uppercase font-semibold text-sm ">([^<]*)<\/th>$/, '<th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">$1</th>');
             }
             headRow.innerHTML = headHtml;
+            document.getElementById('overviewDetailModalHint').classList.toggle('hidden', !showWhatsApp);
 
-            hintEl.classList.toggle('hidden', !showWhatsApp);
+            headRow.querySelectorAll('th[data-col-index]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const idx = parseInt(th.dataset.colIndex, 10);
+                    if (overviewModalState.sortColIndex === idx) {
+                        overviewModalState.sortDir = overviewModalState.sortDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        overviewModalState.sortColIndex = idx;
+                        overviewModalState.sortDir = 'asc';
+                    }
+                    renderOverviewDetailTableHead();
+                    renderOverviewDetailTableBody();
+                });
+            });
+        }
+
+        function renderOverviewDetailTableBody() {
+            const modalBodyTable = document.querySelector('#overviewDetailModal #overviewDetailTable tbody');
+            if (!modalBodyTable) return;
+            const { columns, showWhatsApp, waMessageBuilder, sortColIndex, sortDir } = overviewModalState;
+            let customers = (overviewModalState.customers || []).slice();
+
+            if (sortColIndex !== null && columns[sortColIndex]) {
+                const col = columns[sortColIndex];
+                const dateField = OVERVIEW_DATE_COLUMN_FIELD_MAP[col.label];
+                const dir = sortDir === 'asc' ? 1 : -1;
+                customers.sort((a, b) => {
+                    let va, vb;
+                    if (dateField) {
+                        const da = parseDate(a[dateField]);
+                        const db = parseDate(b[dateField]);
+                        va = da ? da.getTime() : -Infinity;
+                        vb = db ? db.getTime() : -Infinity;
+                    } else {
+                        va = col.get(a);
+                        vb = col.get(b);
+                        const na = parseFloat(va), nb = parseFloat(vb);
+                        if (!isNaN(na) && !isNaN(nb) && String(na) === String(va).trim() && String(nb) === String(vb).trim()) {
+                            va = na; vb = nb;
+                        }
+                    }
+                    if (va < vb) return -1 * dir;
+                    if (va > vb) return 1 * dir;
+                    return 0;
+                });
+            }
+
             modalBodyTable.innerHTML = '';
-
             if (!customers || customers.length === 0) {
                 const colspan = columns.length + (showWhatsApp ? 1 : 0);
                 modalBodyTable.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4">Tidak ada customer untuk kriteria ini.</td></tr>`;
@@ -2683,10 +3003,855 @@
                     row.querySelectorAll('td').forEach(cell => cell.classList.add('py-2', 'px-4', 'text-sm', 'text-gray-700', 'whitespace-nowrap'));
                 });
             }
-
-            document.getElementById('overviewDetailModalLabel').textContent = modalTitle;
-            showModal('overviewDetailModal');
         }
+
+        // ============================================================
+        // ================= MODUL PROSPECT (BARU) ===================
+        // Semua kode di bawah ini KHUSUS untuk tab "Prospect" dan HANYA
+        // memanggil `prospectWebAppUrl`. Tidak ada bagian dari modul ini
+        // yang membaca/menulis allCustomers atau customerWebAppUrl,
+        // sehingga fitur Customer Overview & Analisis yang sudah ada
+        // TIDAK terpengaruh sama sekali.
+        //
+        // CATATAN PENYESUAIAN: nama kolom persis dari Apps Script Anda
+        // belum diketahui, jadi setiap field di bawah dicari dari
+        // beberapa kemungkinan nama header (case-insensitive). Jika
+        // Apps Script Anda memakai nama header lain, cukup tambahkan
+        // namanya ke daftar PROSPECT_FIELD_MAP di bawah ini.
+        // ============================================================
+
+        // Nama header di bawah ini sudah disesuaikan PERSIS dengan header asli
+        // spreadsheet Prospect Anda (lihat daftar di code.gs). Nama alternatif
+        // (huruf besar/underscore) tetap dipertahankan sebagai cadangan, kalau
+        // suatu saat header di sheet diubah.
+        const PROSPECT_FIELD_MAP = {
+            name:      ['Nama Prospect', 'NAMA', 'NAME', 'NAMA_PROSPECT', 'FULLNAME'],
+            kelurahan: ['Kelurahan', 'KELURAHAN', 'SUBDISTRICT', 'SUBDISTRICT_INST', 'DESA'],
+            salesCode: ['Sales Code', 'SALESCODE', 'SALES_CODE', 'KODE_SALES', 'SALES'],
+            wifi:      ['Wifi yang Digunakan Prospect', 'WIFI', 'WIFI_BULANAN', 'PAKET_WIFI', 'BUNDLE_NAME'],
+            providerBulanan: ['Bulanan Provider Saat Ini'],
+            status:    ['Status Prospect', 'STATUS_PROSPECT', 'STATUSPROSPECT', 'STATUS'],
+            dpStatus:  ['Kode DP Penuh', 'KODE_DP', 'KODEDP', 'STATUS_DP', 'DP_STATUS', 'DP'],
+            tanggal:   ['Timestamp', 'TANGGAL', 'TANGGAL_PROSPECT', 'TGL', 'DATE', 'CREATED_AT'],
+            phone:     ['Nomor Telpon', 'NO_HP', 'NOMOR_HP', 'NOHP', 'PHONE', 'TELEPON', 'NO_TELEPON', 'WA'],
+            alamat:    ['Rincian Alamat'],
+            sumber:    ['Prospect dapat Darimana']
+        };
+
+        function getProspectField(p, candidates) {
+            if (!p) return undefined;
+            for (const key of candidates) {
+                if (p[key] !== undefined && p[key] !== null && p[key] !== '') return p[key];
+            }
+            const lowerMap = {};
+            Object.keys(p).forEach(k => { lowerMap[k.toLowerCase()] = k; });
+            for (const key of candidates) {
+                const actualKey = lowerMap[key.toLowerCase()];
+                if (actualKey && p[actualKey] !== undefined && p[actualKey] !== null && p[actualKey] !== '') return p[actualKey];
+            }
+            return undefined;
+        }
+
+        const pName      = p => String(getProspectField(p, PROSPECT_FIELD_MAP.name) || '-');
+        const pKelurahan = p => String(getProspectField(p, PROSPECT_FIELD_MAP.kelurahan) || 'Tidak Diketahui');
+        const pSalesCode = p => String(getProspectField(p, PROSPECT_FIELD_MAP.salesCode) || '-');
+        const pWifi      = p => String(getProspectField(p, PROSPECT_FIELD_MAP.wifi) || 'Tidak Diketahui');
+        const pProviderBulanan = p => String(getProspectField(p, PROSPECT_FIELD_MAP.providerBulanan) || '-');
+        const pStatus    = p => String(getProspectField(p, PROSPECT_FIELD_MAP.status) || 'Tidak Diketahui');
+        const pDpStatus  = p => String(getProspectField(p, PROSPECT_FIELD_MAP.dpStatus) || 'Tidak Diketahui');
+        const pTanggalRaw= p => getProspectField(p, PROSPECT_FIELD_MAP.tanggal);
+        const pPhone     = p => getProspectField(p, PROSPECT_FIELD_MAP.phone);
+        const pAlamat    = p => String(getProspectField(p, PROSPECT_FIELD_MAP.alamat) || '-');
+        const pSumber    = p => String(getProspectField(p, PROSPECT_FIELD_MAP.sumber) || 'Tidak Diketahui');
+        const pSalesCodeLabel = p => {
+            const code = pSalesCode(p);
+            return salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+        };
+
+        function prospectDateKey(raw) {
+            if (!raw) return '';
+            const d = new Date(raw);
+            if (isNaN(d.getTime())) return String(raw);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function buildCategoryCounts(list, getter, options) {
+            options = options || {};
+            const counts = {};
+            list.forEach(item => {
+                const key = getter(item) || (options.emptyLabel || 'Tidak Diketahui');
+                counts[key] = (counts[key] || 0) + 1;
+            });
+            let entries = Object.keys(counts).map(k => ({ label: k, count: counts[k] }));
+            entries.sort((a, b) => b.count - a.count);
+            if (options.limit) entries = entries.slice(0, options.limit);
+            return entries;
+        }
+
+        // Palet warna soft & profesional (mengikuti gaya referensi dashboard: nuansa navy,
+        // biru muda, dan aksen oranye/teal lembut -- tidak mencolok, mudah dibaca).
+        const PROSPECT_PALETTE = [
+            '#3B5F8A', '#E08E45', '#5FA8A0', '#8C9BAB', '#9DBFDE',
+            '#C4785C', '#7C6A9C', '#B7A67D', '#6C93BF', '#5C8B72',
+            '#A65D57', '#4F7CAC'
+        ];
+        const PROSPECT_PRIMARY = '#3B5F8A';   // Navy soft - warna utama bar chart
+        const PROSPECT_ACCENT_ORANGE = '#E0955A';
+        const PROSPECT_ACCENT_TEAL = '#5FA8A0';
+        const PROSPECT_GRID_COLOR = '#EEF1F5';
+        const PROSPECT_TEXT_COLOR = '#4A5568';
+
+        const PROSPECT_DETAIL_COLUMNS = [
+            { label: 'Nama', get: p => pName(p) },
+            { label: 'Kelurahan', get: p => pKelurahan(p) },
+            { label: 'Rincian Alamat', get: p => pAlamat(p) },
+            { label: 'Sales Code', get: p => pSalesCodeLabel(p) },
+            { label: 'WiFi Bulanan', get: p => pWifi(p) },
+            { label: 'Provider Saat Ini (Bulanan)', get: p => pProviderBulanan(p) },
+            { label: 'Status Prospect', get: p => pStatus(p) },
+            { label: 'Kode DP', get: p => pDpStatus(p) }
+        ];
+
+        // Pesan WhatsApp default untuk follow-up prospect (silakan sesuaikan redaksinya)
+        function prospectWaMessage(p) {
+            const name = pName(p);
+            return `Halo Kak ${name},\nPerkenalkan kami dari #Biznet Branch Bandar Lampung Campang Raya.\nTerima kasih atas ketertarikan Kakak terhadap layanan WiFi kami.\nBoleh dibantu info lebih lanjut kah kak, apakah masih berminat untuk berlangganan?\nKami siap bantu proses pemasangannya ya kak 🙏`;
+        }
+
+        function prospectWaActionCellHtml(p) {
+            const waNumber = formatWhatsAppNumber(pPhone(p));
+            if (waNumber) {
+                const link = `https://wa.me/${waNumber}?text=${encodeURIComponent(prospectWaMessage(p))}`;
+                return `<a href="${link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 hover:bg-green-500 hover:text-white transition-colors" title="Chat WhatsApp"><i class="fab fa-whatsapp"></i></a>`;
+            }
+            return `<span class="text-gray-300" title="Nomor tidak tersedia"><i class="fab fa-whatsapp"></i></span>`;
+        }
+
+        // Modal detail prospect (dedicated, terpisah dari #overviewDetailModal & #chartDetailModal
+        // agar tidak ada risiko bentrok dengan modal-modal Customer yang sudah ada)
+        function showProspectDetailModal(prospects, modalTitle, showWhatsApp) {
+            const columns = PROSPECT_DETAIL_COLUMNS;
+            const headRow = document.getElementById('prospectDetailTableHeadRow');
+            const modalBodyTable = document.querySelector('#prospectDetailModal #prospectDetailTable tbody');
+            const hintEl = document.getElementById('prospectDetailModalHint');
+            if (!modalBodyTable || !headRow) return;
+
+            let headHtml = columns.map((col, i) => {
+                const roundClass = i === 0 ? 'rounded-tl-lg' : '';
+                return `<th class="py-3 px-4 uppercase font-semibold text-sm ${roundClass}">${col.label}</th>`;
+            }).join('');
+            if (showWhatsApp) {
+                headHtml += `<th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Aksi</th>`;
+            } else {
+                headHtml = headHtml.replace(/<th class="py-3 px-4 uppercase font-semibold text-sm ">([^<]*)<\/th>$/, '<th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">$1</th>');
+            }
+            headRow.innerHTML = headHtml;
+
+            hintEl.classList.toggle('hidden', !showWhatsApp);
+            modalBodyTable.innerHTML = '';
+
+            if (!prospects || prospects.length === 0) {
+                const colspan = columns.length + (showWhatsApp ? 1 : 0);
+                modalBodyTable.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4">Tidak ada prospect untuk kriteria ini.</td></tr>`;
+            } else {
+                prospects.forEach(p => {
+                    const row = modalBodyTable.insertRow();
+                    columns.forEach(col => { row.insertCell().textContent = col.get(p); });
+                    if (showWhatsApp) {
+                        row.insertCell().innerHTML = prospectWaActionCellHtml(p);
+                    }
+                    row.classList.add('hover:bg-gray-50');
+                    row.querySelectorAll('td').forEach(cell => cell.classList.add('py-2', 'px-4', 'text-sm', 'text-gray-700', 'whitespace-nowrap'));
+                });
+            }
+
+            document.getElementById('prospectDetailModalLabel').textContent = modalTitle;
+            showModal('prospectDetailModal');
+        }
+
+        // --- AMBIL DATA PROSPECT (Apps Script terpisah) ---
+        async function fetchProspectData() {
+            const totalDisplay = document.getElementById('prospectTotalDisplay');
+            const errorBox = document.getElementById('prospectChartError');
+            if (!totalDisplay) return;
+            errorBox.classList.add('hidden');
+            totalDisplay.textContent = 'Memuat data prospect...';
+            try {
+                const response = await fetch(prospectWebAppUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                }
+                const result = await response.json();
+                if (!Array.isArray(result)) {
+                    throw new Error('Data dari Apps Script Prospect bukan array. Periksa format keluaran Apps Script prospect Anda.');
+                }
+                allProspects = result;
+                totalDisplay.textContent = `Total Prospect: ${formatNumber(allProspects.length)}`;
+
+                populateProspectDailyFilterDefaults();
+                populateProspectSalesCodeFilterOptions();
+                populateProspectSearchFilterOptions();
+                renderAllProspectCharts();
+                applyProspectFilters();
+            } catch (error) {
+                console.error('Error mengambil data prospect dari Apps Script:', error);
+                errorBox.classList.remove('hidden');
+                errorBox.textContent = `Gagal memuat data prospect: ${error.message}`;
+                totalDisplay.textContent = 'Gagal memuat data prospect.';
+            }
+        }
+
+        function renderAllProspectCharts() {
+            renderProspectGauge();
+            renderProspectSalesCodeProgress();
+            renderProspectDailyChart();
+            renderProspectKelurahanChart();
+            renderProspectStatusChart();
+            renderProspectDpChart();
+            renderProspectWifiChart();
+            renderProspectSumberChart();
+        }
+
+        // Set default bulan/tahun pada filter "Prospect Harian per Sales Code" ke bulan berjalan
+        function populateProspectDailyFilterDefaults() {
+            const monthSelect = document.getElementById('prospectDailyMonthSelect');
+            const yearSelect = document.getElementById('prospectDailyYearSelect');
+            if (!monthSelect || !yearSelect) return;
+            if (monthSelect.options.length === 0 || yearSelect.options.length === 0) return;
+            const today = new Date();
+            if (!monthSelect.dataset.userSet) monthSelect.value = String(today.getMonth());
+            if (!yearSelect.dataset.userSet) yearSelect.value = String(today.getFullYear());
+        }
+
+        // Isi ulang dropdown filter Sales Code pada chart "Prospect Harian per Sales Code"
+        // berdasarkan kode sales yang benar-benar ada di data prospect.
+        function populateProspectSalesCodeFilterOptions() {
+            const select = document.getElementById('prospectDailySalesCodeSelect');
+            if (!select) return;
+            const currentValue = select.value;
+            const codesInData = Array.from(new Set(allProspects.map(p => pSalesCode(p)))).filter(c => c && c !== '-');
+            const allCodes = Array.from(new Set([...Object.keys(salesCodeNames), ...codesInData])).sort();
+            select.innerHTML = '<option value="">Semua Sales Code</option>' +
+                allCodes.map(c => `<option value="${c}">${salesCodeNames[c] ? `${salesCodeNames[c]} (${c})` : c}</option>`).join('');
+            if (allCodes.includes(currentValue)) select.value = currentValue;
+        }
+
+        // ================= 7. Pencarian & Daftar Prospect =================
+        // Isi ulang dropdown Filter Status Prospect & Filter Sales Code pada bagian Pencarian Prospect
+        function populateProspectSearchFilterOptions() {
+            const statusSelect = document.getElementById('filterProspectStatus');
+            const salesCodeSelect = document.getElementById('filterProspectSalesCode');
+
+            if (statusSelect) {
+                const currentStatus = statusSelect.value;
+                const statuses = Array.from(new Set(allProspects.map(p => pStatus(p)))).sort();
+                statusSelect.innerHTML = '<option value="">Semua Status</option>' +
+                    statuses.map(s => `<option value="${s}">${s}</option>`).join('');
+                if (statuses.includes(currentStatus)) statusSelect.value = currentStatus;
+            }
+
+            if (salesCodeSelect) {
+                const currentCode = salesCodeSelect.value;
+                const codesInData = Array.from(new Set(allProspects.map(p => pSalesCode(p)))).filter(c => c && c !== '-');
+                const allCodes = Array.from(new Set([...Object.keys(salesCodeNames), ...codesInData])).sort();
+                salesCodeSelect.innerHTML = '<option value="">Semua Sales Code</option>' +
+                    allCodes.map(c => `<option value="${c}">${salesCodeNames[c] ? `${salesCodeNames[c]} (${c})` : c}</option>`).join('');
+                if (allCodes.includes(currentCode)) salesCodeSelect.value = currentCode;
+            }
+        }
+
+        // Terapkan pencarian (nama, no. telpon, alamat, kelurahan) + filter Status Prospect & Sales Code
+        function applyProspectFilters() {
+            const searchInput = document.getElementById('searchProspect');
+            const statusSelect = document.getElementById('filterProspectStatus');
+            const salesCodeSelect = document.getElementById('filterProspectSalesCode');
+            const totalDisplay = document.getElementById('totalProspectSearchDisplay');
+            if (!searchInput || !totalDisplay) return;
+
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            const statusFilter = statusSelect ? statusSelect.value : '';
+            const salesCodeFilter = salesCodeSelect ? salesCodeSelect.value : '';
+
+            filteredProspects = allProspects.filter(p => {
+                const matchesSearch = searchTerm === '' ||
+                    pName(p).toLowerCase().includes(searchTerm) ||
+                    String(pPhone(p) || '').toLowerCase().includes(searchTerm) ||
+                    pAlamat(p).toLowerCase().includes(searchTerm) ||
+                    pKelurahan(p).toLowerCase().includes(searchTerm);
+
+                const matchesStatus = statusFilter === '' || pStatus(p) === statusFilter;
+                const matchesSalesCode = salesCodeFilter === '' || pSalesCode(p) === salesCodeFilter;
+
+                return matchesSearch && matchesStatus && matchesSalesCode;
+            });
+
+            prospectSearchCurrentPage = 1;
+            totalDisplay.textContent = `Menampilkan ${formatNumber(filteredProspects.length)} dari ${formatNumber(allProspects.length)} Prospect.`;
+            renderProspectSearchTable(prospectSearchCurrentPage);
+        }
+
+        function renderProspectSearchTable(page) {
+            const tableBody = document.querySelector('#prospectSearchTable tbody');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+            const startIndex = (page - 1) * prospectItemsPerPage;
+            const endIndex = startIndex + prospectItemsPerPage;
+            const paginatedItems = filteredProspects.slice(startIndex, endIndex);
+
+            if (paginatedItems.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4">Tidak ada prospect yang ditemukan.</td></tr>`;
+            } else {
+                paginatedItems.forEach(p => {
+                    const row = tableBody.insertRow();
+                    const cells = [
+                        pName(p),
+                        pPhone(p) || '-',
+                        pKelurahan(p),
+                        pAlamat(p),
+                        pSalesCodeLabel(p),
+                        pStatus(p)
+                    ];
+                    cells.forEach(text => {
+                        const cell = row.insertCell();
+                        cell.textContent = text;
+                        cell.classList.add('py-2', 'px-4', 'text-sm', 'text-gray-700', 'whitespace-nowrap');
+                    });
+                    const actionCell = row.insertCell();
+                    actionCell.innerHTML = prospectWaActionCellHtml(p);
+                    actionCell.classList.add('py-2', 'px-4', 'text-sm', 'whitespace-nowrap');
+                    row.classList.add('cursor-pointer', 'hover:bg-gray-50');
+                    row.querySelector('td:first-child').addEventListener('click', () => {
+                        showProspectDetailModal([p], `Detail Prospect ${pName(p)}`, true);
+                    });
+                });
+            }
+            renderProspectSearchPagination(filteredProspects.length, page);
+        }
+
+        function renderProspectSearchPagination(totalItems, currentPageNum) {
+            const paginationUl = document.getElementById('prospectSearchPagination');
+            if (!paginationUl) return;
+            paginationUl.innerHTML = '';
+            const totalPages = Math.ceil(totalItems / prospectItemsPerPage);
+            if (totalPages <= 1) return;
+
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPageNum - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+            if (endPage === totalPages && endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            const makeButton = (label, page, disabled, active) => {
+                const li = document.createElement('li');
+                li.classList.add('page-item', 'mr-2');
+                if (disabled) li.classList.add('opacity-50', 'cursor-not-allowed');
+                const a = document.createElement('a');
+                a.classList.add('px-3', 'py-2', 'bg-white', 'border', 'border-gray-300', 'rounded-lg', 'text-gray-700', 'hover:bg-gray-200');
+                if (active) a.classList.add('bg-blue-500', 'text-white', 'hover:bg-blue-600');
+                a.href = '#';
+                a.innerHTML = label;
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    if (disabled) return;
+                    prospectSearchCurrentPage = page;
+                    renderProspectSearchTable(page);
+                };
+                li.appendChild(a);
+                return li;
+            };
+
+            paginationUl.appendChild(makeButton('&laquo;', currentPageNum - 1, currentPageNum === 1, false));
+            for (let i = startPage; i <= endPage; i++) {
+                paginationUl.appendChild(makeButton(String(i), i, false, i === currentPageNum));
+            }
+            paginationUl.appendChild(makeButton('&raquo;', currentPageNum + 1, currentPageNum === totalPages, false));
+        }
+
+        // ================= 0. New Leads This Month (Gauge Speedometer) =================
+        function renderProspectGauge() {
+            const container = document.getElementById('prospectGaugeContainer');
+            if (!container) return;
+
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const value = allProspects.filter(p => {
+                const d = new Date(pTanggalRaw(p));
+                return !isNaN(d.getTime()) && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            }).length;
+            prospectGaugeCurrentValue = value;
+
+            const target = PROSPECT_MONTHLY_TARGET;
+            const max = Math.max(target * 1.3, value * 1.05, 1);
+            const pct = target ? Math.round((value / target) * 100) : 0;
+            const frac = Math.min(value / max, 1);
+
+            // Zona warna: merah (di bawah target), kuning (mendekati target), hijau (tercapai/melebihi)
+            const redEnd = Math.min((target * 0.6) / max, 1);
+            const yellowEnd = Math.min((target * 0.9) / max, 1);
+
+            const cx = 150, cy = 140, r = 110, strokeW = 22;
+            function polarToCartesian(angleDeg) {
+                const rad = angleDeg * Math.PI / 180;
+                return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+            }
+            function arcPath(fracStart, fracEnd) {
+                const a1 = 180 - fracStart * 180;
+                const a2 = 180 - fracEnd * 180;
+                const p1 = polarToCartesian(a1);
+                const p2 = polarToCartesian(a2);
+                return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${r} ${r} 0 0 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+            }
+
+            const needleAngle = 180 - frac * 180;
+            const needleTip = polarToCartesian(needleAngle);
+            const needleLen = r - 30;
+            const needleRad = needleAngle * Math.PI / 180;
+            const needleX = cx + needleLen * Math.cos(needleRad);
+            const needleY = cy - needleLen * Math.sin(needleRad);
+
+            const statusColor = pct >= 100 ? '#5C8B72' : (pct >= 60 ? '#D4A24C' : '#B0645C');
+
+            container.innerHTML = `
+                <svg viewBox="0 0 300 190" style="max-width:340px;width:100%;">
+                    <path d="${arcPath(0, redEnd)}" fill="none" stroke="#E3AFAA" stroke-width="${strokeW}" stroke-linecap="round" />
+                    <path d="${arcPath(redEnd, yellowEnd)}" fill="none" stroke="#EAD4A0" stroke-width="${strokeW}" stroke-linecap="round" />
+                    <path d="${arcPath(yellowEnd, 1)}" fill="none" stroke="#A9C6B4" stroke-width="${strokeW}" stroke-linecap="round" />
+                    <line x1="${cx}" y1="${cy}" x2="${needleX.toFixed(2)}" y2="${needleY.toFixed(2)}" stroke="#4A5568" stroke-width="4" stroke-linecap="round" />
+                    <circle cx="${cx}" cy="${cy}" r="8" fill="#4A5568" />
+                    <text x="${cx}" y="${cy + 42}" text-anchor="middle" font-size="30" font-weight="700" fill="#2D3748">${formatNumber(value)}</text>
+                    <text x="${cx}" y="${cy + 66}" text-anchor="middle" font-size="14" font-weight="600" fill="${statusColor}">${pct}% dari target</text>
+                </svg>`;
+        }
+
+        // ================= 8. Progress Prospect per Sales Code (bulan berjalan) =================
+        function renderProspectSalesCodeProgress() {
+            const container = document.getElementById('prospectSalesCodeProgressContainer');
+            if (!container) return;
+
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const monthlyProspects = allProspects.filter(p => {
+                const d = new Date(pTanggalRaw(p));
+                return !isNaN(d.getTime()) && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+
+            const counts = {};
+            monthlyProspects.forEach(p => {
+                const code = pSalesCode(p);
+                counts[code] = (counts[code] || 0) + 1;
+            });
+            const codesInData = Object.keys(counts);
+            const allCodes = Array.from(new Set([...Object.keys(salesCodeNames), ...codesInData]))
+                .filter(c => c && c !== '-')
+                .sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
+
+            if (allCodes.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-500 text-center">Belum ada data prospect bulan ini.</p>`;
+                return;
+            }
+
+            const target = PROSPECT_SALESCODE_MONTHLY_TARGET;
+            container.innerHTML = allCodes.map((code, idx) => {
+                const value = counts[code] || 0;
+                const pct = Math.min(Math.round((value / target) * 100), 100);
+                const label = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+                const barColor = value >= target ? '#5C8B72' : (pct >= 50 ? '#D4A24C' : '#B0645C');
+                return `
+                    <div class="prospect-salescode-progress-row cursor-pointer group" data-code-index="${idx}" title="Klik untuk melihat daftar prospect ${label} bulan ini">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">${label}</span>
+                            <span class="text-xs font-medium text-gray-500">${value}/${target} prospect</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2.5 group-hover:opacity-80 transition-opacity">
+                            <div class="h-2.5 rounded-full" style="width:${pct}%; background-color:${barColor};"></div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            // Klik salah satu progress bar -> tampilkan tabel prospect (nama, kelurahan, alamat,
+            // wifi yang digunakan, status prospect) khusus Sales Code tersebut bulan ini.
+            container.querySelectorAll('.prospect-salescode-progress-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const idx = parseInt(row.dataset.codeIndex, 10);
+                    const code = allCodes[idx];
+                    const label = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+                    const filtered = monthlyProspects.filter(p => pSalesCode(p) === code);
+                    showProspectDetailModal(filtered, `Prospect Bulan Ini \u2014 ${label}`, true);
+                });
+            });
+        }
+
+        // 1. Prospect Harian per Sales Code -- total harian dari tanggal 1 s.d. akhir bulan,
+        // dapat difilter per Sales Code untuk melihat pencapaian harian masing-masing sales.
+        function renderProspectDailyChart() {
+            const ctx = document.getElementById('prospectDailyChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (prospectDailyChartInstance) prospectDailyChartInstance.destroy();
+
+            const monthSelect = document.getElementById('prospectDailyMonthSelect');
+            const yearSelect = document.getElementById('prospectDailyYearSelect');
+            const salesCodeSelect = document.getElementById('prospectDailySalesCodeSelect');
+            if (!monthSelect || !yearSelect || !monthSelect.value || !yearSelect.value) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                return;
+            }
+
+            const selectedMonth = parseInt(monthSelect.value, 10); // 0-11
+            const selectedYear = parseInt(yearSelect.value, 10);
+            const selectedCode = salesCodeSelect ? salesCodeSelect.value : '';
+
+            const monthProspects = allProspects.filter(p => {
+                const d = new Date(pTanggalRaw(p));
+                if (isNaN(d.getTime()) || d.getFullYear() !== selectedYear || d.getMonth() !== selectedMonth) return false;
+                return selectedCode ? pSalesCode(p) === selectedCode : true;
+            });
+
+            const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+            const dailyCounts = new Array(daysInMonth).fill(0);
+            const dailyProspectsByDay = Array.from({ length: daysInMonth }, () => []);
+            monthProspects.forEach(p => {
+                const d = new Date(pTanggalRaw(p));
+                const dayIdx = d.getDate() - 1;
+                dailyCounts[dayIdx]++;
+                dailyProspectsByDay[dayIdx].push(p);
+            });
+            const labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
+
+            const totalDisplay = document.getElementById('prospectDailyTotalDisplay');
+            const codeLabel = selectedCode ? (salesCodeNames[selectedCode] ? `${salesCodeNames[selectedCode]} (${selectedCode})` : selectedCode) : 'Semua Sales Code';
+            if (totalDisplay) {
+                totalDisplay.textContent = `Total Prospect ${getMonthName(selectedMonth)} ${selectedYear} \u2014 ${codeLabel}: ${formatNumber(monthProspects.length)}`;
+            }
+
+            context.clearRect(0, 0, ctx.width, ctx.height);
+
+            prospectDailyChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Jumlah Prospect',
+                        data: dailyCounts,
+                        backgroundColor: PROSPECT_PRIMARY + 'CC',
+                        borderColor: PROSPECT_PRIMARY,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        maxBarThickness: 26
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: `Prospect Harian ${getMonthName(selectedMonth)} ${selectedYear} \u2014 ${codeLabel}`,
+                            color: PROSPECT_TEXT_COLOR
+                        },
+                        datalabels: { anchor: 'end', align: 'end', formatter: v => v > 0 ? v : '', color: PROSPECT_TEXT_COLOR, font: { size: 9 } },
+                        tooltip: { callbacks: { label: c => `Tanggal ${c.label}: ${c.raw} prospect` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: PROSPECT_TEXT_COLOR, font: { size: 10 } } },
+                        y: { beginAtZero: true, grid: { color: PROSPECT_GRID_COLOR }, ticks: { precision: 0, color: PROSPECT_TEXT_COLOR } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dayIdx = elements[0].index;
+                            const filtered = dailyProspectsByDay[dayIdx];
+                            const title = `Prospect tanggal ${dayIdx + 1} ${getMonthName(selectedMonth)} ${selectedYear} \u2014 ${codeLabel}`;
+                            showProspectDetailModal(filtered, title, true);
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // 2. Bar Chart Prospect per Kelurahan (jumlah, bukan persentase)
+        function renderProspectKelurahanChart() {
+            const ctx = document.getElementById('prospectKelurahanChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (prospectKelurahanChartInstance) prospectKelurahanChartInstance.destroy();
+
+            const entries = buildCategoryCounts(allProspects, pKelurahan, { limit: 12 });
+            context.clearRect(0, 0, ctx.width, ctx.height);
+            if (entries.length === 0) return;
+
+            const labels = entries.map(e => e.label);
+            const data = entries.map(e => e.count);
+            const colors = labels.map((_, i) => PROSPECT_PALETTE[i % PROSPECT_PALETTE.length]);
+
+            prospectKelurahanChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Jumlah Prospect',
+                        data,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        maxBarThickness: 24
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { anchor: 'end', align: 'end', formatter: v => v, color: PROSPECT_TEXT_COLOR, font: { size: 10 } },
+                        tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} prospect` } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: PROSPECT_GRID_COLOR }, ticks: { precision: 0, color: PROSPECT_TEXT_COLOR } },
+                        y: { grid: { display: false }, ticks: { color: PROSPECT_TEXT_COLOR, font: { size: 10 } } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const kel = labels[elements[0].index];
+                            const filtered = allProspects.filter(p => pKelurahan(p) === kel);
+                            showProspectDetailModal(filtered, `Prospect di Kelurahan ${kel}`, true);
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // 3. Chart Status Prospect
+        function renderProspectStatusChart() {
+            const ctx = document.getElementById('prospectStatusChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (prospectStatusChartInstance) prospectStatusChartInstance.destroy();
+
+            const entries = buildCategoryCounts(allProspects, pStatus);
+            context.clearRect(0, 0, ctx.width, ctx.height);
+            if (entries.length === 0) return;
+
+            const labels = entries.map(e => e.label);
+            const data = entries.map(e => e.count);
+            const colors = labels.map((_, i) => PROSPECT_PALETTE[i % PROSPECT_PALETTE.length]);
+
+            prospectStatusChartInstance = new Chart(context, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#fff', borderWidth: 3 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'right', labels: { color: PROSPECT_TEXT_COLOR, boxWidth: 12, font: { size: 11 }, padding: 12 } },
+                        datalabels: {
+                            color: '#fff',
+                            formatter: (value, ctx2) => {
+                                const total = ctx2.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total ? Math.round((value / total) * 100) : 0;
+                                return pct >= 5 ? `${pct}%` : '';
+                            },
+                            font: { weight: '600', size: 11 }
+                        },
+                        tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} prospect` } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const status = labels[elements[0].index];
+                            const filtered = allProspects.filter(p => pStatus(p) === status);
+                            showProspectDetailModal(filtered, `Prospect dengan Status ${status}`, true);
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // 4. Chart Kode DP Penuh
+        function renderProspectDpChart() {
+            const ctx = document.getElementById('prospectDpChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (prospectDpChartInstance) prospectDpChartInstance.destroy();
+
+            // Hanya tampilkan data yang benar-benar memiliki Kode DP -- kategori "Tidak Diketahui"
+            // (data kosong/tidak terisi) sengaja tidak divisualisasikan sesuai permintaan.
+            const entries = buildCategoryCounts(allProspects, pDpStatus)
+                .filter(e => e.label && e.label.toLowerCase() !== 'tidak diketahui');
+            context.clearRect(0, 0, ctx.width, ctx.height);
+            if (entries.length === 0) return;
+
+            const labels = entries.map(e => e.label);
+            const data = entries.map(e => e.count);
+            const colors = labels.map((_, i) => PROSPECT_PALETTE[i % PROSPECT_PALETTE.length]);
+
+            prospectDpChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Jumlah Prospect',
+                        data,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { anchor: 'end', align: 'end', formatter: v => v, color: PROSPECT_TEXT_COLOR },
+                        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw}` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: PROSPECT_TEXT_COLOR } },
+                        y: { beginAtZero: true, grid: { color: PROSPECT_GRID_COLOR }, ticks: { precision: 0, color: PROSPECT_TEXT_COLOR } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dp = labels[elements[0].index];
+                            const filtered = allProspects.filter(p => pDpStatus(p) === dp);
+                            // Sesuai permintaan: modal untuk Kode DP TANPA tombol aksi WhatsApp
+                            showProspectDetailModal(filtered, `Prospect dengan Kode DP ${dp}`, false);
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // 5. Chart WiFi Bulanan yang Digunakan Prospect
+        function renderProspectWifiChart() {
+            const ctx = document.getElementById('prospectWifiChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (prospectWifiChartInstance) prospectWifiChartInstance.destroy();
+
+            const entries = buildCategoryCounts(allProspects, pWifi, { limit: 12 });
+            context.clearRect(0, 0, ctx.width, ctx.height);
+            if (entries.length === 0) return;
+
+            const labels = entries.map(e => e.label);
+            const data = entries.map(e => e.count);
+
+            prospectWifiChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Jumlah Prospect',
+                        data,
+                        backgroundColor: PROSPECT_ACCENT_TEAL + 'CC',
+                        borderColor: PROSPECT_ACCENT_TEAL,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        maxBarThickness: 22
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { anchor: 'end', align: 'end', formatter: v => v, color: PROSPECT_TEXT_COLOR },
+                        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw}` } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: PROSPECT_GRID_COLOR }, ticks: { precision: 0, color: PROSPECT_TEXT_COLOR } },
+                        y: { grid: { display: false }, ticks: { color: PROSPECT_TEXT_COLOR, font: { size: 10 } } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const wifi = labels[elements[0].index];
+                            const filtered = allProspects.filter(p => pWifi(p) === wifi);
+                            showProspectDetailModal(filtered, `Prospect Paket WiFi ${wifi}`, true);
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // 6. Top Campaigns -- sumber prospect ("Prospect dapat Darimana"), horizontal bar
+        // mengikuti gaya referensi "Top Campaigns by Leads Generating".
+        function renderProspectSumberChart() {
+            const ctx = document.getElementById('prospectSumberChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (prospectSumberChartInstance) prospectSumberChartInstance.destroy();
+
+            const entries = buildCategoryCounts(allProspects, pSumber, { limit: 12 });
+            context.clearRect(0, 0, ctx.width, ctx.height);
+            if (entries.length === 0) return;
+
+            const labels = entries.map(e => e.label);
+            const data = entries.map(e => e.count);
+
+            prospectSumberChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Jumlah Prospect',
+                        data,
+                        backgroundColor: PROSPECT_PRIMARY + 'CC',
+                        borderColor: PROSPECT_PRIMARY,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        maxBarThickness: 24
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { anchor: 'end', align: 'end', formatter: v => v, color: PROSPECT_TEXT_COLOR },
+                        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw}` } }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: PROSPECT_GRID_COLOR }, ticks: { precision: 0, color: PROSPECT_TEXT_COLOR } },
+                        y: { grid: { display: false }, ticks: { color: PROSPECT_TEXT_COLOR, font: { size: 10 } } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const sumber = labels[elements[0].index];
+                            const filtered = allProspects.filter(p => pSumber(p) === sumber);
+                            showProspectDetailModal(filtered, `Prospect dari Sumber ${sumber}`, true);
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // Filter Bulan/Tahun/Sales Code hanya menggambar ulang chart harian (tidak fetch ulang ke Apps Script)
+        (function bindProspectDailyFilter() {
+            const monthSelect = document.getElementById('prospectDailyMonthSelect');
+            const yearSelect = document.getElementById('prospectDailyYearSelect');
+            const salesCodeSelect = document.getElementById('prospectDailySalesCodeSelect');
+            const applyBtn = document.getElementById('applyProspectDailyFilterBtn');
+            if (monthSelect) monthSelect.addEventListener('change', () => { monthSelect.dataset.userSet = '1'; renderProspectDailyChart(); });
+            if (yearSelect) yearSelect.addEventListener('change', () => { yearSelect.dataset.userSet = '1'; renderProspectDailyChart(); });
+            if (salesCodeSelect) salesCodeSelect.addEventListener('change', renderProspectDailyChart);
+            if (applyBtn) applyBtn.addEventListener('click', renderProspectDailyChart);
+        })();
+
+        // ================= AKHIR MODUL PROSPECT =================
 
         // 7. Terminasi bulan berjalan (1 bulan penuh) per Sales Code
         function renderTerminationBySalesChart(startOfThisMonth, today) {
@@ -4410,65 +5575,17 @@
             return (store[code] && store[code][dateStr]) || 0;
         }
 
-        // PENTING - PERUBAHAN LOGIKA (lihat catatan panjang di getManualRevenueMonthTotal
-        // di bawah): setiap nilai yang diinput manual per tanggal BUKAN "revenue hari itu
-        // saja", melainkan TOTAL AKUMULASI dari awal bulan sampai tanggal tsb (sesuai data
-        // yang diperoleh dari laporan). Fungsi ini mengembalikan daftar tanggal (untuk satu
-        // Sales Code) yang jatuh pada bulan & tahun tertentu, terurut ASCENDING (lama -> baru).
-        function getManualRevenueSortedDatesInMonth(code, year, monthIndex) {
-            const store = getManualRevenueStore();
-            const entries = store[code] || {};
-            return Object.keys(entries)
-                .filter(dateStr => {
-                    const d = new Date(`${dateStr}T00:00:00`);
-                    return d.getFullYear() === year && d.getMonth() === monthIndex;
-                })
-                .sort(); // format 'YYYY-MM-DD' aman diurutkan sebagai string
-        }
-
-        // Total input manual untuk satu Sales Code pada bulan & tahun terpilih.
-        //
-        // CATATAN PENTING: sebelumnya fungsi ini MENJUMLAHKAN seluruh nilai yang diinput di
-        // setiap tanggal ("hari ke-1" + "hari ke-2" + ... + "hari ke-N"). Ini BENAR jika yang
-        // diinput adalah nominal revenue HARI ITU SAJA. Namun data yang tersedia untuk AC
-        // ternyata sudah berupa TOTAL TERKUMPUL KUMULATIF dari awal bulan sampai hari input
-        // (mis. tanggal 3 = total dari tgl 1-3, tanggal 4 = total dari tgl 1-4, dst). Kalau
-        // nilai-nilai kumulatif ini dijumlahkan lagi seperti sebelumnya, hasilnya jadi berkali-
-        // lipat lebih besar dari yang sebenarnya (double counting).
-        //
-        // FIX: karena setiap input sudah kumulatif, maka "Total Terkumpul Bulan Ini" yang benar
-        // untuk satu Sales Code cukup diambil dari input PALING BARU (tanggal terakhir yang
-        // diisi) pada bulan tsb -- bukan dijumlahkan semua.
+        // Total input manual untuk satu Sales Code, dijumlahkan dari seluruh tanggal yang
+        // jatuh pada bulan & tahun terpilih (akumulasi harian -> total bulan berjalan).
         function getManualRevenueMonthTotal(code, year, monthIndex) {
             const store = getManualRevenueStore();
             const entries = store[code] || {};
-            const sortedDates = getManualRevenueSortedDatesInMonth(code, year, monthIndex);
-            if (sortedDates.length === 0) return 0;
-            const latestDate = sortedDates[sortedDates.length - 1];
-            return entries[latestDate] || 0;
-        }
-
-        // Selisih (delta) revenue harian yang SEBENARNYA untuk satu tanggal tertentu, dihitung
-        // otomatis dari: Total Terkumpul (tanggal ini, input kumulatif) - Total Terkumpul
-        // (input kumulatif tanggal sebelumnya yang tercatat pada bulan yang sama). Kalau ini
-        // input pertama di bulan tsb, baseline-nya dianggap 0 (awal bulan belum ada revenue).
-        // Inilah yang seharusnya ditampilkan sebagai "Revenue Hari Ini (Manual)", BUKAN nilai
-        // mentah yang diinput (karena nilai mentah = total dari awal bulan, bukan hari itu saja).
-        function getManualRevenueDailyDelta(code, dateStr) {
-            const store = getManualRevenueStore();
-            const entries = store[code] || {};
-            if (entries[dateStr] === undefined) return 0;
-
-            const d = new Date(`${dateStr}T00:00:00`);
-            const sortedDates = getManualRevenueSortedDatesInMonth(code, d.getFullYear(), d.getMonth());
-            const idx = sortedDates.indexOf(dateStr);
-            if (idx <= 0) {
-                // Input pertama bulan ini -> selisih dari baseline 0.
-                return entries[dateStr] || 0;
-            }
-            const previousDate = sortedDates[idx - 1];
-            const previousValue = entries[previousDate] || 0;
-            return (entries[dateStr] || 0) - previousValue;
+            let total = 0;
+            Object.keys(entries).forEach(dateStr => {
+                const d = new Date(`${dateStr}T00:00:00`);
+                if (d.getFullYear() === year && d.getMonth() === monthIndex) total += entries[dateStr];
+            });
+            return total;
         }
 
         // Total input manual seluruh Sales Code untuk bulan & tahun terpilih (dipakai sebagai
@@ -4944,7 +6061,7 @@
             const getCollectedBucket = (code) => {
                 if (!collectedBySalesCode[code]) {
                     collectedBySalesCode[code] = {
-                        manualToday: getManualRevenueDailyDelta(code, todayStr),
+                        manualToday: getManualRevenueForCodeDate(code, todayStr),
                         manualMonthTotal: getManualRevenueMonthTotal(code, selectedYear, selectedMonth),
                         newRevenue: 0,
                         newCustomers: []
@@ -5210,7 +6327,7 @@
                         const codeTarget = getIndividualRevenueTarget(code, selectedYear, selectedMonth);
                         // achieved = Forecast Revenue (manual "Revenue Hari Ini" terakumulasi + sisa recurring)
                         const achieved = codeAchievedForTarget[code] !== undefined ? codeAchievedForTarget[code] : getManualRevenueMonthTotal(code, selectedYear, selectedMonth);
-                        const manualTodayForCode = getManualRevenueDailyDelta(code, todayStr);
+                        const manualTodayForCode = getManualRevenueForCodeDate(code, todayStr);
 
                         const revenueTodayCell = `
                             <td class="py-3 px-4 text-sm text-right">
@@ -5285,13 +6402,15 @@
                 document.getElementById('forecastMonthSelect'),
                 document.getElementById('newSubsMonthSelect'),
                 document.getElementById('salesPerfMonthSelect'),
-                document.getElementById('forecastRevenueMonthSelect')
+                document.getElementById('forecastRevenueMonthSelect'),
+                document.getElementById('prospectDailyMonthSelect')
             ];
             const yearSelectors = [
                 document.getElementById('forecastYearSelect'),
                 document.getElementById('newSubsYearSelect'),
                 document.getElementById('salesPerfYearSelect'),
-                document.getElementById('forecastRevenueYearSelect')
+                document.getElementById('forecastRevenueYearSelect'),
+                document.getElementById('prospectDailyYearSelect')
             ];
             const currentYear = new Date().getFullYear();
             const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -5341,7 +6460,9 @@
                 dashboardStatusChartInstance, kecamatanChartInstance, bundleNameChartInstance,
                 modemStatusChartInstance, dailyNewSubsChartInstance, forecastTerminationChartInstance,
                 arcoPerformanceChartInstance, terminationBySalesChartInstance, suspendAgeChartInstance,
-                modemStatusTerminateChartInstance, subdistrictInstallChartInstance, penetrationChartInstance
+                modemStatusTerminateChartInstance, subdistrictInstallChartInstance, penetrationChartInstance,
+                prospectDailyChartInstance, prospectKelurahanChartInstance, prospectStatusChartInstance,
+                prospectDpChartInstance, prospectWifiChartInstance, prospectSumberChartInstance
             ];
             instances.forEach(chart => {
                 if (chart && typeof chart.resize === 'function') {
@@ -5398,6 +6519,12 @@
         document.getElementById('searchCustomer').addEventListener('input', applyFilters);
         document.getElementById('filterStatus').addEventListener('change', applyFilters);
         document.getElementById('filterSalesCode').addEventListener('change', applyFilters);
+
+        // Pendengar Acara untuk Pencarian & Filter Prospect
+        document.getElementById('applyProspectFiltersBtn').addEventListener('click', applyProspectFilters);
+        document.getElementById('searchProspect').addEventListener('input', applyProspectFilters);
+        document.getElementById('filterProspectStatus').addEventListener('change', applyProspectFilters);
+        document.getElementById('filterProspectSalesCode').addEventListener('change', applyProspectFilters);
 
         // Pendengar Acara untuk Filter Bagian Analisis
         document.getElementById('salesCodeKecamatanFilter').addEventListener('change', renderKecamatanChart);
