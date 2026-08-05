@@ -1601,18 +1601,19 @@
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
-                            <p class="text-xs text-gray-400 mb-3">Masukkan nominal revenue yang benar-benar terkumpul (cash-in) hari ini untuk masing-masing Sales Code. Nilai ini otomatis terakumulasi setiap hari menjadi Total Terkumpul bulan berjalan &amp; menjadi basis perhitungan Forecast Revenue, % Pencapaian, dan Selisih.</p>
+                            <p class="text-xs text-gray-400 mb-3">Masukkan <strong>Total Terkumpul dari awal bulan s/d hari ini</strong> (angka kumulatif, bukan hanya transaksi hari ini) untuk masing-masing Sales Code. Sistem akan otomatis menghitung selisih dengan input terakhir sebelumnya sebagai "Revenue Hari Ini", tanpa menjumlahkan seluruh input harian (menghindari dobel hitung).</p>
                             <div class="overflow-x-auto rounded-lg shadow-md mb-4">
                                 <table class="min-w-full bg-white table-custom" id="manualRevenueTable">
                                     <thead class="bg-gray-700 text-white">
                                         <tr>
                                             <th class="py-2 px-3 uppercase font-semibold text-xs rounded-tl-lg">Sales Code</th>
-                                            <th class="py-2 px-3 uppercase font-semibold text-xs text-right">Sudah Terkumpul Bulan Ini</th>
-                                            <th class="py-2 px-3 uppercase font-semibold text-xs text-right rounded-tr-lg">Input Hari Ini (Rp)</th>
+                                            <th class="py-2 px-3 uppercase font-semibold text-xs text-right">Terkumpul s.d. Kemarin</th>
+                                            <th class="py-2 px-3 uppercase font-semibold text-xs text-right">Total Terkumpul s.d. Hari Ini (Rp)</th>
+                                            <th class="py-2 px-3 uppercase font-semibold text-xs text-right rounded-tr-lg">Selisih (Revenue Hari Ini)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="manualRevenueBody">
-                                        <tr><td colspan="3" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
+                                        <tr><td colspan="4" class="text-center text-gray-500 py-4">Memuat data...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -5575,17 +5576,57 @@
             return (store[code] && store[code][dateStr]) || 0;
         }
 
-        // Total input manual untuk satu Sales Code, dijumlahkan dari seluruh tanggal yang
-        // jatuh pada bulan & tahun terpilih (akumulasi harian -> total bulan berjalan).
-        function getManualRevenueMonthTotal(code, year, monthIndex) {
+        // Seluruh entri tanggal (dalam bulan & tahun terpilih) untuk satu Sales Code,
+        // diurutkan kronologis (string 'YYYY-MM-DD' bisa diurutkan langsung secara leksikografis).
+        function getManualRevenueEntriesSorted(code, year, monthIndex) {
             const store = getManualRevenueStore();
             const entries = store[code] || {};
-            let total = 0;
-            Object.keys(entries).forEach(dateStr => {
-                const d = new Date(`${dateStr}T00:00:00`);
-                if (d.getFullYear() === year && d.getMonth() === monthIndex) total += entries[dateStr];
-            });
-            return total;
+            return Object.keys(entries)
+                .filter(dateStr => {
+                    const d = new Date(`${dateStr}T00:00:00`);
+                    return d.getFullYear() === year && d.getMonth() === monthIndex;
+                })
+                .sort()
+                .map(dateStr => ({ dateStr, value: entries[dateStr] }));
+        }
+
+        // --- PENTING: PERBAIKAN LOGIKA "TOTAL TERKUMPUL BULAN INI" ---
+        // Setiap angka yang diinput Area Coordinator per tanggal SUDAH berupa akumulasi
+        // (running total) dari awal bulan sampai tanggal tsb -- BUKAN nominal transaksi
+        // harian yang berdiri sendiri. Karena itu Total Terkumpul Bulan Ini TIDAK BOLEH
+        // dihitung dengan menjumlahkan seluruh entri harian (itu akan mendobel-hitung,
+        // misal: kemarin Rp140.000.000 + hari ini Rp150.000.000 dijumlahkan jadi
+        // Rp290.000.000, padahal yang benar tetap Rp150.000.000 karena angka hari ini
+        // SUDAH mencakup seluruh hari sebelumnya).
+        // Total Terkumpul Bulan Ini = nilai entri dengan TANGGAL PALING BARU pada bulan
+        // tsb (entri terbaru otomatis sudah mencakup seluruh akumulasi sebelumnya).
+        function getManualRevenueMonthTotal(code, year, monthIndex) {
+            const sorted = getManualRevenueEntriesSorted(code, year, monthIndex);
+            if (sorted.length === 0) return 0;
+            return sorted[sorted.length - 1].value;
+        }
+
+        // Revenue yang BENAR-BENAR masuk pada tanggal tertentu (selisih harian), dipakai untuk
+        // kolom tampilan "Revenue Hari Ini" -- BUKAN untuk dijumlahkan ke Total Terkumpul Bulan Ini.
+        // Formula sesuai kebutuhan: Total Kemarin + (Total Hari Ini - Total Kemarin) = Total Hari Ini,
+        // sehingga Selisih/Revenue Hari Ini = Total (kumulatif) pada tanggal ini dikurangi Total
+        // (kumulatif) pada entri terakhir SEBELUM tanggal ini dalam bulan yang sama. Jika belum ada
+        // entri sebelumnya pada bulan tsb, baseline dianggap Rp0 (awal bulan).
+        function getManualRevenueDeltaForDate(code, year, monthIndex, dateStr) {
+            const store = getManualRevenueStore();
+            const entries = store[code] || {};
+            const currentValue = entries[dateStr];
+            if (currentValue === undefined) return 0; // belum ada input untuk tanggal ini
+            const sorted = getManualRevenueEntriesSorted(code, year, monthIndex);
+            let previousValue = 0; // baseline awal bulan (belum ada revenue terkumpul)
+            for (const entry of sorted) {
+                if (entry.dateStr < dateStr) {
+                    previousValue = entry.value;
+                } else if (entry.dateStr === dateStr) {
+                    break;
+                }
+            }
+            return Math.max(0, currentValue - previousValue);
         }
 
         // Total input manual seluruh Sales Code untuk bulan & tahun terpilih (dipakai sebagai
@@ -5628,22 +5669,37 @@
             body.innerHTML = '';
             const codes = getAllKnownSalesCodes();
             if (codes.length === 0) {
-                body.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500 py-4">Belum ada data Sales Code.</td></tr>';
+                body.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-4">Belum ada data Sales Code.</td></tr>';
             } else {
                 codes.forEach(code => {
                     const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
-                    const monthTotal = getManualRevenueMonthTotal(code, selectedYear, selectedMonth);
+                    // "Terkumpul s.d. Kemarin" = entri kumulatif terakhir SEBELUM hari ini pada bulan
+                    // ini (baseline Rp0 kalau belum pernah diinput bulan ini). Dipakai sebagai acuan
+                    // untuk menghitung selisih (Revenue Hari Ini) secara otomatis & live saat diketik.
+                    const sortedEntries = getManualRevenueEntriesSorted(code, selectedYear, selectedMonth);
+                    let baselineBeforeToday = 0;
+                    sortedEntries.forEach(entry => {
+                        if (entry.dateStr < dateStr) baselineBeforeToday = entry.value;
+                    });
                     const todayValue = getManualRevenueForCodeDate(code, dateStr);
                     const row = body.insertRow();
                     row.dataset.code = code;
+                    row.dataset.baseline = baselineBeforeToday;
                     row.className = focusCode && code === focusCode ? 'bg-green-50' : 'hover:bg-gray-50';
                     row.innerHTML = `
                         <td class="py-2 px-3 text-sm font-semibold text-gray-800">${name}</td>
-                        <td class="py-2 px-3 text-sm text-right text-gray-600">${formatRupiah(monthTotal)}</td>
+                        <td class="py-2 px-3 text-sm text-right text-gray-600">${formatRupiah(baselineBeforeToday)}</td>
                         <td class="py-2 px-3 text-sm text-right">
                             <input type="number" min="0" step="1000" value="${todayValue || ''}" placeholder="0" class="manual-revenue-input w-36 sm:w-40 text-right border border-gray-300 rounded-lg py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-green-400" />
                         </td>
+                        <td class="py-2 px-3 text-sm text-right font-bold text-green-600 manual-revenue-delta">${formatRupiah(Math.max(0, (todayValue || 0) - baselineBeforeToday))}</td>
                     `;
+                    const inputEl = row.querySelector('.manual-revenue-input');
+                    const deltaEl = row.querySelector('.manual-revenue-delta');
+                    inputEl.addEventListener('input', () => {
+                        const val = Math.max(0, parseInt(inputEl.value, 10) || 0);
+                        deltaEl.textContent = formatRupiah(Math.max(0, val - baselineBeforeToday));
+                    });
                 });
             }
 
@@ -6061,7 +6117,7 @@
             const getCollectedBucket = (code) => {
                 if (!collectedBySalesCode[code]) {
                     collectedBySalesCode[code] = {
-                        manualToday: getManualRevenueForCodeDate(code, todayStr),
+                        manualToday: getManualRevenueDeltaForDate(code, selectedYear, selectedMonth, todayStr),
                         manualMonthTotal: getManualRevenueMonthTotal(code, selectedYear, selectedMonth),
                         newRevenue: 0,
                         newCustomers: []
@@ -6327,7 +6383,7 @@
                         const codeTarget = getIndividualRevenueTarget(code, selectedYear, selectedMonth);
                         // achieved = Forecast Revenue (manual "Revenue Hari Ini" terakumulasi + sisa recurring)
                         const achieved = codeAchievedForTarget[code] !== undefined ? codeAchievedForTarget[code] : getManualRevenueMonthTotal(code, selectedYear, selectedMonth);
-                        const manualTodayForCode = getManualRevenueForCodeDate(code, todayStr);
+                        const manualTodayForCode = getManualRevenueDeltaForDate(code, selectedYear, selectedMonth, todayStr);
 
                         const revenueTodayCell = `
                             <td class="py-3 px-4 text-sm text-right">
