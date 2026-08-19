@@ -1083,6 +1083,10 @@
                     <div class="chart-container">
                         <canvas id="forecastTerminationChart"></canvas>
                     </div>
+                    <div id="forecastTerminationChartError" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mt-4 hidden"></div>
+
+                    <!-- Dipindahkan ke sini (tepat di bawah chart) atas permintaan: tabel detail
+                         customer forecast terminasi yang diisi saat bar chart di atas di-klik. -->
                     <div class="overflow-x-auto rounded-lg shadow-md mt-6">
                         <h4 class="text-lg font-bold text-gray-800 mb-3 text-center" id="forecastTerminationTableTitle">Detail Customer Forecast Terminasi</h4>
                         <table class="min-w-full bg-white table-custom" id="forecastTerminationDetailTable">
@@ -1104,7 +1108,136 @@
                         </table>
                         <p id="forecastTerminationDetailTableMessage" class="text-center text-gray-600 p-4 hidden"></p>
                     </div>
-                    <div id="forecastTerminationChartError" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mt-4 hidden"></div>
+
+                    <!-- ================= VISUAL TAMBAHAN: mengikuti filter Bulan/Tahun di atas ================= -->
+                    <h3 class="text-lg font-bold text-gray-800 mt-10 mb-1 text-center">Visual Data Bulan/Tahun Terpilih</h3>
+                    <p id="ftVisualPeriodLabel" class="text-center text-xs text-gray-400 mb-4">-</p>
+
+                    <!-- Metric: Total Tiket -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                        <div class="metric-card p-6 flex items-center justify-between sm:col-span-1">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-500">Customer Terminate Bulan Ini</h4>
+                                <p id="ftKpiTerminated" class="text-3xl font-bold text-gray-800">0</p>
+                            </div>
+                            <div class="icon-box icon-red"><i class="fas fa-user-times"></i></div>
+                        </div>
+                        <div class="metric-card p-6 flex items-center justify-between sm:col-span-1">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-500">Total Tiket (TOTAL_TICKET)</h4>
+                                <p id="ftKpiTotalTicket" class="text-3xl font-bold text-gray-800">0</p>
+                            </div>
+                            <div class="icon-box icon-orange"><i class="fas fa-ticket-alt"></i></div>
+                        </div>
+                        <div class="metric-card p-6 flex items-center justify-between sm:col-span-1">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-500">Rata-rata Tiket / Customer</h4>
+                                <p id="ftKpiAvgTicket" class="text-3xl font-bold text-gray-800">0</p>
+                            </div>
+                            <div class="icon-box icon-gray"><i class="fas fa-headset"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Terminasi per Sales Code & Umur Customer Terminate -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Chart Terminasi Bulan Berjalan (per Sales Code)</h3>
+                            <div class="chart-container h-72">
+                                <canvas id="ftSalesChart"></canvas>
+                            </div>
+                            <p id="ftSalesChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Umur Customer Terminate Bulan Ini</h3>
+                            <div class="chart-container h-72">
+                                <canvas id="ftAgeChart"></canvas>
+                            </div>
+                            <p id="ftAgeChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                    </div>
+
+                    <!-- Status Modem Suspend & Terminate & Total Tiket per customer -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Modem Customer Suspend &amp; Terminate Bulan Ini</h3>
+                            <div class="chart-container h-72">
+                                <canvas id="ftModemChart"></canvas>
+                            </div>
+                            <p id="ftModemChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Jumlah Tiket per Customer Terminate</h3>
+                            <div class="chart-container h-72">
+                                <canvas id="ftTicketChart"></canvas>
+                            </div>
+                            <p id="ftTicketChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                    </div>
+
+                    <!-- ================= CHART REASON CUSTOMER (alasan suspend/terminate) ================= -->
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Chart Reason Customer</h3>
+                        <div class="chart-container h-72">
+                            <canvas id="ftReasonChart"></canvas>
+                        </div>
+                        <p id="ftReasonChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                    </div>
+
+                    <!-- ================= CHART CUSTOMER SUSPEND & TERMINATE PER SUBDISTRICT ================= -->
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Customer Suspend &amp; Terminate per Subdistrict</h3>
+                        <p class="text-center text-xs text-gray-400 mb-2">Mengikuti filter Bulan/Tahun &amp; Subdistrict di atas. Klik batang untuk lihat detail customer.</p>
+                        <div class="chart-container h-72">
+                            <canvas id="ftSubdistrictChart"></canvas>
+                        </div>
+                        <p id="ftSubdistrictChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                    </div>
+
+                    <!-- ================= TABEL CUSTOMER SUSPEND & TERMINATE + REASON CUSTOMER ================= -->
+                    <div class="overflow-x-auto rounded-lg shadow-md mb-8">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 px-1">
+                            <h4 class="text-lg font-bold text-gray-800 text-center flex-1 min-w-[200px]">Customer Suspend &amp; Terminate <span id="reasonTerminationPeriodLabel" class="text-gray-400 font-normal text-sm"></span></h4>
+                            <div class="flex items-center gap-1 text-xs">
+                                <label for="reasonTerminationSubdistrictSelect" class="text-gray-500 font-semibold whitespace-nowrap">Subdistrict:</label>
+                                <select id="reasonTerminationSubdistrictSelect" class="shadow-sm border rounded-lg py-1.5 px-2 text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 max-w-[160px]">
+                                    <option value="ALL">Semua Subdistrict</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-1 text-xs">
+                                <label for="reasonTerminationSortSelect" class="text-gray-500 font-semibold whitespace-nowrap">Urutkan:</label>
+                                <select id="reasonTerminationSortSelect" class="shadow-sm border rounded-lg py-1.5 px-2 text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    <option value="desc">Tanggal Terbaru</option>
+                                    <option value="asc">Tanggal Terlama</option>
+                                </select>
+                            </div>
+                        </div>
+                        <table class="min-w-full bg-white table-custom" id="reasonTerminationTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">Status</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm min-w-[140px]">Nama Pelanggan</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Status Modem</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Tanggal</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Umur Berlangganan</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm min-w-[160px]">Reason Customer</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Keterangan Visit</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Diisi oleh renderReasonTerminationTable() -->
+                            </tbody>
+                        </table>
+                        <p id="reasonTerminationTableMessage" class="text-center text-gray-600 p-4 hidden"></p>
+                        <p class="text-[11px] text-gray-400 px-2 py-2">
+                            <i class="fas fa-square text-red-100 mr-1" style="text-shadow:0 0 0 1px #fecaca;"></i>Baris merah lembut = sudah Terminate.
+                            Baris transparan = masih Suspend (belum terminasi).
+                            Klik <i class="fas fa-pen text-blue-500 mx-1"></i> untuk isi/ubah reason, penjelasan &amp; foto bukti visit,
+                            atau <i class="fas fa-eye text-gray-500 mx-1"></i> untuk lihat report ringkas.
+                        </p>
+                    </div>
+
                 </div>
             </section>
             
@@ -1419,6 +1552,73 @@
                             </div>
                             <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
                                 <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('overviewDetailModal')">Tutup</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Edit Reason Customer (Suspend/Terminate) - dipicu icon pensil pada tabel
+                         "Customer Suspend & Terminate". Tombol "Simpan" di sini yang benar-benar
+                         mengirim reason, penjelasan (free text) & foto bukti visit ke spreadsheet. -->
+                    <div id="reasonTerminationEditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1080] p-2">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full md:w-3/4 lg:w-1/2 max-h-[92vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                                <h5 class="text-base sm:text-xl font-semibold text-gray-800">Edit Reason Customer</h5>
+                                <button type="button" class="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2" onclick="closeModal('reasonTerminationEditModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <p id="reasonTerminationEditName" class="text-sm text-gray-500 mb-4">-</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-bold mb-1">Reason Customer</label>
+                                    <select id="reasonTerminationEditSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-bold mb-1">Penjelasan (Free Text)</label>
+                                    <textarea id="reasonTerminationEditFreeText" rows="3" placeholder="Penjelasan tambahan..." class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-bold mb-1">Foto Bukti Visit <span class="text-gray-400 font-normal">(otomatis dikompres maks. &plusmn;200KB)</span></label>
+                                    <div class="flex items-center gap-3 flex-wrap">
+                                        <img id="reasonTerminationEditPhotoPreview" src="" class="h-20 w-20 object-cover rounded-lg border hidden" alt="Foto bukti visit">
+                                        <input type="file" id="reasonTerminationEditFileInput" accept="image/*" class="hidden">
+                                        <button type="button" id="reasonTerminationEditUploadBtn" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm whitespace-nowrap">
+                                            <i class="fas fa-camera mr-1"></i> Upload/Ganti Foto
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap justify-between items-center mt-6 border-t pt-4 gap-2">
+                                <span id="reasonTerminationEditHint" class="text-xs text-green-600 hidden"><i class="fas fa-check-circle mr-1"></i>Tersimpan ke spreadsheet</span>
+                                <div class="flex justify-end space-x-3 ml-auto">
+                                    <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('reasonTerminationEditModal')">Tutup</button>
+                                    <button type="button" id="reasonTerminationEditSaveBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 whitespace-nowrap">
+                                        <i class="fas fa-save mr-1"></i> Simpan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Lihat Report Ringkas (icon mata) - ringkasan customer + foto hasil visit -->
+                    <div id="reasonTerminationViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-[1080] p-2">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full md:w-3/4 lg:w-1/2 max-h-[92vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300">
+                            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                                <h5 class="text-base sm:text-xl font-semibold text-gray-800">Report Ringkas Customer</h5>
+                                <button type="button" class="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2" onclick="closeModal('reasonTerminationViewModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="reasonTerminationViewBody" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 mb-4">
+                                <!-- Diisi oleh openReasonTerminationViewModal() -->
+                            </div>
+                            <div class="border-t pt-4">
+                                <p class="text-sm font-semibold text-gray-600 mb-2">Foto Bukti Visit</p>
+                                <img id="reasonTerminationViewPhoto" src="" class="max-h-64 rounded-lg border hidden" alt="Foto bukti visit">
+                                <p id="reasonTerminationViewNoPhoto" class="text-sm text-gray-400 italic">Belum ada foto bukti visit.</p>
+                            </div>
+                            <div class="flex justify-end space-x-3 mt-6 border-t pt-4">
+                                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition-colors duration-200" onclick="closeModal('reasonTerminationViewModal')">Tutup</button>
                             </div>
                         </div>
                     </div>
@@ -1746,6 +1946,14 @@
         let modemStatusTerminateChartInstance = null;
         let subdistrictInstallChartInstance = null;
         let penetrationChartInstance = null;
+
+        // --- CHART INSTANCE KHUSUS VISUAL TAMBAHAN FORECAST TERMINASI (ikut filter Bulan/Tahun) ---
+        let ftSalesChartInstance = null;
+        let ftAgeChartInstance = null;
+        let ftModemChartInstance = null;
+        let ftTicketChartInstance = null;
+        let ftReasonChartInstance = null;
+        let ftSubdistrictChartInstance = null;
 
         // --- VARIABEL & CHART INSTANCE KHUSUS PROSPECT ---
         let allProspects = []; // Data mentah dari prospectWebAppUrl
@@ -4809,6 +5017,17 @@
             const totalForecastTerminations = forecastTerminations.reduce((sum, value) => sum + value, 0);
             document.getElementById('totalForecastTerminationCountDisplay').textContent = `Total Terminasi Aktif: ${formatNumber(totalActualTerminations)} | Total Forecast Terminasi: ${formatNumber(totalForecastTerminations)}`;
 
+            // Render seluruh visual tambahan (chart & tabel) yang mengikuti filter Bulan/Tahun yang sama
+            const ftPeriodLabel = `${getMonthName(selectedMonth)} ${selectedYear}`;
+            const ftPeriodEl = document.getElementById('ftVisualPeriodLabel');
+            if (ftPeriodEl) ftPeriodEl.textContent = `Periode: ${ftPeriodLabel}`;
+            const rtPeriodEl = document.getElementById('reasonTerminationPeriodLabel');
+            if (rtPeriodEl) rtPeriodEl.textContent = `(${ftPeriodLabel})`;
+            renderFtSalesChart(selectedMonth, selectedYear);
+            renderFtAgeChart(selectedMonth, selectedYear);
+            renderFtModemChart(selectedMonth, selectedYear);
+            renderFtTicketChart(selectedMonth, selectedYear);
+            renderReasonTerminationTable(selectedMonth, selectedYear);
 
             const hasData = actualTerminations.some(val => val > 0) || forecastTerminations.some(val => val > 0);
 
@@ -4985,6 +5204,19 @@
                     vaButton.onclick = () => showVaDetail(customer);
                     actionCell.appendChild(vaButton);
 
+                    // Icon Edit (pensil): isi/ubah Reason Customer, penjelasan (free text) &
+                    // upload foto bukti visit langsung dari tabel forecast ini. Data disimpan
+                    // ke tab "Reason_Termination" (kunci = CONTRACTACCOUNT) lewat modal yang
+                    // sama dipakai tabel "Customer Suspend & Terminate" di bawah, jadi begitu
+                    // disimpan otomatis ikut muncul/ter-update di tabel tsb tanpa perlu isi ulang.
+                    const editReasonBtn = document.createElement('button');
+                    editReasonBtn.type = 'button';
+                    editReasonBtn.title = 'Edit Reason / Penjelasan / Foto Bukti Visit';
+                    editReasonBtn.className = 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white transition-colors';
+                    editReasonBtn.innerHTML = '<i class="fas fa-pen"></i>';
+                    editReasonBtn.onclick = () => openReasonTerminationEditModal(customer);
+                    actionCell.appendChild(editReasonBtn);
+
                     const waLink = buildWhatsAppLink(customer);
                     const waAnchor = document.createElement('a');
                     waAnchor.target = '_blank';
@@ -5006,6 +5238,643 @@
             }
         }
 
+
+        // ==========================================================================
+        // VISUAL TAMBAHAN FORECAST TERMINASI - semuanya mengikuti filter
+        // forecastMonthSelect/forecastYearSelect (dipanggil dari renderForecastTerminationChart).
+        // Mengambil customer TERMINATED dengan TERMDATE di bulan/tahun terpilih -
+        // sumber data yang sama dengan tabel "Terminasi Bulan Berjalan" di Customer Overview,
+        // hanya saja di sini bulan/tahunnya bisa dipilih bebas (tidak selalu bulan berjalan).
+        function getTerminatedCustomersForPeriod(selectedMonth, selectedYear) {
+            return allCustomers.filter(c => {
+                if (!c.STATUS || c.STATUS.toUpperCase() !== 'TERMINATED') return false;
+                const d = parseDate(c.TERMDATE);
+                return d && d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+            });
+        }
+
+        // 1. Chart Terminasi Bulan Berjalan per Sales Code
+        function renderFtSalesChart(selectedMonth, selectedYear) {
+            const ctx = document.getElementById('ftSalesChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ftSalesChartInstance) ftSalesChartInstance.destroy();
+
+            const terminated = getTerminatedCustomersForPeriod(selectedMonth, selectedYear);
+            const customersByCode = {};
+            terminated.forEach(c => {
+                const code = c.SALESCODE || 'Tidak Diketahui';
+                (customersByCode[code] = customersByCode[code] || []).push(c);
+            });
+
+            const errorEl = document.getElementById('ftSalesChartError');
+            const sortedCodes = Object.keys(customersByCode).sort((a, b) => customersByCode[b].length - customersByCode[a].length);
+            if (sortedCodes.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Belum ada terminasi pada ${getMonthName(selectedMonth)} ${selectedYear}.`; }
+                return;
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+
+            const labels = sortedCodes.map(code => salesCodeNames[code] ? `${salesCodeNames[code]}` : code);
+            const data = sortedCodes.map(code => customersByCode[code].length);
+
+            ftSalesChartInstance = new Chart(context, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Terminasi', data: data, backgroundColor: 'rgba(220, 38, 38, 0.7)', borderColor: 'rgba(220, 38, 38, 1)', borderWidth: 1, borderRadius: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const code = sortedCodes[elements[0].index];
+                            showOverviewDetailModal(customersByCode[code], `Terminasi ${getMonthName(selectedMonth)} ${selectedYear} - ${labels[elements[0].index]}`, true);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. Umur Customer Terminate Bulan Ini (berdasarkan bulan/tahun terpilih)
+        function renderFtAgeChart(selectedMonth, selectedYear) {
+            const ctx = document.getElementById('ftAgeChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ftAgeChartInstance) ftAgeChartInstance.destroy();
+
+            const terminated = getTerminatedCustomersForPeriod(selectedMonth, selectedYear);
+            const bucketLabels = ['1-3 Bulan', '4-9 Bulan', '9-12 Bulan', '> 12 Bulan'];
+            const customersByBucket = { '1-3 Bulan': [], '4-9 Bulan': [], '9-12 Bulan': [], '> 12 Bulan': [] };
+
+            terminated.forEach(c => {
+                const term = parseDate(c.TERMDATE);
+                const start = parseDate(c.CONTRACTSTARTDATE);
+                if (!term || !start) return;
+                const ageMonths = (term - start) / (1000 * 60 * 60 * 24 * 30);
+                if (ageMonths <= 3) customersByBucket['1-3 Bulan'].push(c);
+                else if (ageMonths <= 9) customersByBucket['4-9 Bulan'].push(c);
+                else if (ageMonths <= 12) customersByBucket['9-12 Bulan'].push(c);
+                else customersByBucket['> 12 Bulan'].push(c);
+            });
+
+            const totalFound = bucketLabels.reduce((sum, l) => sum + customersByBucket[l].length, 0);
+            const errorEl = document.getElementById('ftAgeChartError');
+            if (totalFound === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Tidak ada customer terminate pada ${getMonthName(selectedMonth)} ${selectedYear}.`; }
+                return;
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+
+            ftAgeChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels: bucketLabels,
+                    datasets: [{ label: 'Jumlah Customer', data: bucketLabels.map(l => customersByBucket[l].length), backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: 'rgba(245, 158, 11, 1)', borderWidth: 1, borderRadius: 4 }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const label = bucketLabels[elements[0].index];
+                            showOverviewDetailModal(customersByBucket[label], `Customer Terminate ${getMonthName(selectedMonth)} ${selectedYear} - Umur ${label}`, true, SUSPEND_AGE_DETAIL_COLUMNS);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 3. Status Modem Customer Suspend & Terminate Bulan Ini (pie, 3 klasifikasi) - bulan/tahun terpilih
+        function renderFtModemChart(selectedMonth, selectedYear) {
+            const ctx = document.getElementById('ftModemChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ftModemChartInstance) ftModemChartInstance.destroy();
+
+            const counts = {};
+            const customersByClass = {};
+            allCustomers.forEach(c => {
+                if (!c.STATUS) return;
+                const statusUpper = c.STATUS.toUpperCase();
+                if (statusUpper !== 'TERMINATED' && statusUpper !== 'SUSPENDED') return;
+                const d = parseDate(c.TERMDATE);
+                if (!d || d.getFullYear() !== selectedYear || d.getMonth() !== selectedMonth) return;
+                const modemClass = classifyModemStatus(c);
+                counts[modemClass] = (counts[modemClass] || 0) + 1;
+                (customersByClass[modemClass] = customersByClass[modemClass] || []).push(c);
+            });
+
+            const errorEl = document.getElementById('ftModemChartError');
+            const labels = Object.keys(counts);
+            if (labels.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Belum ada data status modem untuk suspend/terminasi ${getMonthName(selectedMonth)} ${selectedYear}.`; }
+                return;
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+
+            const data = labels.map(l => counts[l]);
+            const bg = labels.map(l => (MODEM_CLASS_COLORS[l] || MODEM_CLASS_COLORS['Tidak Diketahui']).bg);
+            const bd = labels.map(l => (MODEM_CLASS_COLORS[l] || MODEM_CLASS_COLORS['Tidak Diketahui']).border);
+
+            ftModemChartInstance = new Chart(context, {
+                type: 'pie',
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: bg, borderColor: bd, borderWidth: 1 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#333', boxWidth: 12, font: { size: 11 } } } },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const label = labels[elements[0].index];
+                            showOverviewDetailModal(customersByClass[label] || [], `Status Modem Suspend & Terminate ${getMonthName(selectedMonth)} ${selectedYear} - ${label}`, true, MODEM_SUBDISTRICT_DETAIL_COLUMNS);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 4. Jumlah Tiket (TOTAL_TICKET) per customer terminate bulan/tahun terpilih + KPI cards
+        function renderFtTicketChart(selectedMonth, selectedYear) {
+            const ctx = document.getElementById('ftTicketChart');
+            const kpiTerminatedEl = document.getElementById('ftKpiTerminated');
+            const kpiTicketEl = document.getElementById('ftKpiTotalTicket');
+            const kpiAvgEl = document.getElementById('ftKpiAvgTicket');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ftTicketChartInstance) ftTicketChartInstance.destroy();
+
+            const terminated = getTerminatedCustomersForPeriod(selectedMonth, selectedYear);
+            const totalTicket = terminated.reduce((sum, c) => sum + (parseInt(c.TOTAL_TICKET, 10) || 0), 0);
+
+            if (kpiTerminatedEl) kpiTerminatedEl.textContent = formatNumber(terminated.length);
+            if (kpiTicketEl) kpiTicketEl.textContent = formatNumber(totalTicket);
+            if (kpiAvgEl) kpiAvgEl.textContent = terminated.length > 0 ? (totalTicket / terminated.length).toFixed(1) : '0';
+
+            const errorEl = document.getElementById('ftTicketChartError');
+            const withTickets = terminated.filter(c => (parseInt(c.TOTAL_TICKET, 10) || 0) > 0);
+            if (withTickets.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Tidak ada data tiket untuk customer terminate ${getMonthName(selectedMonth)} ${selectedYear}.`; }
+                return;
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+
+            // Top 15 customer dengan tiket terbanyak, supaya chart tetap terbaca
+            const sorted = withTickets.slice().sort((a, b) => (parseInt(b.TOTAL_TICKET, 10) || 0) - (parseInt(a.TOTAL_TICKET, 10) || 0)).slice(0, 15);
+            const labels = sorted.map(c => c.BP_FULLNAME || c.CONTRACTACCOUNT || '-');
+            const data = sorted.map(c => parseInt(c.TOTAL_TICKET, 10) || 0);
+
+            ftTicketChartInstance = new Chart(context, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Total Tiket', data: data, backgroundColor: 'rgba(37, 99, 235, 0.7)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1, borderRadius: 4 }] },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const c = sorted[elements[0].index];
+                            showOverviewDetailModal([c], `Detail Tiket - ${c.BP_FULLNAME || c.CONTRACTACCOUNT}`, true, DEFAULT_DETAIL_COLUMNS);
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================================================
+        // TABEL CUSTOMER SUSPEND & TERMINATE + REASON CUSTOMER (mengikuti filter Bulan/Tahun)
+        // Kini menampilkan SEMUA customer SUSPENDED & TERMINATED pada periode terpilih
+        // (bukan hanya TERMINATED), sejalan dengan angka "Total Terminasi Aktif" &
+        // "Total Forecast Terminasi" di atasnya. Reason, penjelasan (free text), dan
+        // foto bukti visit diisi lewat modal Edit (icon pensil) supaya tabel tetap
+        // ringkas & mudah dibaca di HP mode vertikal; hasilnya dikirim ke spreadsheet
+        // tab "Reason_Termination" lewat updateReasonTerminationEntry().
+        // ==========================================================================
+        function buildReasonSelectHtml(customer, currentReason) {
+            let optionsHtml = '<option value="">- Pilih Reason -</option>';
+            REASON_TERMINATE_OPTIONS.forEach(opt => {
+                optionsHtml += `<option value="${opt}" ${currentReason === opt ? 'selected' : ''}>${opt}</option>`;
+            });
+            return optionsHtml;
+        }
+
+        // Kandidat tabel: SEMUA customer SUSPENDED & TERMINATED dengan TERMDATE
+        // (aktual maupun estimasi) jatuh di bulan/tahun terpilih. Parameter
+        // subdistrict opsional ('ALL' atau kosong = semua subdistrict) untuk
+        // filter tambahan berdasarkan SUBDISTRICT_INST.
+        function getReasonCandidatesForPeriod(selectedMonth, selectedYear, subdistrict) {
+            return allCustomers.filter(c => {
+                if (!c.STATUS) return false;
+                const statusUpper = c.STATUS.toUpperCase();
+                if (statusUpper !== 'TERMINATED' && statusUpper !== 'SUSPENDED') return false;
+                const d = parseDate(c.TERMDATE);
+                if (!d || d.getFullYear() !== selectedYear || d.getMonth() !== selectedMonth) return false;
+                if (subdistrict && subdistrict !== 'ALL') {
+                    const sub = (c.SUBDISTRICT_INST || 'Tidak Diketahui').trim();
+                    if (sub !== subdistrict) return false;
+                }
+                return true;
+            });
+        }
+
+        // Mengisi ulang opsi dropdown filter Subdistrict berdasarkan daftar subdistrict
+        // yang benar-benar ada pada kandidat customer suspend/terminate bulan/tahun
+        // terpilih (BUKAN dari CONTRACTACCOUNT semua customer), supaya opsi yang
+        // muncul relevan dengan periode yang sedang dilihat. Pilihan yang sedang
+        // aktif dipertahankan kalau masih tersedia di daftar baru.
+        function populateReasonTerminationSubdistrictOptions(candidatesForPeriod) {
+            const selectEl = document.getElementById('reasonTerminationSubdistrictSelect');
+            if (!selectEl) return;
+            const previousValue = selectEl.value || 'ALL';
+
+            const subdistricts = Array.from(new Set(
+                candidatesForPeriod.map(c => (c.SUBDISTRICT_INST || 'Tidak Diketahui').trim())
+            )).sort((a, b) => a.localeCompare(b));
+
+            selectEl.innerHTML = '<option value="ALL">Semua Subdistrict</option>' +
+                subdistricts.map(sub => `<option value="${sub}">${sub}</option>`).join('');
+
+            selectEl.value = subdistricts.includes(previousValue) ? previousValue : 'ALL';
+        }
+
+        const MODEM_BADGE_COLOR_CLASSES = {
+            'Rent': 'bg-teal-100 text-teal-700',
+            'Buy': 'bg-indigo-100 text-indigo-700',
+            'Dipinjamkan': 'bg-amber-100 text-amber-700'
+        };
+
+        function renderReasonTerminationTable(selectedMonth, selectedYear) {
+            const tableBody = document.querySelector('#reasonTerminationTable tbody');
+            const messageEl = document.getElementById('reasonTerminationTableMessage');
+            if (!tableBody) return;
+
+            // Kalau dipanggil tanpa argumen (mis. dari syncReasonTerminationFromServer),
+            // pakai bulan/tahun yang sedang aktif di filter Forecast Terminasi.
+            if (selectedMonth === undefined || selectedYear === undefined) {
+                const monthSelect = document.getElementById('forecastMonthSelect');
+                const yearSelect = document.getElementById('forecastYearSelect');
+                if (!monthSelect || !yearSelect || monthSelect.value === '') return;
+                selectedMonth = parseInt(monthSelect.value, 10);
+                selectedYear = parseInt(yearSelect.value, 10);
+            }
+
+            const sortSelect = document.getElementById('reasonTerminationSortSelect');
+            const sortOrder = sortSelect ? sortSelect.value : 'desc'; // 'desc' = terbaru dulu
+
+            // Kandidat SEMUA subdistrict dulu (dipakai untuk isi opsi dropdown Subdistrict
+            // & untuk chart per-subdistrict), baru difilter lagi sesuai Subdistrict terpilih
+            // untuk isi tabel & chart Reason Customer.
+            const candidatesAllSubdistricts = getReasonCandidatesForPeriod(selectedMonth, selectedYear, 'ALL');
+            populateReasonTerminationSubdistrictOptions(candidatesAllSubdistricts);
+
+            const subdistrictSelect = document.getElementById('reasonTerminationSubdistrictSelect');
+            const selectedSubdistrict = subdistrictSelect ? subdistrictSelect.value : 'ALL';
+
+            const candidates = getReasonCandidatesForPeriod(selectedMonth, selectedYear, selectedSubdistrict)
+                .sort((a, b) => {
+                    const da = parseDate(a.TERMDATE) || 0;
+                    const db = parseDate(b.TERMDATE) || 0;
+                    return sortOrder === 'asc' ? (da - db) : (db - da);
+                });
+
+            renderFtReasonChart(candidates);
+            renderFtSubdistrictChart(candidatesAllSubdistricts, selectedMonth, selectedYear);
+
+            tableBody.innerHTML = '';
+
+            if (candidates.length === 0) {
+                if (messageEl) {
+                    messageEl.textContent = `Tidak ada customer suspend/terminate pada ${getMonthName(selectedMonth)} ${selectedYear}.`;
+                    messageEl.classList.remove('hidden');
+                }
+                return;
+            }
+            if (messageEl) messageEl.classList.add('hidden');
+
+            candidates.forEach(customer => {
+                const key = customer.CONTRACTACCOUNT;
+                const entry = getReasonTerminationEntry(key);
+                const isTerminated = (customer.STATUS || '').toUpperCase() === 'TERMINATED';
+
+                const row = tableBody.insertRow();
+                // Bedakan warna baris: Terminate = merah soft (teks tetap terbaca),
+                // Suspend = transparan (tidak diwarnai).
+                row.classList.add(isTerminated ? 'bg-red-50' : 'bg-transparent', isTerminated ? 'hover:bg-red-100' : 'hover:bg-gray-50');
+
+                // Kolom Status
+                const statusCell = row.insertCell();
+                const statusBadge = document.createElement('span');
+                statusBadge.textContent = isTerminated ? 'Terminate' : 'Suspend';
+                statusBadge.className = isTerminated
+                    ? 'inline-block px-2 py-1 rounded-full text-xs font-semibold bg-red-200 text-red-800'
+                    : 'inline-block px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600';
+                statusCell.appendChild(statusBadge);
+
+                // Kolom Nama Pelanggan
+                const nameCell = row.insertCell();
+                nameCell.textContent = customer.BP_FULLNAME || '-';
+                nameCell.classList.add('font-medium');
+
+                // Kolom Sales Code (cukup kode saja, tanpa nama, agar ringkas di HP)
+                row.insertCell().textContent = customer.SALESCODE || '-';
+
+                // Kolom Status Modem (Rent / Buy / Dipinjamkan)
+                const modemCell = row.insertCell();
+                const modemLabel = classifyModemStatus(customer);
+                const modemBadge = document.createElement('span');
+                modemBadge.textContent = modemLabel;
+                modemBadge.className = 'inline-block px-2 py-1 rounded-full text-xs font-semibold ' + (MODEM_BADGE_COLOR_CLASSES[modemLabel] || 'bg-gray-100 text-gray-600');
+                modemCell.appendChild(modemBadge);
+
+                // Kolom Tanggal (Tgl Terminasi kalau sudah terminate, Estimasi kalau masih suspend)
+                const dateCell = row.insertCell();
+                dateCell.innerHTML = `<span class="block text-[10px] uppercase text-gray-400">${isTerminated ? 'Tgl Terminasi' : 'Estimasi'}</span>${customer.TERMDATE || '-'}`;
+
+                // Kolom Umur Berlangganan (CONTRACTSTARTDATE -> TERMDATE)
+                row.insertCell().textContent = computeSubscriptionAge(customer.CONTRACTSTARTDATE, customer.TERMDATE);
+
+                // Kolom Reason Customer (ringkasan, edit lewat modal)
+                const reasonCell = row.insertCell();
+                reasonCell.textContent = entry.reason || '- Belum diisi -';
+                if (!entry.reason) reasonCell.classList.add('italic', 'text-gray-400');
+
+                // Kolom Keterangan Visit (otomatis)
+                const keteranganCell = row.insertCell();
+                const keterangan = entry.keteranganVisit || computeKeteranganVisit(entry.reason, entry.fotoUrl);
+                const badge = document.createElement('span');
+                badge.textContent = keterangan;
+                badge.className = keterangan === 'Sudah Divisit'
+                    ? 'inline-block px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700'
+                    : 'inline-block px-2 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700';
+                keteranganCell.appendChild(badge);
+
+                // Kolom Aksi: Edit (pensil, buka modal isi reason/free text/foto + tombol Simpan)
+                // dan Lihat (mata, buka modal report ringkas + foto hasil visit)
+                const actionCell = row.insertCell();
+                actionCell.classList.add('space-x-2', 'whitespace-nowrap');
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.title = 'Edit Reason / Penjelasan / Foto Bukti Visit';
+                editBtn.className = 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white transition-colors';
+                editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+                editBtn.onclick = () => openReasonTerminationEditModal(customer);
+                actionCell.appendChild(editBtn);
+
+                const viewBtn = document.createElement('button');
+                viewBtn.type = 'button';
+                viewBtn.title = 'Lihat Report Ringkas';
+                viewBtn.className = 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-500 hover:text-white transition-colors';
+                viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                viewBtn.onclick = () => openReasonTerminationViewModal(customer);
+                actionCell.appendChild(viewBtn);
+
+                row.querySelectorAll('td').forEach(cell => {
+                    cell.classList.add('py-2', 'px-4', 'text-sm', 'text-gray-700');
+                });
+            });
+        }
+
+        // Chart batang (horizontal) jumlah customer per Reason Customer, mengikuti
+        // daftar customer (suspend & terminate) yang sedang tampil di tabel.
+        function renderFtReasonChart(customers) {
+            const ctx = document.getElementById('ftReasonChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ftReasonChartInstance) ftReasonChartInstance.destroy();
+
+            const counts = {};
+            (customers || []).forEach(c => {
+                const entry = getReasonTerminationEntry(c.CONTRACTACCOUNT);
+                const reason = entry.reason || 'Belum Diisi';
+                counts[reason] = (counts[reason] || 0) + 1;
+            });
+
+            const errorEl = document.getElementById('ftReasonChartError');
+            const labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+            if (labels.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = 'Belum ada data Reason Customer pada periode ini.'; }
+                return;
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+
+            const data = labels.map(l => counts[l]);
+            const colors = labels.map((l, i) => l === 'Belum Diisi' ? 'rgba(156, 163, 175, 0.75)' : `hsla(${(i * 47) % 360}, 62%, 55%, 0.8)`);
+            const borders = labels.map((l, i) => l === 'Belum Diisi' ? 'rgba(107, 114, 128, 1)' : `hsla(${(i * 47) % 360}, 62%, 40%, 1)`);
+
+            ftReasonChartInstance = new Chart(context, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Jumlah Customer', data: data, backgroundColor: colors, borderColor: borders, borderWidth: 1, borderRadius: 4 }] },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const reasonLabel = labels[elements[0].index];
+                            const matched = (customers || []).filter(c => {
+                                const entry = getReasonTerminationEntry(c.CONTRACTACCOUNT);
+                                return (entry.reason || 'Belum Diisi') === reasonLabel;
+                            });
+                            showOverviewDetailModal(matched, `Reason Customer - ${reasonLabel}`, true, DEFAULT_DETAIL_COLUMNS);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart batang (horizontal) jumlah customer Suspend & Terminate per Subdistrict,
+        // mengikuti filter Bulan/Tahun terpilih (SELALU seluruh subdistrict, terlepas dari
+        // filter Subdistrict di tabel, supaya chart ini tetap berguna sebagai peta sebaran
+        // sebelum memilih satu subdistrict tertentu). Klik batang untuk lihat detail customer
+        // pada subdistrict tsb & sekaligus menerapkannya sebagai filter tabel di atas.
+        function renderFtSubdistrictChart(customers, selectedMonth, selectedYear) {
+            const ctx = document.getElementById('ftSubdistrictChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ftSubdistrictChartInstance) ftSubdistrictChartInstance.destroy();
+
+            const customersBySub = {};
+            (customers || []).forEach(c => {
+                const sub = (c.SUBDISTRICT_INST || 'Tidak Diketahui').trim();
+                (customersBySub[sub] = customersBySub[sub] || []).push(c);
+            });
+
+            const errorEl = document.getElementById('ftSubdistrictChartError');
+            const labels = Object.keys(customersBySub).sort((a, b) => customersBySub[b].length - customersBySub[a].length);
+            if (labels.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Belum ada customer suspend/terminate pada ${getMonthName(selectedMonth)} ${selectedYear}.`; }
+                return;
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+
+            const data = labels.map(l => customersBySub[l].length);
+
+            ftSubdistrictChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: 'Jumlah Customer', data: data, backgroundColor: 'rgba(37, 99, 235, 0.7)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1, borderRadius: 4 }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const subLabel = labels[elements[0].index];
+                            const subdistrictSelect = document.getElementById('reasonTerminationSubdistrictSelect');
+                            if (subdistrictSelect) {
+                                const hasOption = Array.from(subdistrictSelect.options).some(o => o.value === subLabel);
+                                if (hasOption) {
+                                    subdistrictSelect.value = subLabel;
+                                    renderReasonTerminationTable(selectedMonth, selectedYear);
+                                }
+                            }
+                            showOverviewDetailModal(customersBySub[subLabel], `Customer Suspend & Terminate - ${subLabel}`, true, DEFAULT_DETAIL_COLUMNS);
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================================================
+        // MODAL EDIT REASON CUSTOMER - dipicu icon pensil. Menyimpan reason,
+        // penjelasan (free text) & foto bukti visit sekaligus lewat tombol "Simpan"
+        // (baru benar-benar terkirim ke spreadsheet saat tombol ini ditekan).
+        // ==========================================================================
+        let reasonTerminationEditContext = null; // { customer, pendingPhotoDataUrl }
+
+        function openReasonTerminationEditModal(customer) {
+            const entry = getReasonTerminationEntry(customer.CONTRACTACCOUNT);
+            reasonTerminationEditContext = { customer: customer, pendingPhotoDataUrl: null };
+
+            const nameEl = document.getElementById('reasonTerminationEditName');
+            if (nameEl) {
+                const salesLabel = salesCodeNames[customer.SALESCODE] ? `${salesCodeNames[customer.SALESCODE]} (${customer.SALESCODE})` : (customer.SALESCODE || '-');
+                nameEl.textContent = `${customer.BP_FULLNAME || customer.CONTRACTACCOUNT || '-'} • ${salesLabel}`;
+            }
+
+            const selectEl = document.getElementById('reasonTerminationEditSelect');
+            if (selectEl) selectEl.innerHTML = buildReasonSelectHtml(customer, entry.reason);
+
+            const freeTextEl = document.getElementById('reasonTerminationEditFreeText');
+            if (freeTextEl) freeTextEl.value = entry.reasonFreeText || '';
+
+            const previewEl = document.getElementById('reasonTerminationEditPhotoPreview');
+            if (previewEl) {
+                if (entry.fotoUrl) { previewEl.src = entry.fotoUrl; previewEl.classList.remove('hidden'); }
+                else { previewEl.src = ''; previewEl.classList.add('hidden'); }
+            }
+
+            const hintEl = document.getElementById('reasonTerminationEditHint');
+            if (hintEl) hintEl.classList.add('hidden');
+
+            const saveBtn = document.getElementById('reasonTerminationEditSaveBtn');
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Simpan'; }
+
+            showModal('reasonTerminationEditModal');
+        }
+
+        // ==========================================================================
+        // MODAL LIHAT REPORT RINGKAS - dipicu icon mata. Read-only: ringkasan data
+        // customer + reason + foto hasil visit.
+        // ==========================================================================
+        function openReasonTerminationViewModal(customer) {
+            const entry = getReasonTerminationEntry(customer.CONTRACTACCOUNT);
+            const bodyEl = document.getElementById('reasonTerminationViewBody');
+            if (bodyEl) {
+                const salesLabel = salesCodeNames[customer.SALESCODE] ? `${salesCodeNames[customer.SALESCODE]} (${customer.SALESCODE})` : (customer.SALESCODE || '-');
+                const rows = [
+                    ['Nama Lengkap', customer.BP_FULLNAME || '-'],
+                    ['Business Partner ID', customer.BUSINESSPARTNERID || '-'],
+                    ['Sales Code', salesLabel],
+                    ['Status', customer.STATUS || '-'],
+                    ['Status Modem', classifyModemStatus(customer)],
+                    ['Mulai Kontrak', customer.CONTRACTSTARTDATE || '-'],
+                    ['Tgl Terminasi / Estimasi', customer.TERMDATE || '-'],
+                    ['Subdistrict', customer.SUBDISTRICT_INST || '-'],
+                    ['Total Tiket', customer.TOTAL_TICKET || '0'],
+                    ['Umur Berlangganan', computeSubscriptionAge(customer.CONTRACTSTARTDATE, customer.TERMDATE)],
+                    ['Reason Customer', entry.reason || '- Belum diisi -'],
+                    ['Penjelasan', entry.reasonFreeText || '-'],
+                    ['Keterangan Visit', entry.keteranganVisit || computeKeteranganVisit(entry.reason, entry.fotoUrl)]
+                ];
+                bodyEl.innerHTML = rows.map(([label, val]) =>
+                    `<div><p class="text-[11px] uppercase text-gray-400 font-semibold">${label}</p><p class="text-gray-800 break-words">${val}</p></div>`
+                ).join('');
+            }
+
+            const photoEl = document.getElementById('reasonTerminationViewPhoto');
+            const noPhotoEl = document.getElementById('reasonTerminationViewNoPhoto');
+            if (entry.fotoUrl) {
+                if (photoEl) { photoEl.src = entry.fotoUrl; photoEl.classList.remove('hidden'); }
+                if (noPhotoEl) noPhotoEl.classList.add('hidden');
+            } else {
+                if (photoEl) { photoEl.src = ''; photoEl.classList.add('hidden'); }
+                if (noPhotoEl) noPhotoEl.classList.remove('hidden');
+            }
+
+            showModal('reasonTerminationViewModal');
+        }
+
+        // ==========================================================================
+        // KOMPRESI FOTO BUKTI VISIT - target maksimal kurang lebih 200KB, dilakukan
+        // di browser (canvas) sebelum dikirim sebagai base64 ke Apps Script, supaya
+        // ukuran file Google Drive tetap kecil & cepat diupload dari HP.
+        // ==========================================================================
+        const REASON_TERMINATION_MAX_PHOTO_BYTES = 200 * 1024;
+
+        function compressImageFile(file, maxBytes) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let maxDim = 1280;
+                        const attempt = () => {
+                            let width = img.width, height = img.height;
+                            if (width > maxDim || height > maxDim) {
+                                if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+                                else { width = Math.round(width * maxDim / height); height = maxDim; }
+                            }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width; canvas.height = height;
+                            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+                            let quality = 0.85;
+                            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                            let sizeBytes = Math.ceil((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
+                            while (sizeBytes > maxBytes && quality > 0.3) {
+                                quality -= 0.1;
+                                dataUrl = canvas.toDataURL('image/jpeg', quality);
+                                sizeBytes = Math.ceil((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
+                            }
+                            if (sizeBytes > maxBytes && maxDim > 480) {
+                                maxDim = Math.round(maxDim * 0.75);
+                                attempt();
+                                return;
+                            }
+                            resolve(dataUrl);
+                        };
+                        attempt();
+                    };
+                    img.onerror = () => reject(new Error('Gagal memuat gambar.'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('Gagal membaca file.'));
+                reader.readAsDataURL(file);
+            });
+        }
 
         function getRandomColor(alpha = 1) {
             const r = Math.floor(Math.random() * 255);
@@ -5441,6 +6310,156 @@
         // jauh dari akurat. Sekarang revenue yang benar-benar terkumpul (cash-in) diinput manual
         // setiap hari oleh Area Coordinator per Sales Code, disimpan di localStorage browser ini,
         // lalu diakumulasikan otomatis menjadi Total Terkumpul bulan berjalan.
+        // ==========================================================================
+        // REASON TERMINATION - alasan terminasi, penjelasan, foto bukti visit,
+        // dan keterangan visit. Tersimpan lintas device di tab "Reason_Termination"
+        // pada spreadsheet, dibaca/ditulis lewat customerWebAppUrl (Apps Script).
+        // ==========================================================================
+        const REASON_TERMINATION_STORAGE_KEY = 'biznetReasonTerminationV1';
+        const REASON_TERMINATE_OPTIONS = [
+            'INTERNET SLOW', 'JARANG DIGUNAKAN', 'SUDAH DIBAYAR', 'CROSSING', 'MASALAH KEUANGAN',
+            'GANTI PROVIDER', 'PERLU WAKTU UNTUK PEMBAYARAN', 'BANGKRUT', 'RNA', 'PEMISAHAN ID BILLING',
+            'SERING GANGGUAN', 'PELANGGAN BISNIS MENGGUNAKAN HOME', 'RUMAH SEDANG RENOVASI'
+        ];
+        // Reason yang otomatis dianggap "sudah divisit" tanpa perlu upload foto.
+        const REASON_AUTO_VISITED = ['SUDAH DIBAYAR'];
+
+        // reasonTerminationStore: { [CONTRACTACCOUNT]: { reason, reasonFreeText, fotoUrl, keteranganVisit, updatedAt } }
+        let reasonTerminationStore = (function () {
+            try {
+                return JSON.parse(localStorage.getItem(REASON_TERMINATION_STORAGE_KEY) || '{}');
+            } catch (e) {
+                return {};
+            }
+        })();
+
+        function getReasonTerminationStore() {
+            return reasonTerminationStore;
+        }
+
+        function saveReasonTerminationStoreLocal(store) {
+            reasonTerminationStore = store;
+            try {
+                localStorage.setItem(REASON_TERMINATION_STORAGE_KEY, JSON.stringify(store));
+            } catch (e) { /* abaikan jika localStorage penuh/diblokir browser */ }
+        }
+
+        function getReasonTerminationEntry(contractAccount) {
+            return getReasonTerminationStore()[contractAccount] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit' };
+        }
+
+        // Menentukan Keterangan Visit secara otomatis:
+        // - Reason "SUDAH DIBAYAR" -> otomatis "Sudah Divisit" (tidak perlu foto)
+        // - Ada foto bukti visit -> "Sudah Divisit"
+        // - Selain itu -> "Belum Divisit"
+        function computeKeteranganVisit(reason, fotoUrl) {
+            if (reason && REASON_AUTO_VISITED.includes(reason)) return 'Sudah Divisit';
+            if (fotoUrl) return 'Sudah Divisit';
+            return 'Belum Divisit';
+        }
+
+        // Mengambil data Reason Termination TERBARU dari spreadsheet (lintas device),
+        // sama seperti syncManualRevenueFromServer.
+        async function syncReasonTerminationFromServer() {
+            try {
+                const res = await fetch(`${customerWebAppUrl}?action=getReasonTermination`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const serverStore = await res.json();
+                if (serverStore && typeof serverStore === 'object' && !Array.isArray(serverStore)) {
+                    saveReasonTerminationStoreLocal(serverStore);
+                    const activeSection = document.querySelector('.content-section:not(.hidden)');
+                    if (activeSection && activeSection.id === 'forecastTerminationAnalysis' && typeof renderReasonTerminationTable === 'function') {
+                        try { renderReasonTerminationTable(); } catch (e) { /* elemen belum siap, aman diabaikan */ }
+                    }
+                }
+            } catch (err) {
+                console.error('Gagal mengambil data Reason Termination dari server, memakai cache lokal:', err);
+            }
+        }
+
+        // Mengirim satu entri Reason Termination ke Apps Script (action: 'saveReasonTermination').
+        // fotoBase64 (opsional) berisi data URL foto hasil pembacaan file lokal (dari galeri HP),
+        // yang akan disimpan Apps Script ke Google Drive lalu dikembalikan URL-nya.
+        function sendReasonTerminationToSheet(entry) {
+            const payload = Object.assign({ action: 'saveReasonTermination' }, entry);
+            return fetch(customerWebAppUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status !== 'success') {
+                    console.error('Gagal menyimpan Reason Termination ke spreadsheet:', res.message);
+                    throw new Error(res.message || 'Server menolak permintaan simpan.');
+                }
+                return res;
+            })
+            .catch(err => {
+                console.error('Gagal terhubung ke Apps Script saat menyimpan Reason Termination:', err);
+                throw err;
+            });
+        }
+
+        // Update lokal (state + localStorage + UI) untuk satu customer, lalu kirim ke server.
+        // fotoBase64 hanya dikirim saat ada foto baru yang diupload pada aksi ini.
+        // Mengembalikan Promise supaya pemanggil (mis. tombol "Simpan" pada modal Edit)
+        // bisa menunggu hasilnya dan menampilkan hint sukses/gagal ke pengguna.
+        function updateReasonTerminationEntry(customer, changes, fotoBase64) {
+            const key = customer.CONTRACTACCOUNT;
+            if (!key) return Promise.resolve();
+            const store = getReasonTerminationStore();
+            const current = store[key] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit' };
+            const merged = Object.assign({}, current, changes);
+            merged.keteranganVisit = computeKeteranganVisit(merged.reason, merged.fotoUrl);
+            store[key] = merged;
+            saveReasonTerminationStoreLocal(store);
+            renderReasonTerminationTable(); // Refresh tampilan (termasuk kolom Keterangan Visit) segera
+
+            return sendReasonTerminationToSheet({
+                businessPartnerId: customer.BUSINESSPARTNERID || '',
+                contractAccount: key,
+                bpFullName: customer.BP_FULLNAME || '',
+                salesCode: customer.SALESCODE || '',
+                reason: merged.reason || '',
+                reasonFreeText: merged.reasonFreeText || '',
+                fotoBase64: fotoBase64 || '',
+                fotoUrl: fotoBase64 ? '' : (merged.fotoUrl || ''), // biarkan Apps Script isi fotoUrl kalau ada fotoBase64
+                keteranganVisit: merged.keteranganVisit
+            }).then(res => {
+                // Kalau ada foto baru, simpan URL final dari Drive ke state lokal
+                if (fotoBase64 && res && res.fotoUrl) {
+                    const latestStore = getReasonTerminationStore();
+                    const latestEntry = latestStore[key] || merged;
+                    latestEntry.fotoUrl = res.fotoUrl;
+                    latestEntry.keteranganVisit = computeKeteranganVisit(latestEntry.reason, latestEntry.fotoUrl);
+                    latestStore[key] = latestEntry;
+                    saveReasonTerminationStoreLocal(latestStore);
+                    renderReasonTerminationTable();
+                }
+                return res;
+            });
+            // Catatan: kegagalan TIDAK ditelan di sini lagi (dulu ada .catch kosong) --
+            // pemanggil sekarang bertanggung jawab menangani .catch supaya bisa memberi
+            // hint yang jelas ke pengguna. Data tetap tersimpan lokal walau gagal kirim,
+            // dan akan tersinkron ulang otomatis lewat syncReasonTerminationFromServer().
+        }
+
+        // Menghitung umur berlangganan (CONTRACTSTARTDATE -> TERMDATE) dalam format "X Thn Y Bln"
+        function computeSubscriptionAge(startDateStr, endDateStr) {
+            const start = parseDate(startDateStr);
+            const end = parseDate(endDateStr);
+            if (!start || !end || end < start) return '-';
+            let totalMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+            if (end.getDate() < start.getDate()) totalMonths--;
+            if (totalMonths < 0) totalMonths = 0;
+            const years = Math.floor(totalMonths / 12);
+            const months = totalMonths % 12;
+            if (years > 0 && months > 0) return `${years} Thn ${months} Bln`;
+            if (years > 0) return `${years} Thn`;
+            return `${months} Bln`;
+        }
+
         const MANUAL_REVENUE_STORAGE_KEY = 'biznetManualRevenueDailyV1';
 
         // Format tanggal lokal (bukan UTC) -> 'YYYY-MM-DD', dipakai sebagai key harian.
@@ -6517,6 +7536,8 @@
                 modemStatusChartInstance, dailyNewSubsChartInstance, forecastTerminationChartInstance,
                 arcoPerformanceChartInstance, terminationBySalesChartInstance, suspendAgeChartInstance,
                 modemStatusTerminateChartInstance, subdistrictInstallChartInstance, penetrationChartInstance,
+                ftSalesChartInstance, ftAgeChartInstance, ftModemChartInstance, ftTicketChartInstance,
+                ftReasonChartInstance, ftSubdistrictChartInstance,
                 prospectDailyChartInstance, prospectKelurahanChartInstance, prospectStatusChartInstance,
                 prospectDpChartInstance, prospectWifiChartInstance, prospectSumberChartInstance
             ];
@@ -6541,6 +7562,8 @@
             fetchCustomerData();
             syncManualRevenueFromServer(); // Ambil revenue manual terbaru dari spreadsheet (lintas device)
             setInterval(syncManualRevenueFromServer, 120000); // Ulangi setiap 2 menit agar tetap sinkron
+            syncReasonTerminationFromServer(); // Ambil Reason Termination terbaru dari spreadsheet (lintas device)
+            setInterval(syncReasonTerminationFromServer, 120000); // Ulangi setiap 2 menit agar tetap sinkron
             populateMonthYearSelectors(); // Panggil fungsi ini saat DOM dimuat
             updateClock(); // Update clock immediately
             setInterval(updateClock, 1000); // Update clock every second
@@ -6594,6 +7617,75 @@
         document.getElementById('applyForecastFilterBtn').addEventListener('click', renderForecastTerminationChart);
         document.getElementById('forecastMonthSelect').addEventListener('change', renderForecastTerminationChart);
         document.getElementById('forecastYearSelect').addEventListener('change', renderForecastTerminationChart);
+
+        // Pendengar Acara untuk sortir tabel Customer Suspend & Terminate (terbaru/terlama)
+        const reasonTerminationSortSelectEl = document.getElementById('reasonTerminationSortSelect');
+        if (reasonTerminationSortSelectEl) {
+            reasonTerminationSortSelectEl.addEventListener('change', () => renderReasonTerminationTable());
+        }
+
+        const reasonTerminationSubdistrictSelectEl = document.getElementById('reasonTerminationSubdistrictSelect');
+        if (reasonTerminationSubdistrictSelectEl) {
+            reasonTerminationSubdistrictSelectEl.addEventListener('change', () => renderReasonTerminationTable());
+        }
+
+        // Pendengar Acara untuk Modal Edit Reason Customer (upload foto terkompresi + tombol Simpan)
+        (function initReasonTerminationEditModalEvents() {
+            const uploadBtn = document.getElementById('reasonTerminationEditUploadBtn');
+            const fileInput = document.getElementById('reasonTerminationEditFileInput');
+            const saveBtn = document.getElementById('reasonTerminationEditSaveBtn');
+            if (!uploadBtn || !fileInput || !saveBtn) return;
+
+            uploadBtn.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', async () => {
+                const file = fileInput.files && fileInput.files[0];
+                if (!file || !reasonTerminationEditContext) return;
+                const originalHtml = uploadBtn.innerHTML;
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memproses foto...';
+                try {
+                    const compressed = await compressImageFile(file, REASON_TERMINATION_MAX_PHOTO_BYTES);
+                    reasonTerminationEditContext.pendingPhotoDataUrl = compressed;
+                    const previewEl = document.getElementById('reasonTerminationEditPhotoPreview');
+                    if (previewEl) { previewEl.src = compressed; previewEl.classList.remove('hidden'); }
+                } catch (err) {
+                    console.error('Gagal memproses foto bukti visit:', err);
+                    alert('Gagal memproses foto. Silakan coba lagi dengan foto lain.');
+                } finally {
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = originalHtml;
+                    fileInput.value = '';
+                }
+            });
+
+            saveBtn.addEventListener('click', () => {
+                if (!reasonTerminationEditContext) return;
+                const ctx = reasonTerminationEditContext;
+                const reasonVal = document.getElementById('reasonTerminationEditSelect').value;
+                const freeTextVal = document.getElementById('reasonTerminationEditFreeText').value;
+                const hintEl = document.getElementById('reasonTerminationEditHint');
+
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...';
+                if (hintEl) hintEl.classList.add('hidden');
+
+                updateReasonTerminationEntry(ctx.customer, { reason: reasonVal, reasonFreeText: freeTextVal }, ctx.pendingPhotoDataUrl)
+                    .then(() => {
+                        ctx.pendingPhotoDataUrl = null;
+                        if (hintEl) hintEl.classList.remove('hidden');
+                    })
+                    .catch(err => {
+                        console.error('Gagal menyimpan Reason Customer ke spreadsheet:', err);
+                        alert('Gagal menyimpan ke spreadsheet. Data tetap tersimpan sementara di perangkat ini dan akan disinkronkan ulang otomatis.');
+                    })
+                    .finally(() => {
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Simpan';
+                    });
+            });
+        })();
+
         document.getElementById('applySalesPerfFilterBtn').addEventListener('click', renderSalesPerformanceTable);
         document.getElementById('salesPerfMonthSelect').addEventListener('change', renderSalesPerformanceTable);
         document.getElementById('salesPerfYearSelect').addEventListener('change', renderSalesPerformanceTable);
