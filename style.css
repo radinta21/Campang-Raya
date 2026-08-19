@@ -298,6 +298,33 @@ input, select, textarea, button {
     }
 }
 
+/* --- Responsive: Tabel Customer Suspend & Terminate (Reason Customer) --- */
+@media (max-width: 640px) {
+    #reasonTerminationTable th,
+    #reasonTerminationTable td {
+        font-size: 0.72rem;
+        padding: 8px 10px !important;
+        white-space: nowrap;
+    }
+    #reasonTerminationTable td:nth-child(5) {
+        white-space: normal;
+        min-width: 110px;
+    }
+}
+
+/* --- Responsive: Modal Edit / Lihat Report Ringkas Reason Customer --- */
+@media (max-width: 640px) {
+    #reasonTerminationEditModal .grid,
+    #reasonTerminationViewModal .grid {
+        grid-template-columns: 1fr;
+    }
+    #reasonTerminationViewPhoto {
+        max-height: 45vh;
+        width: 100%;
+        object-fit: contain;
+    }
+}
+
 /* --- Custom Scrollbar --- */
 ::-webkit-scrollbar {
     width: 6px;
