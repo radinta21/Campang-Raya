@@ -5776,7 +5776,7 @@
 
             const previewEl = document.getElementById('reasonTerminationEditPhotoPreview');
             if (previewEl) {
-                if (entry.fotoUrl) { previewEl.src = entry.fotoUrl; previewEl.classList.remove('hidden'); }
+                if (entry.fotoUrl) { previewEl.src = normalizeDriveImageUrl(entry.fotoUrl); previewEl.classList.remove('hidden'); }
                 else { previewEl.src = ''; previewEl.classList.add('hidden'); }
             }
 
@@ -5821,7 +5821,7 @@
             const photoEl = document.getElementById('reasonTerminationViewPhoto');
             const noPhotoEl = document.getElementById('reasonTerminationViewNoPhoto');
             if (entry.fotoUrl) {
-                if (photoEl) { photoEl.src = entry.fotoUrl; photoEl.classList.remove('hidden'); }
+                if (photoEl) { photoEl.src = normalizeDriveImageUrl(entry.fotoUrl); photoEl.classList.remove('hidden'); }
                 if (noPhotoEl) noPhotoEl.classList.add('hidden');
             } else {
                 if (photoEl) { photoEl.src = ''; photoEl.classList.add('hidden'); }
@@ -6480,6 +6480,25 @@
 
         function getReasonTerminationEntry(contractAccount) {
             return getReasonTerminationStore()[contractAccount] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit' };
+        }
+
+        // ==========================================================================
+        // FIX FOTO TIDAK MUNCUL: format URL lama "drive.google.com/uc?export=view&id=..."
+        // yang dipakai backend sebelumnya SUDAH TIDAK BISA DIANDALKAN untuk ditaruh
+        // langsung di <img src>, karena Google Drive sering membalas dengan halaman
+        // HTML perantara (bukan file gambar mentah) alih-alih menampilkan gambarnya --
+        // hasilnya ikon gambar rusak/patah walaupun uploadnya sendiri sudah berhasil.
+        // Fungsi ini mengubah URL apa pun (format lama ATAU baru) menjadi format
+        // thumbnail Drive yang jauh lebih andal untuk ditampilkan sebagai <img>, jadi
+        // foto yang SUDAH TERLANJUR tersimpan dengan URL lama pun ikut otomatis
+        // "sembuh" saat ditampilkan, tanpa perlu upload ulang atau ubah data di sheet.
+        function normalizeDriveImageUrl(url) {
+            if (!url) return url;
+            const match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+            }
+            return url;
         }
 
         // Menentukan Keterangan Visit secara otomatis:
