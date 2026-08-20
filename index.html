@@ -5242,12 +5242,16 @@
         // ==========================================================================
         // VISUAL TAMBAHAN FORECAST TERMINASI - semuanya mengikuti filter
         // forecastMonthSelect/forecastYearSelect (dipanggil dari renderForecastTerminationChart).
-        // Mengambil customer TERMINATED dengan TERMDATE di bulan/tahun terpilih -
-        // sumber data yang sama dengan tabel "Terminasi Bulan Berjalan" di Customer Overview,
-        // hanya saja di sini bulan/tahunnya bisa dipilih bebas (tidak selalu bulan berjalan).
+        // Mengambil SEMUA customer SUSPENDED & TERMINATED dengan TERMDATE di bulan/tahun
+        // terpilih -- sama seperti sumber data renderFtModemChart (Status Modem Customer
+        // Suspend & Terminate), supaya ketiga chart lain di bagian ini (Terminasi per Sales
+        // Code, Umur Customer Terminate, Jumlah Tiket) juga menampilkan SEMUA data suspend
+        // & terminate sesuai filter, bukan cuma yang sudah TERMINATED saja.
         function getTerminatedCustomersForPeriod(selectedMonth, selectedYear) {
             return allCustomers.filter(c => {
-                if (!c.STATUS || c.STATUS.toUpperCase() !== 'TERMINATED') return false;
+                if (!c.STATUS) return false;
+                const statusUpper = c.STATUS.toUpperCase();
+                if (statusUpper !== 'TERMINATED' && statusUpper !== 'SUSPENDED') return false;
                 const d = parseDate(c.TERMDATE);
                 return d && d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
             });
@@ -5271,7 +5275,7 @@
             const sortedCodes = Object.keys(customersByCode).sort((a, b) => customersByCode[b].length - customersByCode[a].length);
             if (sortedCodes.length === 0) {
                 context.clearRect(0, 0, ctx.width, ctx.height);
-                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Belum ada terminasi pada ${getMonthName(selectedMonth)} ${selectedYear}.`; }
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Belum ada data suspend & terminasi pada ${getMonthName(selectedMonth)} ${selectedYear}.`; }
                 return;
             }
             if (errorEl) errorEl.classList.add('hidden');
@@ -5281,7 +5285,7 @@
 
             ftSalesChartInstance = new Chart(context, {
                 type: 'bar',
-                data: { labels: labels, datasets: [{ label: 'Terminasi', data: data, backgroundColor: 'rgba(220, 38, 38, 0.7)', borderColor: 'rgba(220, 38, 38, 1)', borderWidth: 1, borderRadius: 4 }] },
+                data: { labels: labels, datasets: [{ label: 'Suspend & Terminasi', data: data, backgroundColor: 'rgba(220, 38, 38, 0.7)', borderColor: 'rgba(220, 38, 38, 1)', borderWidth: 1, borderRadius: 4 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
@@ -5289,7 +5293,7 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const code = sortedCodes[elements[0].index];
-                            showOverviewDetailModal(customersByCode[code], `Terminasi ${getMonthName(selectedMonth)} ${selectedYear} - ${labels[elements[0].index]}`, true);
+                            showOverviewDetailModal(customersByCode[code], `Suspend & Terminasi ${getMonthName(selectedMonth)} ${selectedYear} - ${labels[elements[0].index]}`, true);
                         }
                     }
                 }
@@ -5322,7 +5326,7 @@
             const errorEl = document.getElementById('ftAgeChartError');
             if (totalFound === 0) {
                 context.clearRect(0, 0, ctx.width, ctx.height);
-                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Tidak ada customer terminate pada ${getMonthName(selectedMonth)} ${selectedYear}.`; }
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Tidak ada customer suspend/terminate pada ${getMonthName(selectedMonth)} ${selectedYear}.`; }
                 return;
             }
             if (errorEl) errorEl.classList.add('hidden');
@@ -5341,7 +5345,7 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const label = bucketLabels[elements[0].index];
-                            showOverviewDetailModal(customersByBucket[label], `Customer Terminate ${getMonthName(selectedMonth)} ${selectedYear} - Umur ${label}`, true, SUSPEND_AGE_DETAIL_COLUMNS);
+                            showOverviewDetailModal(customersByBucket[label], `Customer Suspend/Terminate ${getMonthName(selectedMonth)} ${selectedYear} - Umur ${label}`, true, SUSPEND_AGE_DETAIL_COLUMNS);
                         }
                     }
                 }
@@ -5418,7 +5422,7 @@
             const withTickets = terminated.filter(c => (parseInt(c.TOTAL_TICKET, 10) || 0) > 0);
             if (withTickets.length === 0) {
                 context.clearRect(0, 0, ctx.width, ctx.height);
-                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Tidak ada data tiket untuk customer terminate ${getMonthName(selectedMonth)} ${selectedYear}.`; }
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = `Tidak ada data tiket untuk customer suspend/terminate ${getMonthName(selectedMonth)} ${selectedYear}.`; }
                 return;
             }
             if (errorEl) errorEl.classList.add('hidden');
@@ -6116,6 +6120,50 @@
 
                 row.querySelectorAll('td').forEach(cell => cell.classList.add('py-3', 'px-4', 'text-sm'));
             });
+
+            // Baris Total: total Penjualan, total Terminasi, dan Net Subs keseluruhan
+            // (total penjualan - total terminasi) dari SEMUA Sales Code pada periode ini.
+            const totalInstalls = codes.reduce((sum, code) => sum + statsByCode[code].installs.length, 0);
+            const totalTerminations = codes.reduce((sum, code) => sum + statsByCode[code].terminations.length, 0);
+            const totalNetSubs = totalInstalls - totalTerminations;
+            const allInstalls = codes.reduce((arr, code) => arr.concat(statsByCode[code].installs), []);
+            const allTerminations = codes.reduce((arr, code) => arr.concat(statsByCode[code].terminations), []);
+
+            const totalRow = tbody.insertRow();
+            totalRow.className = 'bg-gray-50 border-t-2 border-gray-300';
+
+            const totalRankCell = totalRow.insertCell();
+            totalRankCell.innerHTML = '';
+
+            const totalNameCell = totalRow.insertCell();
+            totalNameCell.textContent = 'TOTAL';
+            totalNameCell.classList.add('font-extrabold', 'text-gray-800');
+
+            const totalInstallCell = totalRow.insertCell();
+            totalInstallCell.textContent = formatNumber(totalInstalls);
+            totalInstallCell.classList.add('text-right', 'font-extrabold', 'text-blue-700');
+            if (totalInstalls > 0) {
+                totalInstallCell.classList.add('cursor-pointer', 'hover:underline');
+                totalInstallCell.title = 'Klik untuk melihat daftar customer';
+                totalInstallCell.onclick = () => showOverviewDetailModal(allInstalls, `Total Penjualan Semua Sales Code - ${periodLabel}`, true, DEFAULT_DETAIL_COLUMNS, salesPerformanceWaMessage);
+            }
+
+            const totalTermCell = totalRow.insertCell();
+            totalTermCell.textContent = formatNumber(totalTerminations);
+            totalTermCell.classList.add('text-right', 'font-extrabold', 'text-red-700');
+            if (totalTerminations > 0) {
+                totalTermCell.classList.add('cursor-pointer', 'hover:underline');
+                totalTermCell.title = 'Klik untuk melihat daftar customer';
+                totalTermCell.onclick = () => showOverviewDetailModal(allTerminations, `Total Terminasi Semua Sales Code - ${periodLabel}`, true, DEFAULT_DETAIL_COLUMNS, salesPerformanceTerminationWaMessage);
+            }
+
+            const totalNetCell = totalRow.insertCell();
+            const totalNetColorClass = totalNetSubs > 0 ? 'text-green-700' : (totalNetSubs < 0 ? 'text-red-700' : 'text-gray-600');
+            const totalNetIcon = totalNetSubs > 0 ? '<i class="fas fa-arrow-up mr-1"></i>' : (totalNetSubs < 0 ? '<i class="fas fa-arrow-down mr-1"></i>' : '');
+            totalNetCell.innerHTML = `<span class="${totalNetColorClass} font-extrabold">${totalNetIcon}${totalNetSubs > 0 ? '+' : ''}${formatNumber(totalNetSubs)}</span>`;
+            totalNetCell.classList.add('text-right');
+
+            totalRow.querySelectorAll('td').forEach(cell => cell.classList.add('py-3', 'px-4', 'text-sm'));
         }
 
 
@@ -6344,6 +6392,92 @@
             } catch (e) { /* abaikan jika localStorage penuh/diblokir browser */ }
         }
 
+        // ==========================================================================
+        // ANTREAN SINKRON ULANG (RETRY QUEUE) UNTUK REASON TERMINATION
+        // ==========================================================================
+        // Sebelumnya UI mengklaim "akan disinkronkan ulang otomatis" saat simpan ke
+        // spreadsheet gagal, padahal tidak ada mekanisme apa pun yang benar-benar
+        // mengirim ulang data tsb -- data hanya diam di localStorage dan bisa
+        // TERTIMPA oleh syncReasonTerminationFromServer() berikutnya (yang menarik
+        // data dari server & belum tahu ada perubahan lokal yang belum terkirim).
+        // Antrean di bawah ini menyimpan payload yang GAGAL terkirim, lalu mencoba
+        // mengirim ulang secara berkala & saat koneksi kembali online, sehingga
+        // klaim "disinkronkan ulang otomatis" benar-benar terjadi.
+        const REASON_TERMINATION_PENDING_KEY = 'reasonTerminationPendingSync_v1';
+
+        function getReasonTerminationPendingQueue() {
+            try {
+                return JSON.parse(localStorage.getItem(REASON_TERMINATION_PENDING_KEY) || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function setReasonTerminationPendingQueue(queue) {
+            try {
+                localStorage.setItem(REASON_TERMINATION_PENDING_KEY, JSON.stringify(queue));
+            } catch (e) { /* abaikan jika localStorage penuh/diblokir browser */ }
+        }
+
+        // Menyimpan/menimpa satu payload yang gagal terkirim, dikunci per CONTRACTACCOUNT
+        // (kalau customer yang sama gagal terkirim beberapa kali, cukup simpan versi terbaru).
+        function queueReasonTerminationPending(payload) {
+            if (!payload || !payload.contractAccount) return;
+            const queue = getReasonTerminationPendingQueue();
+            queue[payload.contractAccount] = payload;
+            setReasonTerminationPendingQueue(queue);
+        }
+
+        function clearReasonTerminationPending(contractAccount) {
+            const queue = getReasonTerminationPendingQueue();
+            if (queue[contractAccount]) {
+                delete queue[contractAccount];
+                setReasonTerminationPendingQueue(queue);
+            }
+        }
+
+        let reasonTerminationRetryInFlight = false;
+        // Mencoba mengirim ulang semua payload yang tertunda di antrean. Dipanggil
+        // berkala (interval), saat koneksi kembali online, dan saat halaman dimuat.
+        async function retryPendingReasonTerminationSync() {
+            if (reasonTerminationRetryInFlight) return;
+            const queue = getReasonTerminationPendingQueue();
+            const keys = Object.keys(queue);
+            if (keys.length === 0) return;
+
+            reasonTerminationRetryInFlight = true;
+            try {
+                for (const key of keys) {
+                    const payload = queue[key];
+                    try {
+                        const res = await sendReasonTerminationToSheet(payload);
+                        clearReasonTerminationPending(key);
+                        // Kalau berhasil dan ada URL foto final dari Drive, perbarui state lokal.
+                        if (res && res.fotoUrl && payload.fotoBase64) {
+                            const store = getReasonTerminationStore();
+                            const entry = store[key];
+                            if (entry) {
+                                entry.fotoUrl = res.fotoUrl;
+                                entry.keteranganVisit = computeKeteranganVisit(entry.reason, entry.fotoUrl);
+                                saveReasonTerminationStoreLocal(store);
+                            }
+                        }
+                    } catch (err) {
+                        // Masih gagal (mis. masih offline) -- biarkan di antrean, coba lagi nanti.
+                        console.warn('Retry sinkron Reason Termination masih gagal untuk', key, err);
+                    }
+                }
+                if (typeof renderReasonTerminationTable === 'function') {
+                    const activeSection = document.querySelector('.content-section:not(.hidden)');
+                    if (activeSection && activeSection.id === 'forecastTerminationAnalysis') {
+                        try { renderReasonTerminationTable(); } catch (e) { /* aman diabaikan */ }
+                    }
+                }
+            } finally {
+                reasonTerminationRetryInFlight = false;
+            }
+        }
+
         function getReasonTerminationEntry(contractAccount) {
             return getReasonTerminationStore()[contractAccount] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit' };
         }
@@ -6366,6 +6500,15 @@
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const serverStore = await res.json();
                 if (serverStore && typeof serverStore === 'object' && !Array.isArray(serverStore)) {
+                    // Jangan timpa entri yang masih menunggu di antrean retry (belum berhasil
+                    // terkirim ke server) dengan data server yang masih versi lama -- kalau
+                    // tidak, edit user yang belum terkirim akan terlihat "hilang" sesaat
+                    // sebelum retryPendingReasonTerminationSync berhasil mengirimnya.
+                    const pendingQueue = getReasonTerminationPendingQueue();
+                    const localStore = getReasonTerminationStore();
+                    Object.keys(pendingQueue).forEach(key => {
+                        if (localStore[key]) serverStore[key] = localStore[key];
+                    });
                     saveReasonTerminationStoreLocal(serverStore);
                     const activeSection = document.querySelector('.content-section:not(.hidden)');
                     if (activeSection && activeSection.id === 'forecastTerminationAnalysis' && typeof renderReasonTerminationTable === 'function') {
@@ -6416,7 +6559,7 @@
             saveReasonTerminationStoreLocal(store);
             renderReasonTerminationTable(); // Refresh tampilan (termasuk kolom Keterangan Visit) segera
 
-            return sendReasonTerminationToSheet({
+            const payload = {
                 businessPartnerId: customer.BUSINESSPARTNERID || '',
                 contractAccount: key,
                 bpFullName: customer.BP_FULLNAME || '',
@@ -6426,7 +6569,12 @@
                 fotoBase64: fotoBase64 || '',
                 fotoUrl: fotoBase64 ? '' : (merged.fotoUrl || ''), // biarkan Apps Script isi fotoUrl kalau ada fotoBase64
                 keteranganVisit: merged.keteranganVisit
-            }).then(res => {
+            };
+
+            return sendReasonTerminationToSheet(payload).then(res => {
+                // Berhasil terkirim ke server -> hapus dari antrean retry kalau ada sisa dari percobaan sebelumnya.
+                clearReasonTerminationPending(key);
+
                 // Kalau ada foto baru, simpan URL final dari Drive ke state lokal
                 if (fotoBase64 && res && res.fotoUrl) {
                     const latestStore = getReasonTerminationStore();
@@ -6437,12 +6585,24 @@
                     saveReasonTerminationStoreLocal(latestStore);
                     renderReasonTerminationTable();
                 }
+                // Reason & Keterangan Visit berhasil tersimpan, tapi upload fotonya sendiri
+                // gagal di sisi server (mis. masalah Drive) -- beri tahu secara spesifik
+                // lewat res.fotoUploadError alih-alih membuat seluruh simpan terlihat gagal.
+                if (fotoBase64 && res && res.fotoUploadError) {
+                    const err = new Error('Reason tersimpan, tapi foto gagal diupload: ' + res.fotoUploadError);
+                    err.isPhotoOnlyError = true;
+                    throw err;
+                }
                 return res;
+            }).catch(err => {
+                // Kalau bukan error khusus "foto saja gagal", berarti seluruh request gagal
+                // terkirim (mis. offline) -- simpan ke antrean supaya benar-benar dicoba
+                // ulang otomatis (lihat retryPendingReasonTerminationSync), bukan cuma klaim.
+                if (!err || !err.isPhotoOnlyError) {
+                    queueReasonTerminationPending(payload);
+                }
+                throw err;
             });
-            // Catatan: kegagalan TIDAK ditelan di sini lagi (dulu ada .catch kosong) --
-            // pemanggil sekarang bertanggung jawab menangani .catch supaya bisa memberi
-            // hint yang jelas ke pengguna. Data tetap tersimpan lokal walau gagal kirim,
-            // dan akan tersinkron ulang otomatis lewat syncReasonTerminationFromServer().
         }
 
         // Menghitung umur berlangganan (CONTRACTSTARTDATE -> TERMDATE) dalam format "X Thn Y Bln"
@@ -7564,6 +7724,9 @@
             setInterval(syncManualRevenueFromServer, 120000); // Ulangi setiap 2 menit agar tetap sinkron
             syncReasonTerminationFromServer(); // Ambil Reason Termination terbaru dari spreadsheet (lintas device)
             setInterval(syncReasonTerminationFromServer, 120000); // Ulangi setiap 2 menit agar tetap sinkron
+            retryPendingReasonTerminationSync(); // Coba kirim ulang perubahan yang sempat gagal tersimpan
+            setInterval(retryPendingReasonTerminationSync, 30000); // Ulangi tiap 30 detik selagi ada antrean
+            window.addEventListener('online', retryPendingReasonTerminationSync); // Coba lagi segera saat koneksi kembali
             populateMonthYearSelectors(); // Panggil fungsi ini saat DOM dimuat
             updateClock(); // Update clock immediately
             setInterval(updateClock, 1000); // Update clock every second
@@ -7677,7 +7840,14 @@
                     })
                     .catch(err => {
                         console.error('Gagal menyimpan Reason Customer ke spreadsheet:', err);
-                        alert('Gagal menyimpan ke spreadsheet. Data tetap tersimpan sementara di perangkat ini dan akan disinkronkan ulang otomatis.');
+                        if (err && err.isPhotoOnlyError) {
+                            // Reason/Keterangan Visit sudah tersimpan; hanya fotonya yang gagal.
+                            ctx.pendingPhotoDataUrl = null;
+                            if (hintEl) hintEl.classList.remove('hidden');
+                            alert((err.message || 'Foto gagal diupload.') + ' Silakan coba upload ulang fotonya.');
+                        } else {
+                            alert('Gagal menyimpan ke spreadsheet. Data tetap tersimpan sementara di perangkat ini dan akan dicoba dikirim ulang otomatis begitu koneksi tersedia.');
+                        }
                     })
                     .finally(() => {
                         saveBtn.disabled = false;
