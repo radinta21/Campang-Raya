@@ -311,6 +311,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#" onclick="showSection('customersSection')" class="flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-600 hover:text-white transition-colors duration-200">
+                        <i class="fas fa-address-book mr-3"></i> Customer's
+                    </a>
+                </li>
+                <li>
                     <a href="#analysisSubmenu" data-collapse-toggle="analysisSubmenu" aria-expanded="false" class="flex items-center justify-between p-3 rounded-lg text-gray-300 hover:bg-gray-600 hover:text-white transition-colors duration-200">
                         <span><i class="fas fa-chart-bar mr-3"></i> Analisis</span>
                         <i class="fas fa-chevron-down text-xs"></i>
@@ -384,7 +389,7 @@
             <button id="sidebarToggle" class="text-gray-600 focus:outline-none flex-shrink-0" onclick="toggleSidebar()" title="Tampilkan/Sembunyikan menu">
                 <i class="fas fa-bars text-xl"></i>
             </button>
-            <h1 class="text-sm sm:text-lg md:text-xl font-semibold text-gray-800 text-center flex-1 min-w-0 leading-snug">Dashboard Data Customer Biznet Bandar Lampung Campang Raya</h1>
+            <h1 class="text-sm sm:text-lg md:text-xl font-semibold text-gray-800 text-center flex-1 min-w-0 leading-snug"></h1>
             <div id="realTimeClock" class="header-clock text-gray-600 text-xs sm:text-sm font-medium ml-2 sm:ml-4 flex-shrink-0 whitespace-nowrap"></div>
         </header>
 
@@ -399,9 +404,45 @@
             <section id="customerOverview" class="content-section">
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <!-- ================= INSIGHT BULAN BERJALAN ================= -->
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4 mt-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2 mt-2">
                         <h3 class="text-lg font-bold text-gray-800">Insight Bulan Berjalan</h3>
                         <span id="insightPeriodLabel" class="text-xs font-medium text-gray-400"></span>
+                    </div>
+
+                    <!-- ================= FILTER PERIODE (elegan, tidak menghalangi isi) =================
+                         Mempengaruhi seluruh isi Customer Overview: Insight, Segmentasi Bundle, Target Net
+                         Subs, Area Coordinator, Terminasi, dan Instalasi per Subdistrict. -->
+                    <div class="mb-4">
+                        <button type="button" id="overviewFilterToggleBtn" class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-blue-600 transition-colors duration-200">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Filter Periode</span>
+                            <i class="fas fa-chevron-down text-[10px]" id="overviewFilterChevron"></i>
+                        </button>
+                        <div id="overviewFilterPanel" class="hidden mt-2 p-3 rounded-lg border border-gray-100 bg-gray-50/70 flex flex-wrap items-end gap-3">
+                            <div>
+                                <label class="block text-[11px] text-gray-400 mb-1">Bulan</label>
+                                <select id="overviewFilterMonth" class="text-xs border border-gray-200 rounded-md py-1.5 px-2 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-gray-400 mb-1">Tahun</label>
+                                <select id="overviewFilterYear" class="text-xs border border-gray-200 rounded-md py-1.5 px-2 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-gray-400 mb-1">Dari Tanggal</label>
+                                <input type="date" id="overviewFilterDateFrom" class="text-xs border border-gray-200 rounded-md py-1.5 px-2 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-gray-400 mb-1">Sampai Tanggal</label>
+                                <input type="date" id="overviewFilterDateTo" class="text-xs border border-gray-200 rounded-md py-1.5 px-2 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white">
+                            </div>
+                            <button id="overviewFilterApplyBtn" type="button" class="text-xs font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-md py-1.5 px-3 transition-colors duration-200">
+                                <i class="fas fa-check mr-1"></i>Terapkan
+                            </button>
+                            <button id="overviewFilterResetBtn" type="button" class="text-xs font-medium text-gray-400 hover:text-blue-600 py-1.5 px-2 transition-colors duration-200">
+                                Reset ke Bulan Berjalan
+                            </button>
+                            <p class="w-full text-[10px] text-gray-400 mt-1">Isi "Dari Tanggal" &amp; "Sampai Tanggal" untuk melihat rentang kustom (mengalahkan pilihan Bulan/Tahun). Kosongkan keduanya untuk memakai filter Bulan/Tahun.</p>
+                        </div>
                     </div>
 
                     <!-- KPI Cards: Total Active & Churn Rate (overall) -->
@@ -424,10 +465,11 @@
                         </div>
                     </div>
 
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Daftar Customer</h2>
+                    <!-- ================= MILESTONE: DAFTAR CUSTOMER ================= -->
+                    <h3 class="text-lg font-bold text-gray-800">Daftar Customer</h3>
 
                     <!-- Dashboard Summary Cards -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
                         <div class="metric-card p-6 flex items-center justify-between">
                             <div>
                                 <h4 class="text-sm font-semibold text-gray-500">Customer Active</h4>
@@ -450,77 +492,44 @@
                             <div class="icon-box icon-gray"><i class="fas fa-user-times"></i></div>
                         </div>
                     </div>
+                    <div class="text-center mb-8">
+                        <button type="button" onclick="showSection('customersSection')" class="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+                            <i class="fas fa-address-book mr-1"></i> Lihat &amp; Cari Semua Daftar Customer
+                        </button>
+                    </div>
 
-                    <!-- Customer Filters -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div class="col-span-1">
-                            <label for="searchCustomer" class="block text-gray-700 text-sm font-bold mb-2">Pencarian Customer:</label>
-                            <div class="relative">
-                                <input type="text" id="searchCustomer" placeholder="Cari berdasarkan nama, email, ID, akun kontrak, atau no. HP..."
-                                       class="shadow-sm appearance-none border rounded-lg w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent pl-10">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-search text-gray-400"></i>
-                                </div>
+                    <!-- ================= MILESTONE: REVENUE (ringkasan dari Forecast Revenue Bulan Berjalan) ================= -->
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-1">
+                            <h3 class="text-lg font-bold text-gray-800">Revenue Bulan Berjalan</h3>
+                            <span class="text-xs font-medium text-gray-400" id="ovRevenuePeriodLabel"></span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                            <div class="metric-card p-4">
+                                <p class="text-xs text-gray-400 uppercase font-semibold">Target Revenue</p>
+                                <p class="text-xl font-bold text-gray-800" id="ovRevenueTargetValue">Rp 0</p>
+                            </div>
+                            <div class="metric-card p-4">
+                                <p class="text-xs text-gray-400 uppercase font-semibold">Total Forecast Revenue</p>
+                                <p class="text-xl font-bold text-gray-800" id="ovRevenueTotalValue">Rp 0</p>
+                            </div>
+                            <div class="metric-card p-4">
+                                <p class="text-xs text-gray-400 uppercase font-semibold">Selisih vs Target</p>
+                                <p class="text-xl font-bold text-gray-800" id="ovRevenueGapValue">Rp 0</p>
                             </div>
                         </div>
-                        <div class="col-span-1">
-                            <label for="filterStatus" class="block text-gray-700 text-sm font-bold mb-2">Filter Status:</label>
-                            <select id="filterStatus" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
-                                <option value="">Semua Status</option>
-                                <option value="ACTIVE">ACTIVE</option>
-                                <option value="SUSPENDED">SUSPENDED</option>
-                                <option value="TERMINATED">TERMINATED</option>
-                            </select>
+                        <p class="text-xs text-gray-400 mb-1">Progress forecast revenue terhadap target bulan berjalan (jika semua customer membayar sampai akhir bulan)</p>
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                                <div id="ovRevenueProgressBar" class="h-5 rounded-full flex items-center justify-end pr-2 text-[10px] font-bold text-white transition-all duration-500" style="width:0%; background-color:#94A3B8;"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-600 w-14 text-right" id="ovRevenueProgressPct">0%</span>
                         </div>
-                        <div class="col-span-1">
-                            <label for="filterSalesCode" class="block text-gray-700 text-sm font-bold mb-2">Filter Sales Code:</label>
-                            <select id="filterSalesCode" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
-                                <option value="">Semua Sales Code</option>
-                                <!-- Options will be loaded dynamically -->
-                            </select>
-                        </div>
-                        <div class="col-span-1 flex items-end">
-                            <button id="applyFiltersBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 w-full">
-                                <i class="fas fa-sync-alt mr-2"></i> Apply Filters
-                            </button>
-                        </div>
+                        <p class="text-[11px] text-gray-400 mt-3">Detail lengkap &amp; input manual ada di menu <button type="button" class="text-blue-500 hover:underline font-semibold" onclick="showSection('forecastRevenue')">Forecast Revenue Bulan Berjalan</button>.</p>
                     </div>
-
-                    <!-- Total Customer Display -->
-                    <div id="totalCustomerDisplay" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-6 text-center" role="alert">
-                        Memuat jumlah customer...
-                    </div>
-
-                    <!-- Customer Table -->
-                    <div class="overflow-x-auto rounded-lg shadow-md">
-                        <table class="min-w-full bg-white table-custom" id="customerTable">
-                            <thead class="bg-gray-700 text-white">
-                                <tr>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">ID Partner Bisnis</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Nama Lengkap</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Email</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">No. HP</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Akun Kontrak</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Alamat Instalasi</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Customer data will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination for customer table -->
-                    <nav class="mt-6">
-                        <ul class="flex justify-center space-x-2" id="customerPagination">
-                            <!-- Pagination buttons will be inserted here -->
-                        </ul>
-                    </nav>
 
                     <!-- Segmentasi Bundle_LOB: Home, Metronet, Dedicated -->
-                    <h4 class="text-base font-bold text-gray-700 mb-3">Segmentasi Bundle (Bundle_LOB)</h4>
+                    <h4 class="text-base font-bold text-gray-700 mb-3">Segmentasi Bundle</h4>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         <!-- Segmen Home -->
                         <div class="metric-card p-6">
@@ -628,7 +637,7 @@
 
                     <!-- Pencapaian Area Coordinator (Harian, bulan ini vs bulan lalu) -->
                     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                        <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Pencapaian Instalasi Harian per Area Coordinator</h3>
+                        <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Daily New Subs</h3>
                         <p class="text-center text-xs text-gray-400 mb-4">Kumulatif harian bulan berjalan (garis solid) vs bulan lalu (garis transparan)</p>
                         <div class="chart-container h-80">
                             <canvas id="arcoPerformanceChart"></canvas>
@@ -636,45 +645,44 @@
                         <p id="arcoPerformanceError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                     </div>
 
-                    <!-- Terminasi per Sales Code & Umur Customer Suspend akan Terminate -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- ================= MILESTONE: INSTALASI BULAN BERJALAN PER SUBDISTRICT ================= -->
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Instalasi Bulan Berjalan per Subdistrict</h3>
+                        <div class="chart-container h-72">
+                            <canvas id="subdistrictInstallChart"></canvas>
+                        </div>
+                        <p id="subdistrictInstallError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                    </div>
+
+                    <!-- ================= MILESTONE: TERMINASI ================= -->
+                    <h4 class="text-base font-bold text-gray-700 mb-3">Terminasi</h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Terminasi Bulan Berjalan per Sales Code</h3>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Terminasi</h3>
                             <div class="chart-container h-72">
                                 <canvas id="terminationBySalesChart"></canvas>
                             </div>
                             <p id="terminationBySalesError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Umur Customer Terminate Bulan Ini</h3>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Age Subs</h3>
                             <div class="chart-container h-72">
                                 <canvas id="suspendAgeChart"></canvas>
                             </div>
                             <p id="suspendAgeError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                         </div>
-                    </div>
-
-                    <!-- Status Modem Terminate & Subdistrict Instalasi Bulan Berjalan -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Modem Customer Suspend &amp; Terminate Bulan Ini</h3>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Modem</h3>
                             <div class="chart-container h-72">
                                 <canvas id="modemStatusTerminateChart"></canvas>
                             </div>
                             <p id="modemStatusTerminateError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Instalasi Bulan Berjalan per Subdistrict</h3>
-                            <div class="chart-container h-72">
-                                <canvas id="subdistrictInstallChart"></canvas>
-                            </div>
-                            <p id="subdistrictInstallError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
-                        </div>
                     </div>
 
-                    <!-- Penetrasi per Subdistrict -->
+                    <!-- ================= MILESTONE: PENETRASI ================= -->
                     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                        <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Penetrasi Customer Active per Subdistrict</h3>
+                        <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Penetrasi</h3>
                         <p class="text-center text-xs text-gray-400 mb-4">Total Customer Active dibagi Total Homepass masing-masing Subdistrict</p>
                         <div class="chart-container h-80">
                             <canvas id="penetrationChart"></canvas>
@@ -682,8 +690,112 @@
                         <p id="penetrationError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                     </div>
 
+                    <!-- ================= MILESTONE: PROSPECT (mirror dari sidebar Prospect) ================= -->
+                    <h4 class="text-base font-bold text-gray-700 mb-3">Prospect</h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-1 text-center">Daily Prospect</h3>
+                            <p class="text-center text-xs text-gray-400 mb-2" id="ovProspectDailyTotalDisplay">Bulan berjalan</p>
+                            <div class="chart-container h-64">
+                                <canvas id="ovProspectDailyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Prospect per Kelurahan</h3>
+                            <div class="chart-container h-64">
+                                <canvas id="ovProspectKelurahanChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Prospect</h3>
+                            <div class="chart-container h-64">
+                                <canvas id="ovProspectStatusChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Top Campaigns</h3>
+                            <div class="chart-container h-64">
+                                <canvas id="ovProspectSumberChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-center text-[11px] text-gray-400 mb-2">Detail lengkap, pencarian, dan chart Prospect lainnya ada di menu <button type="button" class="text-blue-500 hover:underline font-semibold" onclick="showSection('prospectSection')">Prospect</button>.</p>
 
+                </div>
+            </section>
 
+            <!-- Customer's Section (Pencarian & Tabel Customer, dipindah dari Customer Overview) -->
+            <section id="customersSection" class="content-section hidden">
+                <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Customer's</h2>
+
+                    <!-- Customer Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="col-span-1">
+                            <label for="searchCustomer" class="block text-gray-700 text-sm font-bold mb-2">Pencarian Customer:</label>
+                            <div class="relative">
+                                <input type="text" id="searchCustomer" placeholder="Cari berdasarkan nama, email, ID, akun kontrak, atau no. HP..."
+                                       class="shadow-sm appearance-none border rounded-lg w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent pl-10">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="filterStatus" class="block text-gray-700 text-sm font-bold mb-2">Filter Status:</label>
+                            <select id="filterStatus" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <option value="">Semua Status</option>
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="SUSPENDED">SUSPENDED</option>
+                                <option value="TERMINATED">TERMINATED</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="filterSalesCode" class="block text-gray-700 text-sm font-bold mb-2">Filter Sales Code:</label>
+                            <select id="filterSalesCode" class="shadow-sm border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                                <option value="">Semua Sales Code</option>
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-span-1 flex items-end">
+                            <button id="applyFiltersBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 w-full">
+                                <i class="fas fa-sync-alt mr-2"></i> Apply Filters
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Total Customer Display -->
+                    <div id="totalCustomerDisplay" class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-lg mb-6 text-center" role="alert">
+                        Memuat jumlah customer...
+                    </div>
+
+                    <!-- Customer Table -->
+                    <div class="overflow-x-auto rounded-lg shadow-md">
+                        <table class="min-w-full bg-white table-custom" id="customerTable">
+                            <thead class="bg-gray-700 text-white">
+                                <tr>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">ID Partner Bisnis</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Nama Lengkap</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Email</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">No. HP</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Akun Kontrak</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Alamat Instalasi</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Customer data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination for customer table -->
+                    <nav class="mt-6">
+                        <ul class="flex justify-center space-x-2" id="customerPagination">
+                            <!-- Pagination buttons will be inserted here -->
+                        </ul>
+                    </nav>
                 </div>
             </section>
 
@@ -711,9 +823,9 @@
                     </div>
                 </div>
 
-                <!-- Pencapaian Sales per Sales Code: Penjualan, Terminasi, Net Subs, bisa disaring per bulan & tahun -->
+                <!-- Pencapaian Arco: Penjualan, Terminasi, Net Subs, bisa disaring per bulan & tahun -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-1 text-center">Pencapaian Sales per Sales Code</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-1 text-center">Pencapaian Arco</h2>
                     <p class="text-center text-xs text-gray-400 mb-4">Total Penjualan (Instalasi), Terminasi, dan Net Subs per Sales Code — pilih bulan &amp; tahun untuk melihat pencapaian periode tertentu</p>
                     <div class="mb-4 flex flex-wrap gap-4 items-center justify-center">
                         <div>
@@ -1096,7 +1208,7 @@
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">CONTRACTACCOUNT</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">SALESCODE</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">STATUS</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">EXPIREDDATE</th>
+                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Age Subs</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">TERMDATE</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm">Status Modem</th>
                                     <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Action</th>
@@ -1148,7 +1260,7 @@
                             <p id="ftSalesChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Umur Customer Terminate Bulan Ini</h3>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Age Subs</h3>
                             <div class="chart-container h-72">
                                 <canvas id="ftAgeChart"></canvas>
                             </div>
@@ -1159,7 +1271,7 @@
                     <!-- Status Modem Suspend & Terminate & Total Tiket per customer -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Modem Customer Suspend &amp; Terminate Bulan Ini</h3>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Modem</h3>
                             <div class="chart-container h-72">
                                 <canvas id="ftModemChart"></canvas>
                             </div>
@@ -1193,36 +1305,37 @@
                         <p id="ftSubdistrictChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                     </div>
 
+                    <!-- ================= CHART LOKASI MODEM & CHART KETERANGAN VISIT (bersebelahan) ================= -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Lokasi Modem</h3>
+                            <div class="chart-container h-72">
+                                <canvas id="ftModemLocationChart"></canvas>
+                            </div>
+                            <p id="ftModemLocationChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Keterangan Visit</h3>
+                            <div class="chart-container h-72">
+                                <canvas id="ftVisitChart"></canvas>
+                            </div>
+                            <p id="ftVisitChartError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                        </div>
+                    </div>
+
                     <!-- ================= TABEL CUSTOMER SUSPEND & TERMINATE + REASON CUSTOMER ================= -->
                     <div class="overflow-x-auto rounded-lg shadow-md mb-8">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-3 px-1">
                             <h4 class="text-lg font-bold text-gray-800 text-center flex-1 min-w-[200px]">Customer Suspend &amp; Terminate <span id="reasonTerminationPeriodLabel" class="text-gray-400 font-normal text-sm"></span></h4>
-                            <div class="flex items-center gap-1 text-xs">
-                                <label for="reasonTerminationSubdistrictSelect" class="text-gray-500 font-semibold whitespace-nowrap">Subdistrict:</label>
-                                <select id="reasonTerminationSubdistrictSelect" class="shadow-sm border rounded-lg py-1.5 px-2 text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 max-w-[160px]">
-                                    <option value="ALL">Semua Subdistrict</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center gap-1 text-xs">
-                                <label for="reasonTerminationSortSelect" class="text-gray-500 font-semibold whitespace-nowrap">Urutkan:</label>
-                                <select id="reasonTerminationSortSelect" class="shadow-sm border rounded-lg py-1.5 px-2 text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
-                                    <option value="desc">Tanggal Terbaru</option>
-                                    <option value="asc">Tanggal Terlama</option>
-                                </select>
+                            <div class="flex items-center gap-1 text-xs w-full sm:w-auto">
+                                <label for="reasonTerminationSearchInput" class="text-gray-500 font-semibold whitespace-nowrap"><i class="fas fa-search"></i></label>
+                                <input type="text" id="reasonTerminationSearchInput" placeholder="Cari Nama, Telepon, ID Pelanggan, No. Kontrak, atau Email..." class="shadow-sm border rounded-lg py-1.5 px-2 text-gray-700 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full sm:w-72">
                             </div>
                         </div>
                         <table class="min-w-full bg-white table-custom" id="reasonTerminationTable">
                             <thead class="bg-gray-700 text-white">
-                                <tr>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tl-lg">Status</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm min-w-[140px]">Nama Pelanggan</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Sales Code</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Status Modem</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Tanggal</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Umur Berlangganan</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm min-w-[160px]">Reason Customer</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm">Keterangan Visit</th>
-                                    <th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Aksi</th>
+                                <tr id="reasonTerminationTableHeadRow">
+                                    <!-- Diisi oleh renderReasonTerminationTableHead() -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -1267,7 +1380,7 @@
 
                     <!-- Progress per Sales Code -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h4 class="text-lg font-bold text-gray-800 mb-1 text-center">Pencapaian Prospect per Sales Code</h4>
+                        <h4 class="text-lg font-bold text-gray-800 mb-1 text-center">Pencapaian Prospect Arco</h4>
                         <p class="text-xs text-gray-500 mb-4 text-center">Target: 5 prospect/hari &middot; minimal 150 prospect/bulan</p>
                         <div id="prospectSalesCodeProgressContainer" class="space-y-4">
                             <!-- Diisi otomatis oleh JS -->
@@ -1275,10 +1388,10 @@
                     </div>
                 </div>
 
-                <!-- 1. Prospect Harian per Sales Code (kumulatif 1 bulan) -->
+                <!-- 1. Daily Prospect (kumulatif 1 bulan) -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                        <h4 class="text-lg font-bold text-gray-800">Prospect Harian per Sales Code</h4>
+                        <h4 class="text-lg font-bold text-gray-800">Daily Prospect</h4>
                         <div class="flex flex-wrap items-end gap-3">
                             <div>
                                 <label for="prospectDailyMonthSelect" class="block text-gray-600 text-xs font-semibold mb-1">Bulan:</label>
@@ -1346,7 +1459,7 @@
 
                 <!-- 6. Top Campaigns: Prospect dapat Darimana -->
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                    <h4 class="text-lg font-bold text-gray-800 mb-2 text-center">Top Campaigns &mdash; Prospect dapat Darimana</h4>
+                    <h4 class="text-lg font-bold text-gray-800 mb-2 text-center">Top Campaigns</h4>
                     <p class="text-xs text-gray-500 mb-3 text-center"><i class="fas fa-info-circle text-blue-500 mr-1"></i>Klik salah satu batang untuk melihat detail prospect dari sumber tersebut.</p>
                     <div class="chart-container" style="height:340px;">
                         <canvas id="prospectSumberChart"></canvas>
@@ -1445,7 +1558,7 @@
              terlihat -- karena section leluhurnya (ancestor) masih
              "hidden", walaupun class "hidden" milik modal itu sendiri
              sudah dilepas. Ini akar penyebab "klik tidak muncul apa-apa"
-             pada tabel Pencapaian Sales per Sales Code & tombol
+             pada tabel Pencapaian Arco & tombol
              "Lihat VA" di Daily Termination Subscribers.
            ============================================================ -->
                     <!-- Modals -->
@@ -1576,6 +1689,15 @@
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-1">Penjelasan (Free Text)</label>
                                     <textarea id="reasonTerminationEditFreeText" rows="3" placeholder="Penjelasan tambahan..." class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 text-sm font-bold mb-1">Lokasi Modem</label>
+                                    <select id="reasonTerminationEditModemLocationSelect" class="shadow-sm border rounded-lg py-2 px-3 text-gray-700 w-full focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                        <option value="">- Pilih Lokasi Modem -</option>
+                                        <option value="Sudah Diambil">Sudah Diambil</option>
+                                        <option value="Masih di Customer">Masih di Customer</option>
+                                    </select>
+                                    <p id="reasonTerminationEditModemLocationFixed" class="text-gray-700 text-sm bg-gray-100 rounded-lg py-2 px-3 hidden font-medium"></p>
                                 </div>
                                 <div>
                                     <label class="block text-gray-700 text-sm font-bold mb-1">Foto Bukti Visit <span class="text-gray-400 font-normal">(otomatis dikompres maks. &plusmn;200KB)</span></label>
@@ -1947,6 +2069,17 @@
         let subdistrictInstallChartInstance = null;
         let penetrationChartInstance = null;
 
+        // --- OVERVIEW: state filter periode (Bulan/Tahun atau rentang tanggal kustom) ---
+        // month/year bernilai null berarti "ikuti bulan berjalan" (real time, default).
+        let overviewFilter = { month: null, year: null, dateFrom: '', dateTo: '' };
+        let overviewFilterInitialized = false;
+        // Chart instance "mirror" untuk milestone Prospect yang ditampilkan di Customer Overview
+        // (dihitung ulang dari data allProspects yang sama, tanpa menyentuh tab Prospect asli).
+        let ovProspectDailyChartInstance = null;
+        let ovProspectKelurahanChartInstance = null;
+        let ovProspectStatusChartInstance = null;
+        let ovProspectSumberChartInstance = null;
+
         // --- CHART INSTANCE KHUSUS VISUAL TAMBAHAN FORECAST TERMINASI (ikut filter Bulan/Tahun) ---
         let ftSalesChartInstance = null;
         let ftAgeChartInstance = null;
@@ -1954,6 +2087,8 @@
         let ftTicketChartInstance = null;
         let ftReasonChartInstance = null;
         let ftSubdistrictChartInstance = null;
+        let ftModemLocationChartInstance = null;
+        let ftVisitChartInstance = null;
 
         // --- VARIABEL & CHART INSTANCE KHUSUS PROSPECT ---
         let allProspects = []; // Data mentah dari prospectWebAppUrl
@@ -2071,6 +2206,7 @@
 
             // Render grafik yang relevan dengan bagian saat ditampilkan
             if (sectionId === 'customerOverview') updateDashboardSummaryAndChart(); // Ganti nama fungsi
+            if (sectionId === 'customersSection') renderCustomerTable(currentPage); // Tab "Customer's" (pencarian & tabel customer)
             if (sectionId === 'prospectSection') {
                 // Data prospect diambil dari Apps Script TERPISAH (tidak menyentuh customerWebAppUrl).
                 // Hanya diambil ulang jika belum pernah dimuat, supaya tidak spam request tiap ganti tab.
@@ -2748,19 +2884,342 @@
             if (terminatedCountEl) terminatedCountEl.textContent = formatNumber(terminatedCount);
             document.getElementById('totalTerminatedCustomersDisplay').textContent = formatNumber(totalTerminatedCount);
 
+            // Pastikan filter periode Customer Overview sudah siap (hanya dijalankan sekali)
+            initOverviewFilterUI();
+
             // Render semua insight tambahan (KPI, target, forecast, dan chart-chart baru)
             renderOverviewInsights();
+
+            // Render kartu Revenue (milestone "Revenue" - ringkasan dari Forecast Revenue Bulan Berjalan)
+            renderOverviewRevenueCard();
+
+            // Render mirror chart Prospect (milestone "Prospect"); ambil data jika belum pernah dimuat
+            if (!Array.isArray(allProspects) || allProspects.length === 0) {
+                fetchProspectData();
+            } else {
+                renderOverviewProspectMirror();
+            }
         }
 
 
         // ================= INSIGHT BULAN BERJALAN: FUNGSI-FUNGSI BARU =================
 
-        // Palet warna untuk chart dinamis (per Sales Code / Area Coordinator)
-        const CHART_PALETTE = ['#2563EB', '#F97316', '#DC2626', '#16A34A', '#7C3AED', '#0EA5E9', '#DB2777', '#CA8A04', '#059669', '#4B5563'];
+        // Palet warna untuk chart dinamis (per Sales Code / Area Coordinator).
+        // Sengaja dibuat "soft" seputar biru-abu (bukan warna-warna kontras/mencolok seperti
+        // merah, oranye, ungu, pink) supaya nyaman dilihat & mudah dijelaskan saat meeting.
+        const CHART_PALETTE = ['#2563EB', '#3B82F6', '#64748B', '#60A5FA', '#94A3B8', '#1D4ED8', '#93C5FD', '#475569', '#0EA5E9', '#334155'];
         function paletteColor(index, alpha) {
             const hex = CHART_PALETTE[index % CHART_PALETTE.length];
             const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Palet "soft" khusus milestone Prospect di Customer Overview (mirror dari tab Prospect).
+        const OV_SOFT_PALETTE = ['#2563EB', '#60A5FA', '#64748B', '#94A3B8', '#3B82F6', '#CBD5E1', '#1D4ED8', '#475569', '#93C5FD', '#0EA5E9', '#334155', '#B6C2D1'];
+
+        // Hitung periode "bulan berjalan" untuk seluruh Customer Overview, mengikuti filter
+        // elegan (Bulan/Tahun, atau rentang tanggal kustom Dari-Sampai) yang dipilih pengguna.
+        // Bila tidak ada filter yang dipilih (default), perilakunya identik seperti sebelumnya:
+        // bulan berjalan = bulan & tahun hari ini (real time).
+        function computeOverviewPeriod() {
+            const realToday = new Date();
+            realToday.setHours(0, 0, 0, 0);
+
+            // Mode rentang tanggal kustom (Dari Tanggal & Sampai Tanggal) mengalahkan Bulan/Tahun.
+            if (overviewFilter.dateFrom && overviewFilter.dateTo) {
+                const from = parseDate(overviewFilter.dateFrom);
+                const to = parseDate(overviewFilter.dateTo);
+                if (from && to && from <= to) {
+                    from.setHours(0, 0, 0, 0);
+                    to.setHours(0, 0, 0, 0);
+                    const rangeDays = Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
+                    const startOfLastMonth = new Date(from);
+                    startOfLastMonth.setDate(startOfLastMonth.getDate() - rangeDays);
+                    const sameDayLastMonth = new Date(from);
+                    sameDayLastMonth.setDate(sameDayLastMonth.getDate() - 1);
+                    return {
+                        today: to,
+                        currentDay: rangeDays,
+                        startOfThisMonth: from,
+                        daysInCurrentMonth: rangeDays,
+                        startOfLastMonth: startOfLastMonth,
+                        daysInLastMonth: rangeDays,
+                        sameDayLastMonth: sameDayLastMonth
+                    };
+                }
+            }
+
+            // Mode Bulan/Tahun terpilih (default: bulan berjalan real time)
+            const selMonth = (overviewFilter.month !== null && overviewFilter.month !== '') ? parseInt(overviewFilter.month, 10) : realToday.getMonth();
+            const selYear = (overviewFilter.year !== null && overviewFilter.year !== '') ? parseInt(overviewFilter.year, 10) : realToday.getFullYear();
+            const isCurrentRealMonth = (selMonth === realToday.getMonth() && selYear === realToday.getFullYear());
+
+            const startOfThisMonth = new Date(selYear, selMonth, 1);
+            const daysInCurrentMonth = new Date(selYear, selMonth + 1, 0).getDate();
+            // Jika bulan yang dipilih adalah bulan berjalan sungguhan -> "hari ini" = tanggal asli.
+            // Jika bulan yang dipilih adalah bulan lain (sudah lewat/akan datang) -> snapshot 1 bulan penuh.
+            const today = isCurrentRealMonth ? realToday : new Date(selYear, selMonth, daysInCurrentMonth);
+            const currentDay = today.getDate();
+
+            const lastMonthRef = new Date(selYear, selMonth - 1, 1);
+            const startOfLastMonth = new Date(lastMonthRef.getFullYear(), lastMonthRef.getMonth(), 1);
+            const daysInLastMonth = new Date(lastMonthRef.getFullYear(), lastMonthRef.getMonth() + 1, 0).getDate();
+            const sameDayLastMonth = new Date(lastMonthRef.getFullYear(), lastMonthRef.getMonth(), Math.min(currentDay, daysInLastMonth));
+
+            return { today, currentDay, startOfThisMonth, daysInCurrentMonth, startOfLastMonth, daysInLastMonth, sameDayLastMonth };
+        }
+
+        // Inisialisasi UI filter Overview (Bulan/Tahun/Tanggal) - dijalankan sekali saja.
+        function initOverviewFilterUI() {
+            if (overviewFilterInitialized) return;
+            const monthSel = document.getElementById('overviewFilterMonth');
+            const yearSel = document.getElementById('overviewFilterYear');
+            if (!monthSel || !yearSel) return;
+            overviewFilterInitialized = true;
+
+            const now = new Date();
+            monthSel.innerHTML = Array.from({ length: 12 }, (_, i) => `<option value="${i}">${getMonthName(i)}</option>`).join('');
+            const years = [];
+            for (let y = now.getFullYear() - 2; y <= now.getFullYear() + 1; y++) years.push(y);
+            yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+            monthSel.value = String(now.getMonth());
+            yearSel.value = String(now.getFullYear());
+
+            const toggleBtn = document.getElementById('overviewFilterToggleBtn');
+            const panel = document.getElementById('overviewFilterPanel');
+            const chevron = document.getElementById('overviewFilterChevron');
+            if (toggleBtn && panel) {
+                toggleBtn.addEventListener('click', () => {
+                    panel.classList.toggle('hidden');
+                    if (chevron) { chevron.classList.toggle('fa-chevron-down'); chevron.classList.toggle('fa-chevron-up'); }
+                });
+            }
+
+            const dateFromEl = document.getElementById('overviewFilterDateFrom');
+            const dateToEl = document.getElementById('overviewFilterDateTo');
+
+            const applyBtn = document.getElementById('overviewFilterApplyBtn');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    overviewFilter.month = monthSel.value;
+                    overviewFilter.year = yearSel.value;
+                    overviewFilter.dateFrom = dateFromEl ? dateFromEl.value : '';
+                    overviewFilter.dateTo = dateToEl ? dateToEl.value : '';
+                    updateDashboardSummaryAndChart();
+                });
+            }
+
+            const resetBtn = document.getElementById('overviewFilterResetBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    const n = new Date();
+                    monthSel.value = String(n.getMonth());
+                    yearSel.value = String(n.getFullYear());
+                    if (dateFromEl) dateFromEl.value = '';
+                    if (dateToEl) dateToEl.value = '';
+                    overviewFilter = { month: null, year: null, dateFrom: '', dateTo: '' };
+                    updateDashboardSummaryAndChart();
+                });
+            }
+        }
+
+        // ================= MILESTONE "REVENUE" (ringkasan dari Forecast Revenue Bulan Berjalan) =================
+        // Memakai ulang helper perhitungan yang sama persis dengan tab "Forecast Revenue Bulan
+        // Berjalan" (getForecastRevenueTarget, calculateRecurringRevenueForCustomer, dst) supaya
+        // angkanya selalu konsisten, tanpa menyentuh/duplikasi tampilan tabel di tab tersebut.
+        function renderOverviewRevenueCard() {
+            if (!Array.isArray(allCustomers) || allCustomers.length === 0) return;
+            const targetValEl = document.getElementById('ovRevenueTargetValue');
+            if (!targetValEl) return; // kartu belum ada di DOM
+
+            const now = new Date();
+            const selectedMonth = (overviewFilter.month !== null && overviewFilter.month !== '') ? parseInt(overviewFilter.month, 10) : now.getMonth();
+            const selectedYear = (overviewFilter.year !== null && overviewFilter.year !== '') ? parseInt(overviewFilter.year, 10) : now.getFullYear();
+            const periodLabel = `${getMonthName(selectedMonth)} ${selectedYear}`;
+
+            const customersThisMonth = allCustomers.filter(c => {
+                const d = parseDate(c.EXPIREDDATE);
+                return d && d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+            });
+
+            let sisaForecastRevenue = 0;
+            customersThisMonth.forEach(c => {
+                if (!isCustomerNewInPeriod(c, selectedYear, selectedMonth)) {
+                    sisaForecastRevenue += calculateRecurringRevenueForCustomer(c);
+                }
+            });
+            const manualCollectedMonthTotal = getManualRevenueGlobalMonthTotal(selectedYear, selectedMonth);
+            const trueForecastTotal = manualCollectedMonthTotal + sisaForecastRevenue;
+            const target = getForecastRevenueTarget(selectedYear, selectedMonth);
+            const gap = trueForecastTotal - target;
+            const progressPct = target > 0 ? (trueForecastTotal / target) * 100 : 0;
+            const barWidth = Math.min(100, Math.max(0, progressPct));
+
+            const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            setText('ovRevenuePeriodLabel', periodLabel);
+            setText('ovRevenueTargetValue', formatRupiah(target));
+            setText('ovRevenueTotalValue', formatRupiah(trueForecastTotal));
+
+            const gapEl = document.getElementById('ovRevenueGapValue');
+            if (gapEl) {
+                gapEl.textContent = `${gap >= 0 ? '+' : '-'}${formatRupiah(Math.abs(gap))}`;
+                gapEl.className = `text-xl font-bold ${gap >= 0 ? 'text-blue-600' : 'text-slate-500'}`;
+            }
+            const bar = document.getElementById('ovRevenueProgressBar');
+            if (bar) {
+                bar.style.width = `${barWidth}%`;
+                bar.style.backgroundColor = progressPct >= 100 ? '#2563EB' : '#94A3B8';
+                bar.textContent = progressPct >= 15 ? `${progressPct.toFixed(0)}%` : '';
+            }
+            setText('ovRevenueProgressPct', `${progressPct.toFixed(0)}%`);
+        }
+
+        // ================= MILESTONE "PROSPECT" (mirror 4 chart dari sidebar Prospect) =================
+        // Fungsi-fungsi di bawah ini SENGAJA dibuat terpisah (bukan menimpa fungsi render asli di
+        // tab Prospect) agar tab Prospect yang sudah ada tidak berubah sama sekali. Sumber data
+        // (allProspects) dan cara menghitungnya identik dengan tab Prospect asli.
+        function renderOverviewProspectMirror() {
+            if (!Array.isArray(allProspects) || allProspects.length === 0) return;
+            if (!document.getElementById('ovProspectDailyChart')) return; // kartu belum ada di DOM
+            renderOvProspectDailyChart();
+            renderOvProspectKelurahanChart();
+            renderOvProspectStatusChart();
+            renderOvProspectSumberChart();
+        }
+
+        function renderOvProspectDailyChart() {
+            const ctx = document.getElementById('ovProspectDailyChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ovProspectDailyChartInstance) ovProspectDailyChartInstance.destroy();
+
+            const now = new Date();
+            const selectedMonth = now.getMonth();
+            const selectedYear = now.getFullYear();
+
+            const monthProspects = allProspects.filter(p => {
+                const d = new Date(pTanggalRaw(p));
+                return !isNaN(d.getTime()) && d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+            });
+
+            const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+            const dailyCounts = new Array(daysInMonth).fill(0);
+            monthProspects.forEach(p => {
+                const d = new Date(pTanggalRaw(p));
+                dailyCounts[d.getDate() - 1]++;
+            });
+            const labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
+
+            const totalDisplay = document.getElementById('ovProspectDailyTotalDisplay');
+            if (totalDisplay) {
+                totalDisplay.textContent = `Total Prospect ${getMonthName(selectedMonth)} ${selectedYear}: ${formatNumber(monthProspects.length)}`;
+            }
+
+            ovProspectDailyChartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Jumlah Prospect',
+                        data: dailyCounts,
+                        backgroundColor: 'rgba(96, 165, 250, 0.75)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        maxBarThickness: 22
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `Tanggal ${c.label}: ${c.raw} prospect` } } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 9 } } },
+                        y: { beginAtZero: true, grid: { color: '#E2E8F0' }, ticks: { precision: 0, color: '#64748B' } }
+                    }
+                }
+            });
+        }
+
+        function renderOvProspectKelurahanChart() {
+            const ctx = document.getElementById('ovProspectKelurahanChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ovProspectKelurahanChartInstance) ovProspectKelurahanChartInstance.destroy();
+
+            const entries = buildCategoryCounts(allProspects, pKelurahan, { limit: 10 });
+            if (entries.length === 0) return;
+            const labels = entries.map(e => e.label);
+            const data = entries.map(e => e.count);
+
+            ovProspectKelurahanChartInstance = new Chart(context, {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Jumlah Prospect', data, backgroundColor: 'rgba(100, 116, 139, 0.75)', borderWidth: 0, borderRadius: 4, maxBarThickness: 20 }] },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} prospect` } } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#E2E8F0' }, ticks: { precision: 0, color: '#64748B' } },
+                        y: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 9 } } }
+                    }
+                }
+            });
+        }
+
+        function renderOvProspectStatusChart() {
+            const ctx = document.getElementById('ovProspectStatusChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ovProspectStatusChartInstance) ovProspectStatusChartInstance.destroy();
+
+            const entries = buildCategoryCounts(allProspects, pStatus);
+            if (entries.length === 0) return;
+            const labels = entries.map(e => e.label);
+            const data = entries.map(e => e.count);
+            const colors = labels.map((_, i) => OV_SOFT_PALETTE[i % OV_SOFT_PALETTE.length]);
+
+            ovProspectStatusChartInstance = new Chart(context, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#fff', borderWidth: 3 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#64748B', boxWidth: 10, font: { size: 10 }, padding: 10 } },
+                        tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} prospect` } }
+                    }
+                }
+            });
+        }
+
+        function renderOvProspectSumberChart() {
+            const ctx = document.getElementById('ovProspectSumberChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ovProspectSumberChartInstance) ovProspectSumberChartInstance.destroy();
+
+            const entries = buildCategoryCounts(allProspects, pSumber, { limit: 10 });
+            if (entries.length === 0) return;
+            const labels = entries.map(e => e.label);
+            const data = entries.map(e => e.count);
+
+            ovProspectSumberChartInstance = new Chart(context, {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Jumlah Prospect', data, backgroundColor: 'rgba(59, 130, 246, 0.75)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1, borderRadius: 4, maxBarThickness: 20 }] },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} prospect` } } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#E2E8F0' }, ticks: { precision: 0, color: '#64748B' } },
+                        y: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 9 } } }
+                    }
+                }
+            });
         }
 
         // Apakah customer dianggap aktif pada tanggal tertentu (rekonstruksi historis berdasarkan CONTRACTSTARTDATE & TERMDATE)
@@ -2792,20 +3251,17 @@
         function renderOverviewInsights() {
             if (!Array.isArray(allCustomers) || allCustomers.length === 0) return;
 
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const currentDay = today.getDate();
-
-            const startOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-            // Tentukan bulan lalu terlebih dahulu (tahun & bulan), baru hitung tanggal pembandingnya.
-            // Ini mencegah "rollover" saat bulan berjalan punya lebih banyak hari daripada bulan lalu
-            // (mis. 31 Juli dibandingkan ke bulan Juni yang cuma 30 hari -> tetap closing 30 Juni,
-            // bukan meloncat ke 1 Juli).
-            const lastMonthRef = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            const startOfLastMonth = new Date(lastMonthRef.getFullYear(), lastMonthRef.getMonth(), 1);
-            const daysInLastMonth = new Date(lastMonthRef.getFullYear(), lastMonthRef.getMonth() + 1, 0).getDate();
-            const sameDayLastMonth = new Date(lastMonthRef.getFullYear(), lastMonthRef.getMonth(), Math.min(currentDay, daysInLastMonth));
+            // Periode "bulan berjalan" kini mengikuti filter elegan (Bulan/Tahun atau rentang
+            // tanggal kustom) yang dipilih pengguna di Customer Overview. Default (tanpa filter
+            // yang diubah) perilakunya identik seperti sebelumnya: bulan & tanggal hari ini.
+            const period = computeOverviewPeriod();
+            const today = period.today;
+            const currentDay = period.currentDay;
+            const startOfThisMonth = period.startOfThisMonth;
+            const daysInCurrentMonth = period.daysInCurrentMonth;
+            const startOfLastMonth = period.startOfLastMonth;
+            const daysInLastMonth = period.daysInLastMonth;
+            const sameDayLastMonth = period.sameDayLastMonth;
 
             const periodLabelEl = document.getElementById('insightPeriodLabel');
             if (periodLabelEl) {
@@ -2947,7 +3403,7 @@
             }
         }
 
-        // 6. Pencapaian instalasi harian per Area Coordinator (Sales Code): bulan ini vs bulan lalu (transparan)
+        // 6. Daily New Subs (Sales Code): bulan ini vs bulan lalu (transparan)
         function renderArcoPerformanceChart(startOfThisMonth, startOfLastMonth, daysInCurrentMonth, daysInLastMonth, today) {
             const ctx = document.getElementById('arcoPerformanceChart');
             if (!ctx) return;
@@ -3029,7 +3485,7 @@
             });
         }
 
-        // 7. Terminasi bulan berjalan per Sales Code
+        // 7. Terminasi
         // Format nomor telepon Indonesia menjadi format internasional untuk link wa.me
         function formatWhatsAppNumber(phone) {
             if (!phone) return null;
@@ -3048,7 +3504,7 @@
             return `Halo Kak ${name},\nTerimakasih telah menjadi pelanggan setia #Biznet,\nDibantu untuk konfirmasinya kak, Wifi dirumahnya sudah tidak aktif, apakah ada kendala kak? Jika ada kendala kami siap membantu!\nJangan lupa untuk melakukan pembayaran, karena masa aktif akan langsung bertambah serta tidak ada denda ya kak\nTerimakasih, salam hangat dari Biznet Branch Campang Raya`;
         }
 
-        // Template pesan WhatsApp khusus untuk tabel "Pencapaian Sales per Sales Code"
+        // Template pesan WhatsApp khusus untuk tabel "Pencapaian Arco"
         // (ucapan terima kasih ke customer aktif, dipakai saat klik angka Penjualan)
         function salesPerformanceWaMessage(customer) {
             const name = customer.BP_FULLNAME || 'Bapak/Ibu';
@@ -3056,7 +3512,7 @@
         }
 
         // Template pesan WhatsApp khusus untuk klik angka Terminasi di tabel
-        // "Pencapaian Sales per Sales Code" (ajakan reaktivasi, beda dari pesan Penjualan)
+        // "Pencapaian Arco" (ajakan reaktivasi, beda dari pesan Penjualan)
         function salesPerformanceTerminationWaMessage(customer) {
             return `Halo Kak, apa kabar? \nKami lihat layanan Biznet Kakak sudah tidak aktif.\nKalau ada rencana pasang internet lagi, kami siap bantu prosesnya ya. \nTerima kasih, semoga harinya menyenangkan! 🙏`;
         }
@@ -3090,6 +3546,21 @@
             { label: 'Status Modem', get: c => c.MODEM_STATUS || '-' }
         ];
 
+        // Set kolom khusus untuk modal drill-down "Chart Terminasi Bulan Berjalan (per Sales Code)":
+        // sama seperti DEFAULT_DETAIL_COLUMNS, tapi TANPA kolom Sales Code sama sekali --
+        // karena judul chart & modal sudah menyebutkan Sales Code-nya, kolom ini tidak perlu
+        // diulang lagi di tabel supaya lebih ringkas & mudah dibaca.
+        const FT_SALES_CHART_DETAIL_COLUMNS = [
+            { label: 'Nama Lengkap', get: c => c.BP_FULLNAME || '-' },
+            { label: 'Akun Kontrak', get: c => c.CONTRACTACCOUNT || '-' },
+            { label: 'Mulai Kontrak', get: c => c.CONTRACTSTARTDATE || '-' },
+            { label: 'Tgl Berakhir', get: c => c.TERMDATE || '-' },
+            { label: 'Status', get: c => c.STATUS || '-' },
+            { label: 'Bundle', get: c => c.BUNDLE_NAME || '-' },
+            { label: 'Subdistrict', get: c => c.SUBDISTRICT_INST || '-' },
+            { label: 'Status Modem', get: c => c.MODEM_STATUS || '-' }
+        ];
+
         // Set kolom khusus untuk modal "Umur Customer Suspend yang Akan Terminate"
         const SUSPEND_AGE_DETAIL_COLUMNS = [
             { label: 'Nama Lengkap', get: c => c.BP_FULLNAME || '-' },
@@ -3109,14 +3580,18 @@
         };
 
         // State tabel modal detail (dipakai untuk fitur sort ascending/descending klik-header)
-        let overviewModalState = { customers: [], columns: [], showWhatsApp: false, waMessageBuilder: null, sortColIndex: null, sortDir: 'asc' };
+        let overviewModalState = { customers: [], columns: [], showWhatsApp: false, waMessageBuilder: null, sortColIndex: null, sortDir: 'asc', reasonActions: false };
 
         // Menampilkan modal detail customer (dipakai oleh chart Terminasi per Sales Code & Umur Customer Suspend)
         // waMessageBuilder (opsional): function(customer) => string, untuk mengganti redaksi WhatsApp
-        // khusus pemanggilan ini saja (mis. dipakai oleh tabel Pencapaian Sales per Sales Code).
-        function showOverviewDetailModal(customers, modalTitle, showWhatsApp, columns, waMessageBuilder) {
+        // khusus pemanggilan ini saja (mis. dipakai oleh tabel Pencapaian Arco).
+        // reasonActions (opsional): kalau true, kolom Aksi juga menampilkan tombol pensil (Edit
+        // Reason Customer) & mata (Lihat Report Ringkas) -- dipakai oleh 5 chart drill-down di
+        // section Forecast Terminasi (Terminasi per Sales Code, Umur Customer Terminate, Jumlah
+        // Tiket, Reason Customer, & Suspend/Terminate per Subdistrict).
+        function showOverviewDetailModal(customers, modalTitle, showWhatsApp, columns, waMessageBuilder, reasonActions) {
             columns = columns || DEFAULT_DETAIL_COLUMNS;
-            overviewModalState = { customers: customers || [], columns, showWhatsApp, waMessageBuilder, sortColIndex: null, sortDir: 'asc' };
+            overviewModalState = { customers: customers || [], columns, showWhatsApp, waMessageBuilder, sortColIndex: null, sortDir: 'asc', reasonActions: !!reasonActions };
 
             // Jika salah satu kolom adalah kolom tanggal ("Tgl Berakhir"), urutkan dari yang
             // paling dekat/terbaru ke yang terlama secara default supaya langsung informatif.
@@ -3169,7 +3644,7 @@
         function renderOverviewDetailTableBody() {
             const modalBodyTable = document.querySelector('#overviewDetailModal #overviewDetailTable tbody');
             if (!modalBodyTable) return;
-            const { columns, showWhatsApp, waMessageBuilder, sortColIndex, sortDir } = overviewModalState;
+            const { columns, showWhatsApp, waMessageBuilder, sortColIndex, sortDir, reasonActions } = overviewModalState;
             let customers = (overviewModalState.customers || []).slice();
 
             if (sortColIndex !== null && columns[sortColIndex]) {
@@ -3206,7 +3681,27 @@
                     const row = modalBodyTable.insertRow();
                     columns.forEach(col => { row.insertCell().textContent = col.get(customer); });
                     if (showWhatsApp) {
-                        row.insertCell().innerHTML = waActionCellHtml(customer, waMessageBuilder);
+                        const actionCell = row.insertCell();
+                        actionCell.classList.add('space-x-2');
+                        actionCell.innerHTML = waActionCellHtml(customer, waMessageBuilder);
+
+                        if (reasonActions) {
+                            const editBtn = document.createElement('button');
+                            editBtn.type = 'button';
+                            editBtn.title = 'Edit Reason Customer';
+                            editBtn.className = 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white transition-colors';
+                            editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+                            editBtn.onclick = () => openReasonTerminationEditModal(customer);
+                            actionCell.appendChild(editBtn);
+
+                            const viewBtn = document.createElement('button');
+                            viewBtn.type = 'button';
+                            viewBtn.title = 'Lihat Report Ringkas';
+                            viewBtn.className = 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-500 hover:text-white transition-colors';
+                            viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                            viewBtn.onclick = () => openReasonTerminationViewModal(customer);
+                            actionCell.appendChild(viewBtn);
+                        }
                     }
                     row.classList.add('hover:bg-gray-50');
                     row.querySelectorAll('td').forEach(cell => cell.classList.add('py-2', 'px-4', 'text-sm', 'text-gray-700', 'whitespace-nowrap'));
@@ -3404,6 +3899,7 @@
                 populateProspectSalesCodeFilterOptions();
                 populateProspectSearchFilterOptions();
                 renderAllProspectCharts();
+                renderOverviewProspectMirror(); // mirror milestone "Prospect" di Customer Overview
                 applyProspectFilters();
             } catch (error) {
                 console.error('Error mengambil data prospect dari Apps Script:', error);
@@ -3424,7 +3920,7 @@
             renderProspectSumberChart();
         }
 
-        // Set default bulan/tahun pada filter "Prospect Harian per Sales Code" ke bulan berjalan
+        // Set default bulan/tahun pada filter "Daily Prospect" ke bulan berjalan
         function populateProspectDailyFilterDefaults() {
             const monthSelect = document.getElementById('prospectDailyMonthSelect');
             const yearSelect = document.getElementById('prospectDailyYearSelect');
@@ -3435,7 +3931,7 @@
             if (!yearSelect.dataset.userSet) yearSelect.value = String(today.getFullYear());
         }
 
-        // Isi ulang dropdown filter Sales Code pada chart "Prospect Harian per Sales Code"
+        // Isi ulang dropdown filter Sales Code pada chart "Daily Prospect"
         // berdasarkan kode sales yang benar-benar ada di data prospect.
         function populateProspectSalesCodeFilterOptions() {
             const select = document.getElementById('prospectDailySalesCodeSelect');
@@ -3696,7 +4192,7 @@
             });
         }
 
-        // 1. Prospect Harian per Sales Code -- total harian dari tanggal 1 s.d. akhir bulan,
+        // 1. Daily Prospect -- total harian dari tanggal 1 s.d. akhir bulan,
         // dapat difilter per Sales Code untuk melihat pencapaian harian masing-masing sales.
         function renderProspectDailyChart() {
             const ctx = document.getElementById('prospectDailyChart');
@@ -4095,7 +4591,7 @@
 
             terminationBySalesChartInstance = new Chart(context, {
                 type: 'bar',
-                data: { labels: labels, datasets: [{ label: 'Terminasi', data: data, backgroundColor: 'rgba(220, 38, 38, 0.7)', borderColor: 'rgba(220, 38, 38, 1)', borderWidth: 1, borderRadius: 4 }] },
+                data: { labels: labels, datasets: [{ label: 'Terminasi', data: data, backgroundColor: 'rgba(100, 116, 139, 0.75)', borderColor: 'rgba(71, 85, 105, 1)', borderWidth: 1, borderRadius: 4 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
@@ -4110,8 +4606,8 @@
             });
         }
 
-        // 8. Distribusi umur customer terminate bulan ini (berdasarkan seluruh data terminasi bulan berjalan,
-        //    diklasifikasikan berdasarkan umur berlangganan - sama sumber datanya dengan "Terminasi Bulan Berjalan per Sales Code")
+        // 8. Distribusi Age Subs (berdasarkan seluruh data terminasi bulan berjalan,
+        //    diklasifikasikan berdasarkan umur berlangganan - sama sumber datanya dengan "Terminasi")
         function renderSuspendAgeChart(startOfThisMonth, today) {
             const ctx = document.getElementById('suspendAgeChart');
             if (!ctx) return;
@@ -4150,7 +4646,7 @@
                 type: 'bar',
                 data: {
                     labels: bucketLabels,
-                    datasets: [{ label: 'Jumlah Customer', data: bucketLabels.map(l => customersByBucket[l].length), backgroundColor: 'rgba(245, 158, 11, 0.7)', borderColor: 'rgba(245, 158, 11, 1)', borderWidth: 1, borderRadius: 4 }]
+                    datasets: [{ label: 'Jumlah Customer', data: bucketLabels.map(l => customersByBucket[l].length), backgroundColor: 'rgba(96, 165, 250, 0.75)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1, borderRadius: 4 }]
                 },
                 options: {
                     indexAxis: 'y',
@@ -4203,7 +4699,7 @@
             { label: 'Promo Code', get: c => c.PROMO_CODE || '-' }
         ];
 
-        // 9. Status modem customer suspend & terminate bulan ini (pie chart, 3 klasifikasi)
+        // 9. Status Modem (pie chart, 3 klasifikasi)
         function renderModemStatusTerminateChart(startOfThisMonth, today) {
             const ctx = document.getElementById('modemStatusTerminateChart');
             if (!ctx) return;
@@ -4239,9 +4735,17 @@
             }
             if (errorEl) errorEl.classList.add('hidden');
 
+            // Palet khusus soft biru-abu untuk chart ini di Customer Overview (tidak memakai
+            // MODEM_CLASS_COLORS bersama, supaya tab Forecast Terminasi tetap memakai warnanya sendiri).
+            const MODEM_CLASS_COLORS_SOFT = {
+                'Rent': { bg: 'rgba(59, 130, 246, 0.75)', border: 'rgba(37, 99, 235, 1)' },       // biru
+                'Buy': { bg: 'rgba(100, 116, 139, 0.75)', border: 'rgba(71, 85, 105, 1)' },        // slate
+                'Dipinjamkan': { bg: 'rgba(148, 163, 184, 0.75)', border: 'rgba(100, 116, 139, 1)' }, // slate muda
+                'Tidak Diketahui': { bg: 'rgba(203, 213, 225, 0.75)', border: 'rgba(148, 163, 184, 1)' }
+            };
             const data = labels.map(l => counts[l]);
-            const bg = labels.map(l => (MODEM_CLASS_COLORS[l] || MODEM_CLASS_COLORS['Tidak Diketahui']).bg);
-            const bd = labels.map(l => (MODEM_CLASS_COLORS[l] || MODEM_CLASS_COLORS['Tidak Diketahui']).border);
+            const bg = labels.map(l => (MODEM_CLASS_COLORS_SOFT[l] || MODEM_CLASS_COLORS_SOFT['Tidak Diketahui']).bg);
+            const bd = labels.map(l => (MODEM_CLASS_COLORS_SOFT[l] || MODEM_CLASS_COLORS_SOFT['Tidak Diketahui']).border);
 
             modemStatusTerminateChartInstance = new Chart(context, {
                 type: 'pie',
@@ -4314,7 +4818,7 @@
             });
         }
 
-        // 12. Penetrasi customer active per Subdistrict (Total Active / Total Homepass)
+        // 12. Penetrasi (Total Active / Total Homepass)
         function renderPenetrationChart() {
             const ctx = document.getElementById('penetrationChart');
             if (!ctx) return;
@@ -4346,8 +4850,10 @@
                     datasets: [{
                         label: 'Penetrasi (%)',
                         data: penetrationData,
-                        backgroundColor: penetrationData.map(p => p >= 50 ? 'rgba(22, 163, 74, 0.7)' : (p >= 25 ? 'rgba(245, 158, 11, 0.7)' : 'rgba(220, 38, 38, 0.7)')),
-                        borderColor: penetrationData.map(p => p >= 50 ? 'rgba(22, 163, 74, 1)' : (p >= 25 ? 'rgba(245, 158, 11, 1)' : 'rgba(220, 38, 38, 1)')),
+                        // Gradasi soft biru (tinggi) -> abu-abu (rendah), tetap mudah dibaca perbedaannya
+                        // tanpa memakai warna alarm merah/oranye/hijau yang mencolok.
+                        backgroundColor: penetrationData.map(p => p >= 50 ? 'rgba(37, 99, 235, 0.8)' : (p >= 25 ? 'rgba(100, 116, 139, 0.75)' : 'rgba(203, 213, 225, 0.85)')),
+                        borderColor: penetrationData.map(p => p >= 50 ? 'rgba(29, 78, 216, 1)' : (p >= 25 ? 'rgba(71, 85, 105, 1)' : 'rgba(148, 163, 184, 1)')),
                         borderWidth: 1, borderRadius: 4
                     }]
                 },
@@ -5017,6 +5523,12 @@
             const totalForecastTerminations = forecastTerminations.reduce((sum, value) => sum + value, 0);
             document.getElementById('totalForecastTerminationCountDisplay').textContent = `Total Terminasi Aktif: ${formatNumber(totalActualTerminations)} | Total Forecast Terminasi: ${formatNumber(totalForecastTerminations)}`;
 
+            // Nilai tertinggi di antara kedua dataset -- dipakai untuk memberi "ruang napas"
+            // ekstra di atas batang tertinggi (lewat y.suggestedMax & layout padding di bawah),
+            // supaya angka datalabel di atas batang tidak terpotong/bersinggungan dengan
+            // legend atau judul chart di atasnya.
+            const maxDailyValue = Math.max(0, ...actualTerminations, ...forecastTerminations);
+
             // Render seluruh visual tambahan (chart & tabel) yang mengikuti filter Bulan/Tahun yang sama
             const ftPeriodLabel = `${getMonthName(selectedMonth)} ${selectedYear}`;
             const ftPeriodEl = document.getElementById('ftVisualPeriodLabel');
@@ -5067,6 +5579,11 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    // Beri ruang ekstra di atas plot area supaya datalabel batang tertinggi
+                    // tidak terpotong/menempel ke legend/judul di atasnya.
+                    layout: {
+                        padding: { top: 24 }
+                    },
                     plugins: {
                         legend: {
                             position: 'top',
@@ -5083,7 +5600,9 @@
                             color: '#333',
                             anchor: 'end',
                             align: 'top',
-                            offset: 5,
+                            offset: 4,
+                            clamp: true,
+                            font: { size: 11 },
                             formatter: (value) => value > 0 ? value : '', // Hanya tampilkan label jika nilai > 0
                         },
                         tooltip: {
@@ -5120,6 +5639,10 @@
                                 color: '#333'
                             },
                             beginAtZero: true,
+                            // Beri "ruang napas" di atas batang tertinggi (bukan cuma pas-pasan
+                            // sampai nilai maksimum) supaya datalabel angka tidak bersinggungan
+                            // dengan legend/judul chart.
+                            suggestedMax: maxDailyValue + Math.max(1, Math.ceil(maxDailyValue * 0.25)),
                             ticks: {
                                 precision: 0,
                                 color: '#333'
@@ -5192,7 +5715,7 @@
                     row.insertCell().textContent = customer.CONTRACTACCOUNT || '-';
                     row.insertCell().textContent = salesCodeNames[customer.SALESCODE] ? `${salesCodeNames[customer.SALESCODE]} (${customer.SALESCODE})` : customer.SALESCODE || '-';
                     row.insertCell().textContent = customer.STATUS || '-';
-                    row.insertCell().textContent = customer.EXPIREDDATE || '-';
+                    row.insertCell().textContent = computeSubscriptionAge(customer.CONTRACTSTARTDATE, customer.TERMDATE);
                     row.insertCell().textContent = customer.TERMDATE || '-';
                     row.insertCell().textContent = classifyModemStatus(customer);
 
@@ -5257,7 +5780,7 @@
             });
         }
 
-        // 1. Chart Terminasi Bulan Berjalan per Sales Code
+        // 1. Chart Terminasi
         function renderFtSalesChart(selectedMonth, selectedYear) {
             const ctx = document.getElementById('ftSalesChart');
             if (!ctx) return;
@@ -5293,14 +5816,14 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const code = sortedCodes[elements[0].index];
-                            showOverviewDetailModal(customersByCode[code], `Suspend & Terminasi ${getMonthName(selectedMonth)} ${selectedYear} - ${labels[elements[0].index]}`, true);
+                            showOverviewDetailModal(customersByCode[code], `Suspend & Terminasi ${getMonthName(selectedMonth)} ${selectedYear} - ${labels[elements[0].index]}`, true, FT_SALES_CHART_DETAIL_COLUMNS, null, true);
                         }
                     }
                 }
             });
         }
 
-        // 2. Umur Customer Terminate Bulan Ini (berdasarkan bulan/tahun terpilih)
+        // 2. Age Subs (berdasarkan bulan/tahun terpilih)
         function renderFtAgeChart(selectedMonth, selectedYear) {
             const ctx = document.getElementById('ftAgeChart');
             if (!ctx) return;
@@ -5345,14 +5868,14 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const label = bucketLabels[elements[0].index];
-                            showOverviewDetailModal(customersByBucket[label], `Customer Suspend/Terminate ${getMonthName(selectedMonth)} ${selectedYear} - Umur ${label}`, true, SUSPEND_AGE_DETAIL_COLUMNS);
+                            showOverviewDetailModal(customersByBucket[label], `Customer Suspend/Terminate ${getMonthName(selectedMonth)} ${selectedYear} - Umur ${label}`, true, SUSPEND_AGE_DETAIL_COLUMNS, null, true);
                         }
                     }
                 }
             });
         }
 
-        // 3. Status Modem Customer Suspend & Terminate Bulan Ini (pie, 3 klasifikasi) - bulan/tahun terpilih
+        // 3. Status Modem (pie, 3 klasifikasi) - bulan/tahun terpilih
         function renderFtModemChart(selectedMonth, selectedYear) {
             const ctx = document.getElementById('ftModemChart');
             if (!ctx) return;
@@ -5443,7 +5966,7 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const c = sorted[elements[0].index];
-                            showOverviewDetailModal([c], `Detail Tiket - ${c.BP_FULLNAME || c.CONTRACTACCOUNT}`, true, DEFAULT_DETAIL_COLUMNS);
+                            showOverviewDetailModal([c], `Detail Tiket - ${c.BP_FULLNAME || c.CONTRACTACCOUNT}`, true, DEFAULT_DETAIL_COLUMNS, null, true);
                         }
                     }
                 }
@@ -5486,31 +6009,69 @@
             });
         }
 
-        // Mengisi ulang opsi dropdown filter Subdistrict berdasarkan daftar subdistrict
-        // yang benar-benar ada pada kandidat customer suspend/terminate bulan/tahun
-        // terpilih (BUKAN dari CONTRACTACCOUNT semua customer), supaya opsi yang
-        // muncul relevan dengan periode yang sedang dilihat. Pilihan yang sedang
-        // aktif dipertahankan kalau masih tersedia di daftar baru.
-        function populateReasonTerminationSubdistrictOptions(candidatesForPeriod) {
-            const selectEl = document.getElementById('reasonTerminationSubdistrictSelect');
-            if (!selectEl) return;
-            const previousValue = selectEl.value || 'ALL';
-
-            const subdistricts = Array.from(new Set(
-                candidatesForPeriod.map(c => (c.SUBDISTRICT_INST || 'Tidak Diketahui').trim())
-            )).sort((a, b) => a.localeCompare(b));
-
-            selectEl.innerHTML = '<option value="ALL">Semua Subdistrict</option>' +
-                subdistricts.map(sub => `<option value="${sub}">${sub}</option>`).join('');
-
-            selectEl.value = subdistricts.includes(previousValue) ? previousValue : 'ALL';
-        }
-
         const MODEM_BADGE_COLOR_CLASSES = {
             'Rent': 'bg-teal-100 text-teal-700',
             'Buy': 'bg-indigo-100 text-indigo-700',
             'Dipinjamkan': 'bg-amber-100 text-amber-700'
         };
+
+        // Definisi kolom tabel "Customer Suspend & Terminate" -- dipakai untuk membangun
+        // header (klik untuk sort ascending/descending) sekaligus untuk mengambil nilai
+        // pembanding saat sorting. `sortValue` HARUS mengembalikan nilai yang bisa
+        // dibandingkan langsung (string/number); untuk tanggal dikembalikan timestamp
+        // (ms) supaya urut secara kronologis, bukan urut abjad string tanggal.
+        // CATATAN: kolom "Status Modem" & "Lokasi Modem" digabung jadi satu kolom "Modem"
+        // (2 badge ditumpuk vertikal dalam 1 sel) supaya tabel tidak terlalu banyak kolom
+        // sempit berdampingan -- ini penyebab utama tampilan "tumpang tindih"/padat di layar
+        // kecil. Kolom gabungan tetap bisa diurutkan (default memakai Status Modem).
+        const REASON_TERM_TABLE_COLUMNS = [
+            { key: 'status', label: 'Status', sortValue: (c, entry) => ((c.STATUS || '').toUpperCase() === 'TERMINATED' ? 1 : 0) },
+            { key: 'nama', label: 'Nama Pelanggan', sortValue: (c) => (c.BP_FULLNAME || '').toLowerCase() },
+            { key: 'salescode', label: 'Sales Code', sortValue: (c) => (c.SALESCODE || '').toLowerCase() },
+            { key: 'modem', label: 'Modem', sortValue: (c, entry) => `${classifyModemStatus(c)} ${getModemLocationLabel(c, entry)}`.toLowerCase() },
+            { key: 'tanggal', label: 'Tanggal', sortValue: (c) => { const d = parseDate(c.TERMDATE); return d ? d.getTime() : -Infinity; } },
+            { key: 'umur', label: 'Umur Berlangganan', sortValue: (c) => { const d1 = parseDate(c.CONTRACTSTARTDATE), d2 = parseDate(c.TERMDATE); return (d1 && d2) ? (d2 - d1) : -Infinity; } },
+            { key: 'reason', label: 'Reason Customer', sortValue: (c, entry) => (entry.reason || '').toLowerCase() },
+            { key: 'keterangan', label: 'Keterangan Visit', sortValue: (c, entry) => (entry.keteranganVisit || computeKeteranganVisit(entry.reason, entry.fotoUrl)) }
+        ];
+
+        // State sort tabel (default: Tanggal, terbaru dulu -- sama seperti perilaku lama).
+        let reasonTerminationSort = { key: 'tanggal', dir: 'desc' };
+
+        // Mencocokkan kata kunci pencarian terhadap Nama Pelanggan, BILLING_PHONE,
+        // BUSINESSPARTNERID, CONTRACTACCOUNT, & BILLING_EMAIL (item pengganti filter Subdistrict).
+        function matchesReasonTerminationSearch(customer, term) {
+            if (!term) return true;
+            const haystacks = [customer.BP_FULLNAME, customer.BILLING_PHONE, customer.BUSINESSPARTNERID, customer.CONTRACTACCOUNT, customer.BILLING_EMAIL];
+            return haystacks.some(v => String(v || '').toLowerCase().includes(term));
+        }
+
+        // Membangun header tabel (dipanggil ulang tiap render supaya ikon panah sort selalu sinkron).
+        function renderReasonTerminationTableHead() {
+            const headRow = document.getElementById('reasonTerminationTableHeadRow');
+            if (!headRow) return;
+
+            const headHtml = REASON_TERM_TABLE_COLUMNS.map((col, i) => {
+                const isSorted = col.key === reasonTerminationSort.key;
+                const arrow = isSorted ? (reasonTerminationSort.dir === 'asc' ? ' <i class="fas fa-arrow-up text-xs"></i>' : ' <i class="fas fa-arrow-down text-xs"></i>') : ' <i class="fas fa-sort text-xs opacity-40"></i>';
+                const roundTl = i === 0 ? 'rounded-tl-lg' : '';
+                const minWidth = (col.key === 'nama') ? 'min-w-[140px]' : (col.key === 'reason' ? 'min-w-[160px]' : (col.key === 'modem' ? 'min-w-[130px]' : (col.key === 'keterangan' ? 'min-w-[110px]' : '')));
+                return `<th data-sort-key="${col.key}" class="py-3 px-4 uppercase font-semibold text-sm ${roundTl} ${minWidth} cursor-pointer select-none hover:bg-gray-600 transition-colors" title="Klik untuk urutkan">${col.label}${arrow}</th>`;
+            }).join('') + `<th class="py-3 px-4 uppercase font-semibold text-sm rounded-tr-lg">Aksi</th>`;
+
+            headRow.innerHTML = headHtml;
+            headRow.querySelectorAll('th[data-sort-key]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.dataset.sortKey;
+                    if (reasonTerminationSort.key === key) {
+                        reasonTerminationSort.dir = reasonTerminationSort.dir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        reasonTerminationSort = { key, dir: 'asc' };
+                    }
+                    renderReasonTerminationTable();
+                });
+            });
+        }
 
         function renderReasonTerminationTable(selectedMonth, selectedYear) {
             const tableBody = document.querySelector('#reasonTerminationTable tbody');
@@ -5527,33 +6088,42 @@
                 selectedYear = parseInt(yearSelect.value, 10);
             }
 
-            const sortSelect = document.getElementById('reasonTerminationSortSelect');
-            const sortOrder = sortSelect ? sortSelect.value : 'desc'; // 'desc' = terbaru dulu
+            renderReasonTerminationTableHead();
 
-            // Kandidat SEMUA subdistrict dulu (dipakai untuk isi opsi dropdown Subdistrict
-            // & untuk chart per-subdistrict), baru difilter lagi sesuai Subdistrict terpilih
-            // untuk isi tabel & chart Reason Customer.
+            // Kandidat SELALU seluruh subdistrict (filter Subdistrict pada tabel ini sudah
+            // dihapus, diganti pencarian bebas) -- tetap dipakai apa adanya untuk chart
+            // Reason Customer & chart per-Subdistrict di atas tabel.
             const candidatesAllSubdistricts = getReasonCandidatesForPeriod(selectedMonth, selectedYear, 'ALL');
-            populateReasonTerminationSubdistrictOptions(candidatesAllSubdistricts);
 
-            const subdistrictSelect = document.getElementById('reasonTerminationSubdistrictSelect');
-            const selectedSubdistrict = subdistrictSelect ? subdistrictSelect.value : 'ALL';
+            const searchInput = document.getElementById('reasonTerminationSearchInput');
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const candidates = candidatesAllSubdistricts.filter(c => matchesReasonTerminationSearch(c, searchTerm));
 
-            const candidates = getReasonCandidatesForPeriod(selectedMonth, selectedYear, selectedSubdistrict)
-                .sort((a, b) => {
-                    const da = parseDate(a.TERMDATE) || 0;
-                    const db = parseDate(b.TERMDATE) || 0;
-                    return sortOrder === 'asc' ? (da - db) : (db - da);
-                });
+            // Sort berdasarkan kolom header yang sedang aktif (klik header untuk ganti kolom/arah).
+            const sortCol = REASON_TERM_TABLE_COLUMNS.find(c => c.key === reasonTerminationSort.key) || REASON_TERM_TABLE_COLUMNS.find(c => c.key === 'tanggal');
+            const dir = reasonTerminationSort.dir === 'asc' ? 1 : -1;
+            candidates.sort((a, b) => {
+                const ea = getReasonTerminationEntry(a.CONTRACTACCOUNT);
+                const eb = getReasonTerminationEntry(b.CONTRACTACCOUNT);
+                const va = sortCol.sortValue(a, ea);
+                const vb = sortCol.sortValue(b, eb);
+                if (va < vb) return -1 * dir;
+                if (va > vb) return 1 * dir;
+                return 0;
+            });
 
-            renderFtReasonChart(candidates);
+            renderFtReasonChart(candidatesAllSubdistricts.filter(c => matchesReasonTerminationSearch(c, searchTerm)));
             renderFtSubdistrictChart(candidatesAllSubdistricts, selectedMonth, selectedYear);
+            renderFtModemLocationChart(candidatesAllSubdistricts);
+            renderFtVisitChart(candidatesAllSubdistricts);
 
             tableBody.innerHTML = '';
 
             if (candidates.length === 0) {
                 if (messageEl) {
-                    messageEl.textContent = `Tidak ada customer suspend/terminate pada ${getMonthName(selectedMonth)} ${selectedYear}.`;
+                    messageEl.textContent = searchTerm
+                        ? `Tidak ada customer suspend/terminate yang cocok dengan pencarian "${searchInput.value}".`
+                        : `Tidak ada customer suspend/terminate pada ${getMonthName(selectedMonth)} ${selectedYear}.`;
                     messageEl.classList.remove('hidden');
                 }
                 return;
@@ -5587,13 +6157,37 @@
                 // Kolom Sales Code (cukup kode saja, tanpa nama, agar ringkas di HP)
                 row.insertCell().textContent = customer.SALESCODE || '-';
 
-                // Kolom Status Modem (Rent / Buy / Dipinjamkan)
+                // Kolom Modem (gabungan): Status Modem (Rent/Buy/Dipinjamkan) ditumpuk di atas
+                // Lokasi Modem, dalam 1 sel -- lebih ringkas & rapi dibanding 2 kolom sempit
+                // berdampingan (penyebab tampilan padat/tumpang tindih sebelumnya).
                 const modemCell = row.insertCell();
+                modemCell.classList.add('align-top');
+                const modemWrap = document.createElement('div');
+                modemWrap.className = 'flex flex-col items-start gap-1';
+
                 const modemLabel = classifyModemStatus(customer);
                 const modemBadge = document.createElement('span');
                 modemBadge.textContent = modemLabel;
-                modemBadge.className = 'inline-block px-2 py-1 rounded-full text-xs font-semibold ' + (MODEM_BADGE_COLOR_CLASSES[modemLabel] || 'bg-gray-100 text-gray-600');
-                modemCell.appendChild(modemBadge);
+                modemBadge.className = 'inline-block px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ' + (MODEM_BADGE_COLOR_CLASSES[modemLabel] || 'bg-gray-100 text-gray-600');
+                modemWrap.appendChild(modemBadge);
+
+                const modemLocationLabel = getModemLocationLabel(customer, entry);
+                if (modemLocationLabel === '- Belum diisi -') {
+                    const locText = document.createElement('span');
+                    locText.textContent = modemLocationLabel;
+                    locText.className = 'italic text-gray-400 text-xs whitespace-nowrap';
+                    modemWrap.appendChild(locText);
+                } else {
+                    const locBadge = document.createElement('span');
+                    locBadge.textContent = modemLocationLabel;
+                    locBadge.className = 'inline-block px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ' + (modemLocationLabel === 'Sudah Diambil'
+                        ? 'bg-green-100 text-green-700'
+                        : (modemLocationLabel === 'Modem Beli'
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : 'bg-orange-100 text-orange-700'));
+                    modemWrap.appendChild(locBadge);
+                }
+                modemCell.appendChild(modemWrap);
 
                 // Kolom Tanggal (Tgl Terminasi kalau sudah terminate, Estimasi kalau masih suspend)
                 const dateCell = row.insertCell();
@@ -5602,9 +6196,14 @@
                 // Kolom Umur Berlangganan (CONTRACTSTARTDATE -> TERMDATE)
                 row.insertCell().textContent = computeSubscriptionAge(customer.CONTRACTSTARTDATE, customer.TERMDATE);
 
-                // Kolom Reason Customer (ringkasan, edit lewat modal)
+                // Kolom Reason Customer (ringkasan, edit lewat modal). Dibatasi lebar &
+                // dipotong (truncate) dengan tooltip judul, supaya reason yang panjang tidak
+                // mendorong/menumpuk kolom lain di sebelahnya.
                 const reasonCell = row.insertCell();
-                reasonCell.textContent = entry.reason || '- Belum diisi -';
+                const reasonText = entry.reason || '- Belum diisi -';
+                reasonCell.textContent = reasonText;
+                reasonCell.title = reasonText;
+                reasonCell.classList.add('max-w-[180px]', 'truncate');
                 if (!entry.reason) reasonCell.classList.add('italic', 'text-gray-400');
 
                 // Kolom Keterangan Visit (otomatis)
@@ -5639,7 +6238,7 @@
                 actionCell.appendChild(viewBtn);
 
                 row.querySelectorAll('td').forEach(cell => {
-                    cell.classList.add('py-2', 'px-4', 'text-sm', 'text-gray-700');
+                    cell.classList.add('py-3', 'px-4', 'text-sm', 'text-gray-700', 'align-top');
                 });
             });
         }
@@ -5687,7 +6286,7 @@
                                 const entry = getReasonTerminationEntry(c.CONTRACTACCOUNT);
                                 return (entry.reason || 'Belum Diisi') === reasonLabel;
                             });
-                            showOverviewDetailModal(matched, `Reason Customer - ${reasonLabel}`, true, DEFAULT_DETAIL_COLUMNS);
+                            showOverviewDetailModal(matched, `Reason Customer - ${reasonLabel}`, true, DEFAULT_DETAIL_COLUMNS, null, true);
                         }
                     }
                 }
@@ -5736,15 +6335,112 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const subLabel = labels[elements[0].index];
-                            const subdistrictSelect = document.getElementById('reasonTerminationSubdistrictSelect');
-                            if (subdistrictSelect) {
-                                const hasOption = Array.from(subdistrictSelect.options).some(o => o.value === subLabel);
-                                if (hasOption) {
-                                    subdistrictSelect.value = subLabel;
-                                    renderReasonTerminationTable(selectedMonth, selectedYear);
-                                }
-                            }
-                            showOverviewDetailModal(customersBySub[subLabel], `Customer Suspend & Terminate - ${subLabel}`, true, DEFAULT_DETAIL_COLUMNS);
+                            showOverviewDetailModal(customersBySub[subLabel], `Customer Suspend & Terminate - ${subLabel}`, true, DEFAULT_DETAIL_COLUMNS, null, true);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Warna soft/muted (tidak mencolok) untuk chart Lokasi Modem.
+        const MODEM_LOCATION_COLORS = {
+            'Sudah Diambil': { bg: 'rgba(129, 178, 154, 0.75)', border: 'rgba(94, 145, 120, 1)' },
+            'Masih di Customer': { bg: 'rgba(214, 168, 116, 0.75)', border: 'rgba(184, 138, 88, 1)' },
+            'Modem Beli': { bg: 'rgba(140, 152, 196, 0.75)', border: 'rgba(105, 118, 165, 1)' },
+            '- Belum diisi -': { bg: 'rgba(180, 180, 186, 0.75)', border: 'rgba(140, 140, 148, 1)' }
+        };
+        const MODEM_LOCATION_ORDER = ['Sudah Diambil', 'Masih di Customer', 'Modem Beli', '- Belum diisi -'];
+
+        // Chart batang: sebaran Lokasi Modem (Sudah Diambil / Masih di Customer / Modem Beli /
+        // Belum diisi) pada customer suspend & terminate periode terpilih. Warna dibuat
+        // soft/muted supaya tidak mencolok di mata. Klik batang untuk lihat detail customer.
+        function renderFtModemLocationChart(customers) {
+            const ctx = document.getElementById('ftModemLocationChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ftModemLocationChartInstance) ftModemLocationChartInstance.destroy();
+
+            const buckets = {};
+            (customers || []).forEach(c => {
+                const entry = getReasonTerminationEntry(c.CONTRACTACCOUNT);
+                const lokasi = getModemLocationLabel(c, entry);
+                (buckets[lokasi] = buckets[lokasi] || []).push(c);
+            });
+
+            const errorEl = document.getElementById('ftModemLocationChartError');
+            const labels = MODEM_LOCATION_ORDER.filter(l => buckets[l]);
+            if (labels.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = 'Belum ada data Lokasi Modem pada periode ini.'; }
+                return;
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+
+            const data = labels.map(l => buckets[l].length);
+            const bg = labels.map(l => MODEM_LOCATION_COLORS[l].bg);
+            const bd = labels.map(l => MODEM_LOCATION_COLORS[l].border);
+
+            ftModemLocationChartInstance = new Chart(context, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Jumlah Customer', data: data, backgroundColor: bg, borderColor: bd, borderWidth: 1, borderRadius: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { display: false } },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const lokasi = labels[elements[0].index];
+                            showOverviewDetailModal(buckets[lokasi], `Lokasi Modem - ${lokasi}`, true, DEFAULT_DETAIL_COLUMNS, null, true);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Warna soft/muted (tidak mencolok) untuk chart Keterangan Visit.
+        const VISIT_COLORS = {
+            'Sudah Divisit': { bg: 'rgba(129, 178, 154, 0.75)', border: 'rgba(94, 145, 120, 1)' },
+            'Belum Divisit': { bg: 'rgba(214, 168, 116, 0.75)', border: 'rgba(184, 138, 88, 1)' }
+        };
+
+        // Chart pie: proporsi Sudah Divisit vs Belum Divisit pada customer suspend &
+        // terminate periode terpilih. Klik potongan pie untuk lihat detail customer.
+        function renderFtVisitChart(customers) {
+            const ctx = document.getElementById('ftVisitChart');
+            if (!ctx) return;
+            const context = ctx.getContext('2d');
+            if (ftVisitChartInstance) ftVisitChartInstance.destroy();
+
+            const buckets = { 'Sudah Divisit': [], 'Belum Divisit': [] };
+            (customers || []).forEach(c => {
+                const entry = getReasonTerminationEntry(c.CONTRACTACCOUNT);
+                const keterangan = entry.keteranganVisit || computeKeteranganVisit(entry.reason, entry.fotoUrl);
+                (buckets[keterangan] = buckets[keterangan] || []).push(c);
+            });
+
+            const errorEl = document.getElementById('ftVisitChartError');
+            const labels = Object.keys(buckets).filter(l => buckets[l].length > 0);
+            if (labels.length === 0) {
+                context.clearRect(0, 0, ctx.width, ctx.height);
+                if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = 'Belum ada data Keterangan Visit pada periode ini.'; }
+                return;
+            }
+            if (errorEl) errorEl.classList.add('hidden');
+
+            const data = labels.map(l => buckets[l].length);
+            const bg = labels.map(l => VISIT_COLORS[l].bg);
+            const bd = labels.map(l => VISIT_COLORS[l].border);
+
+            ftVisitChartInstance = new Chart(context, {
+                type: 'pie',
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: bg, borderColor: bd, borderWidth: 1 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#333', boxWidth: 12, font: { size: 11 } } } },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const label = labels[elements[0].index];
+                            showOverviewDetailModal(buckets[label], `Keterangan Visit - ${label}`, true, DEFAULT_DETAIL_COLUMNS, null, true);
                         }
                     }
                 }
@@ -5760,7 +6456,8 @@
 
         function openReasonTerminationEditModal(customer) {
             const entry = getReasonTerminationEntry(customer.CONTRACTACCOUNT);
-            reasonTerminationEditContext = { customer: customer, pendingPhotoDataUrl: null };
+            const modemClass = classifyModemStatus(customer);
+            reasonTerminationEditContext = { customer: customer, pendingPhotoDataUrl: null, modemClass: modemClass };
 
             const nameEl = document.getElementById('reasonTerminationEditName');
             if (nameEl) {
@@ -5770,6 +6467,22 @@
 
             const selectEl = document.getElementById('reasonTerminationEditSelect');
             if (selectEl) selectEl.innerHTML = buildReasonSelectHtml(customer, entry.reason);
+
+            // Lokasi Modem: kalau modem Buy, lokasi otomatis "Modem Beli" (tidak bisa diubah).
+            // Kalau Rent/Dipinjamkan, user memilih sendiri lewat dropdown.
+            const modemLocSelect = document.getElementById('reasonTerminationEditModemLocationSelect');
+            const modemLocFixed = document.getElementById('reasonTerminationEditModemLocationFixed');
+            if (modemLocSelect && modemLocFixed) {
+                if (modemClass === 'Buy') {
+                    modemLocSelect.classList.add('hidden');
+                    modemLocFixed.textContent = 'Modem Beli';
+                    modemLocFixed.classList.remove('hidden');
+                } else {
+                    modemLocSelect.classList.remove('hidden');
+                    modemLocSelect.value = entry.modemLocation || '';
+                    modemLocFixed.classList.add('hidden');
+                }
+            }
 
             const freeTextEl = document.getElementById('reasonTerminationEditFreeText');
             if (freeTextEl) freeTextEl.value = entry.reasonFreeText || '';
@@ -5804,6 +6517,7 @@
                     ['Sales Code', salesLabel],
                     ['Status', customer.STATUS || '-'],
                     ['Status Modem', classifyModemStatus(customer)],
+                    ['Lokasi Modem', getModemLocationLabel(customer, entry)],
                     ['Mulai Kontrak', customer.CONTRACTSTARTDATE || '-'],
                     ['Tgl Terminasi / Estimasi', customer.TERMDATE || '-'],
                     ['Subdistrict', customer.SUBDISTRICT_INST || '-'],
@@ -6031,7 +6745,7 @@
             });
         }
 
-        // Tabel Pencapaian Sales per Sales Code: Penjualan (Instalasi), Terminasi, dan Net Subs,
+        // Tabel Pencapaian Arco: Penjualan (Instalasi), Terminasi, dan Net Subs,
         // disaring berdasarkan bulan & tahun yang dipilih (bisa dipakai untuk lihat pencapaian
         // bulan mana pun, tidak hanya bulan berjalan).
         function renderSalesPerformanceTable() {
@@ -6479,7 +7193,16 @@
         }
 
         function getReasonTerminationEntry(contractAccount) {
-            return getReasonTerminationStore()[contractAccount] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit' };
+            return getReasonTerminationStore()[contractAccount] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit', modemLocation: '' };
+        }
+
+        // Menentukan label Lokasi Modem: otomatis "Modem Beli" kalau Status Modem = Buy,
+        // selain itu memakai nilai yang diisi manual lewat modal Edit (Sudah Diambil /
+        // Masih di Customer), atau "- Belum diisi -" kalau belum diisi sama sekali.
+        function getModemLocationLabel(customer, entry) {
+            if (classifyModemStatus(customer) === 'Buy') return 'Modem Beli';
+            entry = entry || getReasonTerminationEntry(customer.CONTRACTACCOUNT);
+            return entry.modemLocation || '- Belum diisi -';
         }
 
         // ==========================================================================
@@ -6571,7 +7294,7 @@
             const key = customer.CONTRACTACCOUNT;
             if (!key) return Promise.resolve();
             const store = getReasonTerminationStore();
-            const current = store[key] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit' };
+            const current = store[key] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit', modemLocation: '' };
             const merged = Object.assign({}, current, changes);
             merged.keteranganVisit = computeKeteranganVisit(merged.reason, merged.fotoUrl);
             store[key] = merged;
@@ -6587,7 +7310,8 @@
                 reasonFreeText: merged.reasonFreeText || '',
                 fotoBase64: fotoBase64 || '',
                 fotoUrl: fotoBase64 ? '' : (merged.fotoUrl || ''), // biarkan Apps Script isi fotoUrl kalau ada fotoBase64
-                keteranganVisit: merged.keteranganVisit
+                keteranganVisit: merged.keteranganVisit,
+                modemLocation: merged.modemLocation || ''
             };
 
             return sendReasonTerminationToSheet(payload).then(res => {
@@ -7800,15 +8524,11 @@
         document.getElementById('forecastMonthSelect').addEventListener('change', renderForecastTerminationChart);
         document.getElementById('forecastYearSelect').addEventListener('change', renderForecastTerminationChart);
 
-        // Pendengar Acara untuk sortir tabel Customer Suspend & Terminate (terbaru/terlama)
-        const reasonTerminationSortSelectEl = document.getElementById('reasonTerminationSortSelect');
-        if (reasonTerminationSortSelectEl) {
-            reasonTerminationSortSelectEl.addEventListener('change', () => renderReasonTerminationTable());
-        }
-
-        const reasonTerminationSubdistrictSelectEl = document.getElementById('reasonTerminationSubdistrictSelect');
-        if (reasonTerminationSubdistrictSelectEl) {
-            reasonTerminationSubdistrictSelectEl.addEventListener('change', () => renderReasonTerminationTable());
+        // Pendengar Acara untuk pencarian tabel Customer Suspend & Terminate
+        // (Nama Pelanggan, BILLING_PHONE, BUSINESSPARTNERID, CONTRACTACCOUNT, BILLING_EMAIL)
+        const reasonTerminationSearchInputEl = document.getElementById('reasonTerminationSearchInput');
+        if (reasonTerminationSearchInputEl) {
+            reasonTerminationSearchInputEl.addEventListener('input', () => renderReasonTerminationTable());
         }
 
         // Pendengar Acara untuk Modal Edit Reason Customer (upload foto terkompresi + tombol Simpan)
@@ -7846,13 +8566,16 @@
                 const ctx = reasonTerminationEditContext;
                 const reasonVal = document.getElementById('reasonTerminationEditSelect').value;
                 const freeTextVal = document.getElementById('reasonTerminationEditFreeText').value;
+                const modemLocSelect = document.getElementById('reasonTerminationEditModemLocationSelect');
+                // Modem Buy -> lokasi otomatis "Modem Beli" (tidak diambil dari dropdown yang disembunyikan).
+                const modemLocationVal = ctx.modemClass === 'Buy' ? 'Modem Beli' : ((modemLocSelect && modemLocSelect.value) || '');
                 const hintEl = document.getElementById('reasonTerminationEditHint');
 
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...';
                 if (hintEl) hintEl.classList.add('hidden');
 
-                updateReasonTerminationEntry(ctx.customer, { reason: reasonVal, reasonFreeText: freeTextVal }, ctx.pendingPhotoDataUrl)
+                updateReasonTerminationEntry(ctx.customer, { reason: reasonVal, reasonFreeText: freeTextVal, modemLocation: modemLocationVal }, ctx.pendingPhotoDataUrl)
                     .then(() => {
                         ctx.pendingPhotoDataUrl = null;
                         if (hintEl) hintEl.classList.remove('hidden');
