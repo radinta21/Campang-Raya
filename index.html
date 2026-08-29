@@ -643,6 +643,7 @@
                             <canvas id="arcoPerformanceChart"></canvas>
                         </div>
                         <p id="arcoPerformanceError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                        <p class="text-center text-[11px] text-gray-400 mt-2">Klik titik pada garis solid (bulan berjalan) untuk melihat daftar customer instalasi pada tanggal & Area Coordinator tersebut.</p>
                     </div>
 
                     <!-- ================= MILESTONE: INSTALASI BULAN BERJALAN PER SUBDISTRICT ================= -->
@@ -699,27 +700,51 @@
                             <div class="chart-container h-64">
                                 <canvas id="ovProspectDailyChart"></canvas>
                             </div>
+                            <p class="text-center text-[11px] text-gray-400 mt-2">Klik bar untuk lihat daftar prospect & chat WhatsApp.</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Prospect per Kelurahan</h3>
                             <div class="chart-container h-64">
                                 <canvas id="ovProspectKelurahanChart"></canvas>
                             </div>
+                            <p class="text-center text-[11px] text-gray-400 mt-2">Klik bar untuk lihat daftar prospect & chat WhatsApp.</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Prospect</h3>
                             <div class="chart-container h-64">
                                 <canvas id="ovProspectStatusChart"></canvas>
                             </div>
+                            <p class="text-center text-[11px] text-gray-400 mt-2">Klik salah satu segmen untuk lihat daftar prospect & chat WhatsApp.</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Top Campaigns</h3>
                             <div class="chart-container h-64">
                                 <canvas id="ovProspectSumberChart"></canvas>
                             </div>
+                            <p class="text-center text-[11px] text-gray-400 mt-2">Klik bar untuk lihat daftar prospect & chat WhatsApp.</p>
                         </div>
                     </div>
                     <p class="text-center text-[11px] text-gray-400 mb-2">Detail lengkap, pencarian, dan chart Prospect lainnya ada di menu <button type="button" class="text-blue-500 hover:underline font-semibold" onclick="showSection('prospectSection')">Prospect</button>.</p>
+
+                    <!-- ================= MILESTONE: ANALISA AI (Gemini) ================= -->
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-8 mt-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                    <i class="fas fa-robot text-blue-500"></i> Analisa & Rekomendasi AI
+                                </h3>
+                                <p class="text-xs text-gray-400 mt-1">Ringkasan kondisi bulan berjalan & saran tindak lanjut, dihasilkan oleh Gemini AI berdasarkan data dashboard saat ini.</p>
+                            </div>
+                            <button type="button" id="aiInsightGenerateBtn" onclick="generateAiInsight()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center gap-2 whitespace-nowrap">
+                                <i class="fas fa-magic"></i> <span id="aiInsightBtnLabel">Buat Analisa AI</span>
+                            </button>
+                        </div>
+                        <div id="aiInsightContent" class="text-sm text-gray-700 leading-relaxed whitespace-pre-line border-t border-gray-100 pt-4">
+                            <p class="text-gray-400 italic">Klik "Buat Analisa AI" untuk menghasilkan analisa & rekomendasi otomatis dari kondisi dashboard saat ini.</p>
+                        </div>
+                        <p id="aiInsightError" class="text-center text-red-500 text-sm mt-3 hidden"></p>
+                        <p class="text-center text-[10px] text-gray-300 mt-3">Analisa dibuat otomatis oleh AI dan bisa saja kurang akurat -- gunakan sebagai bahan pertimbangan, bukan keputusan final.</p>
+                    </div>
 
                 </div>
             </section>
@@ -3104,9 +3129,12 @@
 
             const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
             const dailyCounts = new Array(daysInMonth).fill(0);
+            const dailyProspectsByDay = Array.from({ length: daysInMonth }, () => []);
             monthProspects.forEach(p => {
                 const d = new Date(pTanggalRaw(p));
-                dailyCounts[d.getDate() - 1]++;
+                const dayIdx = d.getDate() - 1;
+                dailyCounts[dayIdx]++;
+                dailyProspectsByDay[dayIdx].push(p);
             });
             const labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
 
@@ -3136,6 +3164,14 @@
                     scales: {
                         x: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 9 } } },
                         y: { beginAtZero: true, grid: { color: '#E2E8F0' }, ticks: { precision: 0, color: '#64748B' } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const dayIdx = elements[0].index;
+                            const filtered = dailyProspectsByDay[dayIdx];
+                            const title = `Prospect tanggal ${dayIdx + 1} ${getMonthName(selectedMonth)} ${selectedYear}`;
+                            showProspectDetailModal(filtered, title, true);
+                        }
                     }
                 }
             });
@@ -3163,6 +3199,13 @@
                     scales: {
                         x: { beginAtZero: true, grid: { color: '#E2E8F0' }, ticks: { precision: 0, color: '#64748B' } },
                         y: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 9 } } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const kel = labels[elements[0].index];
+                            const filtered = allProspects.filter(p => pKelurahan(p) === kel);
+                            showProspectDetailModal(filtered, `Prospect di Kelurahan ${kel}`, true);
+                        }
                     }
                 }
             });
@@ -3190,6 +3233,13 @@
                     plugins: {
                         legend: { position: 'right', labels: { color: '#64748B', boxWidth: 10, font: { size: 10 }, padding: 10 } },
                         tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} prospect` } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const status = labels[elements[0].index];
+                            const filtered = allProspects.filter(p => pStatus(p) === status);
+                            showProspectDetailModal(filtered, `Prospect dengan Status ${status}`, true);
+                        }
                     }
                 }
             });
@@ -3217,9 +3267,142 @@
                     scales: {
                         x: { beginAtZero: true, grid: { color: '#E2E8F0' }, ticks: { precision: 0, color: '#64748B' } },
                         y: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 9 } } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const sumber = labels[elements[0].index];
+                            const filtered = allProspects.filter(p => pSumber(p) === sumber);
+                            showProspectDetailModal(filtered, `Prospect dari Sumber ${sumber}`, true);
+                        }
                     }
                 }
             });
+        }
+
+        // ================= MILESTONE "ANALISA AI" (Gemini, lewat Apps Script) =================
+        // Menyusun ringkasan angka-angka penting dari Customer Overview & Prospect (BUKAN data
+        // mentah per-customer) menjadi satu prompt teks, lalu mengirimkannya ke Apps Script
+        // (action 'getAiInsight') yang meneruskannya ke Gemini API. API Key Gemini SENGAJA
+        // disimpan di code.gs (server), bukan di sini, supaya tidak bisa dicuri lewat "View Page
+        // Source" browser.
+        function buildAiInsightPrompt() {
+            const period = computeOverviewPeriod();
+            const startOfThisMonth = period.startOfThisMonth;
+            const today = period.today;
+            const periodLabel = `${getMonthName(startOfThisMonth.getMonth())} ${startOfThisMonth.getFullYear()}`;
+
+            const installThisMonth = allCustomers.filter(c => {
+                const d = parseDate(c.CONTRACTSTARTDATE);
+                return d && d >= startOfThisMonth && d <= today;
+            });
+            const endOfThisMonth = new Date(startOfThisMonth.getFullYear(), startOfThisMonth.getMonth() + 1, 0);
+            endOfThisMonth.setHours(23, 59, 59, 999);
+            const terminateThisMonth = allCustomers.filter(c => {
+                const d = parseDate(c.TERMDATE);
+                return d && d >= startOfThisMonth && d <= endOfThisMonth;
+            });
+            const activeNow = allCustomers.filter(c => c.STATUS && ['ACTIVE', 'SUSPENDED'].includes(c.STATUS.toUpperCase()));
+            const suspendNow = allCustomers.filter(c => c.STATUS && c.STATUS.toUpperCase() === 'SUSPENDED');
+            const netSubs = installThisMonth.length - terminateThisMonth.length;
+
+            const manualCollectedMonthTotal = getManualRevenueGlobalMonthTotal(startOfThisMonth.getFullYear(), startOfThisMonth.getMonth());
+            let sisaForecastRevenue = 0;
+            allCustomers.forEach(c => {
+                const d = parseDate(c.EXPIREDDATE);
+                if (d && d.getFullYear() === startOfThisMonth.getFullYear() && d.getMonth() === startOfThisMonth.getMonth() && !isCustomerNewInPeriod(c, startOfThisMonth.getFullYear(), startOfThisMonth.getMonth())) {
+                    sisaForecastRevenue += calculateRecurringRevenueForCustomer(c);
+                }
+            });
+            const trueForecastTotal = manualCollectedMonthTotal + sisaForecastRevenue;
+            const revenueTarget = getForecastRevenueTarget(startOfThisMonth.getFullYear(), startOfThisMonth.getMonth());
+
+            const installBySales = buildCategoryCounts(installThisMonth, c => salesCodeNames[c.SALESCODE] ? `${salesCodeNames[c.SALESCODE]} (${c.SALESCODE})` : (c.SALESCODE || 'Tidak Diketahui'), { limit: 5 });
+            const terminateBySales = buildCategoryCounts(terminateThisMonth, c => salesCodeNames[c.SALESCODE] ? `${salesCodeNames[c.SALESCODE]} (${c.SALESCODE})` : (c.SALESCODE || 'Tidak Diketahui'), { limit: 5 });
+            const installBySubdistrict = buildCategoryCounts(installThisMonth, c => c.SUBDISTRICT_INST || 'Tidak Diketahui', { limit: 5 });
+
+            let prospectSection = 'Data Prospect belum tersedia.';
+            if (Array.isArray(allProspects) && allProspects.length > 0) {
+                const monthProspects = allProspects.filter(p => {
+                    const d = new Date(pTanggalRaw(p));
+                    return !isNaN(d.getTime()) && d.getFullYear() === startOfThisMonth.getFullYear() && d.getMonth() === startOfThisMonth.getMonth();
+                });
+                const prospectByStatus = buildCategoryCounts(monthProspects, pStatus, { limit: 6 });
+                const prospectByKelurahan = buildCategoryCounts(monthProspects, pKelurahan, { limit: 5 });
+                const prospectBySumber = buildCategoryCounts(monthProspects, pSumber, { limit: 5 });
+                prospectSection = `Total Prospect ${periodLabel}: ${monthProspects.length}\n` +
+                    `Status Prospect: ${prospectByStatus.map(e => `${e.label} (${e.count})`).join(', ') || '-'}\n` +
+                    `Top Kelurahan Prospect: ${prospectByKelurahan.map(e => `${e.label} (${e.count})`).join(', ') || '-'}\n` +
+                    `Top Sumber/Campaign Prospect: ${prospectBySumber.map(e => `${e.label} (${e.count})`).join(', ') || '-'}`;
+            }
+
+            return `Kamu adalah analis bisnis untuk perusahaan penyedia layanan internet rumahan (ISP) bernama Biznet, cabang Campang Raya.
+Berikut ringkasan data dashboard operasional bulan ${periodLabel} (data per tanggal ${today.getDate()} ${getMonthName(today.getMonth())} ${today.getFullYear()}):
+
+=== CUSTOMER ===
+Total Customer Aktif (Active + Suspend): ${activeNow.length}
+Total Customer Suspend saat ini: ${suspendNow.length}
+Instalasi baru bulan ini: ${installThisMonth.length}
+Terminasi bulan ini: ${terminateThisMonth.length}
+Net Subs bulan ini: ${netSubs}
+Top 5 Area Coordinator (Sales Code) berdasarkan instalasi bulan ini: ${installBySales.map(e => `${e.label} (${e.count})`).join(', ') || '-'}
+Top 5 Area Coordinator (Sales Code) berdasarkan terminasi bulan ini: ${terminateBySales.map(e => `${e.label} (${e.count})`).join(', ') || '-'}
+Top 5 Subdistrict instalasi bulan ini: ${installBySubdistrict.map(e => `${e.label} (${e.count})`).join(', ') || '-'}
+
+=== REVENUE ===
+Target Revenue bulan ${periodLabel}: Rp ${Math.round(revenueTarget).toLocaleString('id-ID')}
+Forecast/Realisasi Revenue saat ini: Rp ${Math.round(trueForecastTotal).toLocaleString('id-ID')}
+Gap terhadap target: Rp ${Math.round(trueForecastTotal - revenueTarget).toLocaleString('id-ID')}
+
+=== PROSPECT ===
+${prospectSection}
+
+Berdasarkan data di atas, buatkan analisa kondisi bisnis saat ini secara komprehensif dalam Bahasa Indonesia, mencakup:
+1. Ringkasan kondisi utama (pencapaian instalasi, terminasi, net subs, dan revenue vs target)
+2. Area/Sales Code atau Subdistrict yang perlu perhatian khusus (baik yang berkinerja baik maupun kurang baik)
+3. Kondisi funnel Prospect (apakah cukup untuk mengejar target, sumber mana yang paling efektif)
+4. Saran konkret & actionable yang harus dilakukan tim dalam waktu dekat untuk mengejar target bulan ini
+Gunakan format poin-poin singkat per bagian, bahasa profesional namun mudah dipahami, jangan mengulang angka mentah secara berlebihan.`;
+        }
+
+        async function generateAiInsight() {
+            const btn = document.getElementById('aiInsightGenerateBtn');
+            const btnLabel = document.getElementById('aiInsightBtnLabel');
+            const contentEl = document.getElementById('aiInsightContent');
+            const errorEl = document.getElementById('aiInsightError');
+            if (!contentEl) return;
+
+            if (!Array.isArray(allCustomers) || allCustomers.length === 0) {
+                errorEl.textContent = 'Data customer belum dimuat, coba lagi sesaat lagi.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            errorEl.classList.add('hidden');
+            if (btn) btn.disabled = true;
+            if (btnLabel) btnLabel.textContent = 'Menganalisa...';
+            contentEl.innerHTML = '<p class="text-gray-400 italic"><i class="fas fa-spinner fa-spin mr-2"></i>Sedang menyusun analisa dari data dashboard saat ini...</p>';
+
+            try {
+                const prompt = buildAiInsightPrompt();
+                const response = await fetch(customerWebAppUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'getAiInsight', prompt })
+                });
+                const result = await response.json();
+                if (result.status !== 'success' || !result.text) {
+                    throw new Error(result.message || 'Gagal mendapatkan analisa dari AI.');
+                }
+                contentEl.textContent = result.text;
+            } catch (err) {
+                console.error('Gagal membuat Analisa AI:', err);
+                contentEl.innerHTML = '<p class="text-gray-400 italic">Analisa belum tersedia. Silakan coba lagi.</p>';
+                errorEl.textContent = `Gagal membuat analisa AI: ${err.message}`;
+                errorEl.classList.remove('hidden');
+            } finally {
+                if (btn) btn.disabled = false;
+                if (btnLabel) btnLabel.textContent = 'Buat Analisa AI';
+            }
         }
 
         // Apakah customer dianggap aktif pada tanggal tertentu (rekonstruksi historis berdasarkan CONTRACTSTARTDATE & TERMDATE)
@@ -3461,12 +3644,14 @@
                 datasets.push({
                     label: `${name} - Bulan Ini`, data: cumThisMonth,
                     borderColor: paletteColor(idx, 1), backgroundColor: paletteColor(idx, 1),
-                    borderWidth: 2, tension: 0.2, pointRadius: 2, spanGaps: true
+                    borderWidth: 2, tension: 0.2, pointRadius: 2, spanGaps: true,
+                    _salesCode: code, _isCurrentMonth: true
                 });
                 datasets.push({
                     label: `${name} - Bulan Lalu`, data: cumLastMonth,
                     borderColor: paletteColor(idx, 0.3), backgroundColor: paletteColor(idx, 0.3),
-                    borderWidth: 1.5, borderDash: [4, 3], tension: 0.2, pointRadius: 0, spanGaps: true
+                    borderWidth: 1.5, borderDash: [4, 3], tension: 0.2, pointRadius: 0, spanGaps: true,
+                    _salesCode: code, _isCurrentMonth: false
                 });
             });
 
@@ -3480,7 +3665,33 @@
                         x: { title: { display: true, text: 'Tanggal' } },
                         y: { title: { display: true, text: 'Kumulatif Instalasi' }, beginAtZero: true }
                     },
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } }
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+                    // Klik titik pada garis "Bulan Ini" (garis solid) untuk melihat daftar customer
+                    // yang instalasinya jatuh pada tanggal & Area Coordinator tersebut. Garis "Bulan
+                    // Lalu" (putus-putus, transparan) sengaja TIDAK bisa diklik karena hanya pembanding.
+                    onClick: (evt, elements) => {
+                        if (!elements.length) return;
+                        const el = elements[0];
+                        const dataset = arcoPerformanceChartInstance.data.datasets[el.datasetIndex];
+                        if (!dataset || !dataset._isCurrentMonth) return;
+                        const day = labels[el.index];
+                        if (day === undefined || day === null) return;
+                        const code = dataset._salesCode;
+                        const name = salesCodeNames[code] ? `${salesCodeNames[code]} (${code})` : code;
+                        const dayCustomers = allCustomers.filter(c => {
+                            const cCode = c.SALESCODE || 'Tidak Diketahui';
+                            if (cCode !== code) return false;
+                            const d = parseDate(c.CONTRACTSTARTDATE);
+                            return d && d.getFullYear() === startOfThisMonth.getFullYear() &&
+                                d.getMonth() === startOfThisMonth.getMonth() && d.getDate() === day;
+                        });
+                        showOverviewDetailModal(
+                            dayCustomers,
+                            `Instalasi Tanggal ${day} ${getMonthName(startOfThisMonth.getMonth())} ${startOfThisMonth.getFullYear()} \u2014 ${name}`,
+                            true,
+                            ARCO_INSTALL_DETAIL_COLUMNS
+                        );
+                    }
                 }
             });
         }
@@ -3532,6 +3743,18 @@
             }
             return `<span class="text-gray-300" title="Nomor tidak tersedia"><i class="fab fa-whatsapp"></i></span>`;
         }
+
+        // Kolom untuk modal drill-down chart "Daily New Subs" (Pencapaian Instalasi Harian per
+        // Area Coordinator): Nama Customer, Akun Kontrak, Alamat Instalasi 3, Status Modem,
+        // Bundle LOB, dan Promo Code -- sesuai permintaan.
+        const ARCO_INSTALL_DETAIL_COLUMNS = [
+            { label: 'Nama Customer', get: c => c.BP_FULLNAME || '-' },
+            { label: 'Akun Kontrak', get: c => c.CONTRACTACCOUNT || '-' },
+            { label: 'Alamat Instalasi', get: c => c.INSTALLATION_ADDRESS3 || '-' },
+            { label: 'Status Modem', get: c => c.MODEM_STATUS || '-' },
+            { label: 'Bundle LOB', get: c => c.BUNDLE_LOB || '-' },
+            { label: 'Promo Code', get: c => c.PROMO_CODE || '-' }
+        ];
 
         // Set kolom default untuk modal detail (Terminasi per Sales Code & Forecast Terminasi)
         const DEFAULT_DETAIL_COLUMNS = [
@@ -7296,7 +7519,11 @@
             const store = getReasonTerminationStore();
             const current = store[key] || { reason: '', reasonFreeText: '', fotoUrl: '', keteranganVisit: 'Belum Divisit', modemLocation: '' };
             const merged = Object.assign({}, current, changes);
-            merged.keteranganVisit = computeKeteranganVisit(merged.reason, merged.fotoUrl);
+            // Optimis: kalau ada foto baru yang sedang diupload (fotoBase64), anggap dulu
+            // "Sudah Divisit" di tampilan lokal -- nilai final tetap akan ditimpa oleh
+            // keteranganVisit OTORITATIF dari server begitu respons berhasil diterima
+            // (lihat blok .then di bawah), termasuk kalau ternyata upload gagal.
+            merged.keteranganVisit = computeKeteranganVisit(merged.reason, fotoBase64 || merged.fotoUrl);
             store[key] = merged;
             saveReasonTerminationStoreLocal(store);
             renderReasonTerminationTable(); // Refresh tampilan (termasuk kolom Keterangan Visit) segera
@@ -7318,12 +7545,17 @@
                 // Berhasil terkirim ke server -> hapus dari antrean retry kalau ada sisa dari percobaan sebelumnya.
                 clearReasonTerminationPending(key);
 
-                // Kalau ada foto baru, simpan URL final dari Drive ke state lokal
-                if (fotoBase64 && res && res.fotoUrl) {
+                // PENTING: server (code.gs) adalah SUMBER KEBENARAN untuk keteranganVisit --
+                // dihitung ulang di sana berdasarkan fotoUrl final (hasil upload barusan atau
+                // foto lama yang dipertahankan), bukan nilai kiriman client. Timpa state lokal
+                // dengan nilai otoritatif ini supaya tidak pernah "nyangkut" di Belum Divisit
+                // walau fotonya sudah berhasil diupload (atau sebaliknya, kalau upload ternyata
+                // gagal, status akan otomatis tetap Belum Divisit sesuai kondisi sebenarnya).
+                if (res && (res.fotoUrl !== undefined || res.keteranganVisit !== undefined)) {
                     const latestStore = getReasonTerminationStore();
                     const latestEntry = latestStore[key] || merged;
-                    latestEntry.fotoUrl = res.fotoUrl;
-                    latestEntry.keteranganVisit = computeKeteranganVisit(latestEntry.reason, latestEntry.fotoUrl);
+                    if (fotoBase64 && res.fotoUrl) latestEntry.fotoUrl = res.fotoUrl;
+                    if (res.keteranganVisit !== undefined) latestEntry.keteranganVisit = res.keteranganVisit;
                     latestStore[key] = latestEntry;
                     saveReasonTerminationStoreLocal(latestStore);
                     renderReasonTerminationTable();
