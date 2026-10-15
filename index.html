@@ -445,25 +445,80 @@
                         </div>
                     </div>
 
-                    <!-- KPI Cards: Total Active & Churn Rate (overall) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                        <div class="metric-card p-6">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-semibold text-gray-500">Total Customer Active</h4>
-                                <div class="icon-box icon-blue"><i class="fas fa-users"></i></div>
-                            </div>
-                            <p id="kpiTotalActive" class="text-3xl font-bold text-gray-800">0</p>
-                            <p id="kpiTotalActiveGrowth" class="text-xs font-semibold mt-1">-</p>
+                    <!-- ================= RINGKASAN (layout mockup) ================= -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="metric-card p-4">
+                            <div class="flex items-center justify-between mb-1"><h4 class="text-xs font-semibold text-gray-500">Total Customer Active</h4><div class="icon-box icon-blue" style="width:36px;height:36px"><i class="fas fa-users"></i></div></div>
+                            <p id="kpiTotalActive" class="text-2xl font-bold text-gray-800">0</p>
+                            <p id="kpiTotalActiveGrowth" class="text-[11px] font-semibold mt-1">-</p>
                         </div>
-                        <div class="metric-card p-6">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-semibold text-gray-500">Churn Rate <span class="text-gray-400">(Target 0.8%)</span></h4>
-                                <div class="icon-box icon-red"><i class="fas fa-user-slash"></i></div>
-                            </div>
-                            <p id="kpiChurnRate" class="text-3xl font-bold text-gray-800">0%</p>
-                            <p id="kpiChurnStatus" class="text-xs font-semibold mt-1">-</p>
+                        <div class="metric-card p-4">
+                            <div class="flex items-center justify-between mb-1"><h4 class="text-xs font-semibold text-gray-500">Churn Rate <span class="text-gray-400">(Target 0.8%)</span></h4><div class="icon-box icon-red" style="width:36px;height:36px"><i class="fas fa-user-slash"></i></div></div>
+                            <p id="kpiChurnRate" class="text-2xl font-bold text-gray-800">0%</p>
+                            <p id="kpiChurnStatus" class="text-[11px] font-semibold mt-1">-</p>
+                        </div>
+                        <div class="metric-card p-4">
+                            <div class="flex items-center justify-between mb-1"><h4 class="text-xs font-semibold text-gray-500">Revenue Bulan Berjalan <span class="text-gray-400 font-normal" id="ovRevenuePeriodLabel"></span></h4><div class="icon-box icon-orange" style="width:36px;height:36px"><i class="fas fa-coins"></i></div></div>
+                            <p id="ovRevenueTotalValue" class="text-2xl font-bold text-gray-800">Rp 0</p>
+                            <div class="flex items-center gap-2 mt-1"><div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden"><div id="ovRevenueProgressBar" class="h-2 rounded-full" style="width:0%;background-color:#94A3B8"></div></div><span id="ovRevenueProgressPct" class="text-[11px] font-semibold text-gray-500">0%</span></div>
+                            <p class="text-[11px] text-gray-400 mt-1">Target <span id="ovRevenueTargetValue">Rp 0</span> &bull; Selisih <span id="ovRevenueGapValue" class="font-semibold">Rp 0</span> &bull; <button type="button" class="text-blue-500 hover:underline" onclick="showSection('forecastRevenue')">Detail</button></p>
                         </div>
                     </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="metric-card p-4">
+                            <h4 class="text-xs font-semibold text-gray-500 mb-1">Segmentasi Bundle <span class="text-gray-400 font-normal">(Active + Suspend)</span></h4>
+                            <div class="relative w-full" style="height:190px"><canvas id="ovxBundleChart"></canvas></div>
+                        </div>
+                        <div class="metric-card p-4">
+                            <h4 class="text-xs font-semibold text-gray-500 mb-1">Pencapaian Target Net Subs</h4>
+                            <div class="relative w-full" style="height:150px"><canvas id="ovxTargetGauge"></canvas><div class="absolute inset-0 flex items-center justify-center pointer-events-none"><span id="ovxTargetPct" class="text-2xl font-bold text-gray-800">0%</span></div></div>
+                            <p class="text-[11px] text-gray-500 text-center mt-1" id="targetActualLabel">Aktual: 0 / 100 Net Subs</p>
+                            <p class="text-[11px] text-gray-400 text-center" id="targetForecastLabel">Forecast akhir bulan: 0 Net Subs</p>
+                        </div>
+                        <div class="metric-card p-4">
+                            <h4 class="text-xs font-semibold text-gray-500 mb-1">Daily New Subscribers</h4>
+                            <p class="text-2xl font-bold text-gray-800 leading-none"><span id="ovxDailyAvg">0</span> <span class="text-xs font-normal text-gray-400">/hari</span></p>
+                            <p id="ovxDailySub" class="text-[11px] text-gray-400 mb-1">-</p>
+                            <div class="relative w-full" style="height:130px"><canvas id="ovxDailyChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                        <div class="metric-card p-4 lg:col-span-2">
+                            <div class="flex items-center justify-between mb-1">
+                                <h4 class="text-xs font-semibold text-gray-500">Instalasi Bulan Berjalan per Subdistrict <span class="text-gray-400 font-normal">(vs bulan lalu, tanggal sama)</span></h4>
+                                <button type="button" id="ovxSubToggle" class="text-[11px] font-semibold text-blue-600 hover:underline whitespace-nowrap">Lihat semua &rarr;</button>
+                            </div>
+                            <div id="ovxSubWrap" class="relative w-full" style="height:240px"><canvas id="subdistrictInstallChart"></canvas></div>
+                            <p id="subdistrictInstallError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
+                            <p class="text-center text-[10px] text-gray-400 mt-1">Klik bar biru solid (bulan ini) atau biru transparan (bulan lalu) untuk melihat daftar customer.</p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="metric-card p-4"><h4 class="text-xs font-semibold text-gray-500">Terminasi <span class="text-gray-400 font-normal">(s/d hari ini)</span></h4>
+                                <p class="text-2xl font-bold text-gray-800"><span id="ovxTermCount">0</span> <span class="text-xs font-normal text-gray-400">customer</span></p><p id="ovxTermGrowth" class="text-[11px] font-semibold">-</p></div>
+                            <div class="metric-card p-4"><h4 class="text-xs font-semibold text-gray-500">Penetrasi <span class="text-gray-400 font-normal">(Active / Homepass)</span></h4>
+                                <p id="ovxPenetration" class="text-2xl font-bold text-gray-800">0%</p><p id="ovxPenetrationSub" class="text-[11px] text-gray-400">-</p></div>
+                            <div class="metric-card p-4"><h4 class="text-xs font-semibold text-gray-500">Prospect <span class="text-gray-400 font-normal">(bulan berjalan)</span></h4>
+                                <p class="text-2xl font-bold text-gray-800"><span id="ovxProspectCount">-</span> <span class="text-xs font-normal text-gray-400">leads</span></p><p id="ovxProspectGrowth" class="text-[11px] font-semibold text-gray-400">Menunggu data prospect...</p></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="metric-card p-4"><h4 class="text-xs font-semibold text-gray-500 mb-1">Age Subs <span class="text-gray-400 font-normal">(terminasi bulan ini)</span></h4>
+                            <div class="relative w-full" style="height:200px"><canvas id="suspendAgeChart"></canvas></div><p id="suspendAgeError" class="text-center text-red-500 text-sm mt-2 hidden"></p></div>
+                        <div class="metric-card p-4"><h4 class="text-xs font-semibold text-gray-500 mb-1">Status Modem <span class="text-gray-400 font-normal">(suspend &amp; terminasi bulan ini)</span></h4>
+                            <div class="relative w-full" style="height:200px"><canvas id="modemStatusTerminateChart"></canvas></div><p id="modemStatusTerminateError" class="text-center text-red-500 text-sm mt-2 hidden"></p></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                        <div class="metric-card p-4"><h4 class="text-xs font-semibold text-gray-500 mb-2">Top 5 Sales &amp; AC Performance <span class="text-gray-400 font-normal">(klik baris untuk detail)</span></h4>
+                            <div class="overflow-x-auto"><table class="min-w-full table-custom"><thead><tr><th class="px-2 py-2 text-left">No</th><th class="px-2 py-2 text-left">Nama</th><th class="px-2 py-2 text-left">Kode</th><th class="px-2 py-2 text-right">Install</th><th class="px-2 py-2 text-right">Term</th><th class="px-2 py-2 text-right">Net Subs</th></tr></thead><tbody id="ovxTopSalesBody"></tbody></table></div></div>
+                        <div class="metric-card p-4"><h4 class="text-xs font-semibold text-gray-500 mb-2">Terminasi (Detail) <span class="text-gray-400 font-normal">(klik baris untuk detail)</span></h4>
+                            <div class="overflow-x-auto"><table class="min-w-full table-custom"><thead><tr><th class="px-2 py-2 text-left">Penyebab</th><th class="px-2 py-2 text-right">Jumlah</th><th class="px-2 py-2 text-right">Persentase</th></tr></thead><tbody id="ovxReasonBody"></tbody></table></div></div>
+                    </div>
+
+                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3 border-t border-gray-100 pt-4">Detail Lainnya</h3>
 
                     <!-- ================= MILESTONE: DAFTAR CUSTOMER ================= -->
                     <h3 class="text-lg font-bold text-gray-800">Daftar Customer</h3>
@@ -496,36 +551,6 @@
                         <button type="button" onclick="showSection('customersSection')" class="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline">
                             <i class="fas fa-address-book mr-1"></i> Lihat &amp; Cari Semua Daftar Customer
                         </button>
-                    </div>
-
-                    <!-- ================= MILESTONE: REVENUE (ringkasan dari Forecast Revenue Bulan Berjalan) ================= -->
-                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-1">
-                            <h3 class="text-lg font-bold text-gray-800">Revenue Bulan Berjalan</h3>
-                            <span class="text-xs font-medium text-gray-400" id="ovRevenuePeriodLabel"></span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                            <div class="metric-card p-4">
-                                <p class="text-xs text-gray-400 uppercase font-semibold">Target Revenue</p>
-                                <p class="text-xl font-bold text-gray-800" id="ovRevenueTargetValue">Rp 0</p>
-                            </div>
-                            <div class="metric-card p-4">
-                                <p class="text-xs text-gray-400 uppercase font-semibold">Total Forecast Revenue</p>
-                                <p class="text-xl font-bold text-gray-800" id="ovRevenueTotalValue">Rp 0</p>
-                            </div>
-                            <div class="metric-card p-4">
-                                <p class="text-xs text-gray-400 uppercase font-semibold">Selisih vs Target</p>
-                                <p class="text-xl font-bold text-gray-800" id="ovRevenueGapValue">Rp 0</p>
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-400 mb-1">Progress forecast revenue terhadap target bulan berjalan (jika semua customer membayar sampai akhir bulan)</p>
-                        <div class="flex items-center gap-3">
-                            <div class="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
-                                <div id="ovRevenueProgressBar" class="h-5 rounded-full flex items-center justify-end pr-2 text-[10px] font-bold text-white transition-all duration-500" style="width:0%; background-color:#94A3B8;"></div>
-                            </div>
-                            <span class="text-sm font-semibold text-gray-600 w-14 text-right" id="ovRevenueProgressPct">0%</span>
-                        </div>
-                        <p class="text-[11px] text-gray-400 mt-3">Detail lengkap &amp; input manual ada di menu <button type="button" class="text-blue-500 hover:underline font-semibold" onclick="showSection('forecastRevenue')">Forecast Revenue Bulan Berjalan</button>.</p>
                     </div>
 
                     <!-- Segmentasi Bundle_LOB: Home, Metronet, Dedicated -->
@@ -620,21 +645,6 @@
                         </div>
                     </div>
 
-                    <!-- Target vs Aktual Net Subs -->
-                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-3 gap-2">
-                            <h3 class="text-lg font-bold text-gray-800">Pencapaian Target Net Subs Bulan Ini</h3>
-                            <span class="text-sm text-gray-500">Target: <strong class="text-gray-700">100 Net Subs</strong></span>
-                        </div>
-                        <div class="w-full bg-gray-100 rounded-full h-6 overflow-hidden mb-2">
-                            <div id="targetProgressBar" class="h-6 rounded-full flex items-center justify-end pr-3 text-xs font-bold text-white transition-all duration-500" style="width:0%; background-color:#2563EB;">0%</div>
-                        </div>
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600 gap-1">
-                            <span id="targetActualLabel">Aktual: 0 / 100 Net Subs</span>
-                            <span id="targetForecastLabel" class="font-semibold">Forecast akhir bulan: 0 Net Subs</span>
-                        </div>
-                    </div>
-
                     <!-- Pencapaian Area Coordinator (Harian, bulan ini vs bulan lalu) -->
                     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
                         <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">Daily New Subs</h3>
@@ -646,18 +656,9 @@
                         <p class="text-center text-[11px] text-gray-400 mt-2">Klik titik pada garis solid (bulan berjalan) untuk melihat daftar customer instalasi pada tanggal & Area Coordinator tersebut.</p>
                     </div>
 
-                    <!-- ================= MILESTONE: INSTALASI BULAN BERJALAN PER SUBDISTRICT ================= -->
-                    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Instalasi Bulan Berjalan per Subdistrict</h3>
-                        <div class="chart-container h-72">
-                            <canvas id="subdistrictInstallChart"></canvas>
-                        </div>
-                        <p id="subdistrictInstallError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
-                    </div>
-
                     <!-- ================= MILESTONE: TERMINASI ================= -->
-                    <h4 class="text-base font-bold text-gray-700 mb-3">Terminasi</h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <h4 class="text-base font-bold text-gray-700 mb-3">Terminasi per Sales</h4>
+                    <div class="grid grid-cols-1 gap-6 mb-8">
                         <div class="bg-white p-6 rounded-lg shadow-md">
                             <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Terminasi</h3>
                             <div class="chart-container h-72">
@@ -665,21 +666,7 @@
                             </div>
                             <p id="terminationBySalesError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Age Subs</h3>
-                            <div class="chart-container h-72">
-                                <canvas id="suspendAgeChart"></canvas>
-                            </div>
-                            <p id="suspendAgeError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Status Modem</h3>
-                            <div class="chart-container h-72">
-                                <canvas id="modemStatusTerminateChart"></canvas>
-                            </div>
-                            <p id="modemStatusTerminateError" class="text-center text-red-500 text-sm mt-2 hidden"></p>
-                        </div>
-                    </div>
 
                     <!-- ================= MILESTONE: PENETRASI ================= -->
                     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -3106,6 +3093,7 @@
         function renderOverviewProspectMirror() {
             if (!Array.isArray(allProspects) || allProspects.length === 0) return;
             if (!document.getElementById('ovProspectDailyChart')) return; // kartu belum ada di DOM
+            renderOvxProspectStat();
             renderOvProspectDailyChart();
             renderOvProspectKelurahanChart();
             renderOvProspectStatusChart();
@@ -3525,8 +3513,10 @@ Gunakan format poin-poin singkat per bagian, bahasa profesional namun mudah dipa
             renderTerminationBySalesChart(startOfThisMonth, today);
             renderSuspendAgeChart(startOfThisMonth, today);
             renderModemStatusTerminateChart(startOfThisMonth, today);
-            renderSubdistrictInstallChart(startOfThisMonth, today);
+            renderSubdistrictInstallChart(startOfThisMonth, today, startOfLastMonth, sameDayLastMonth);
             renderPenetrationChart();
+            renderOverviewMockup(today, currentDay, startOfThisMonth, startOfLastMonth, sameDayLastMonth);
+            renderOvxProspectStat();
         }
 
         // Menghitung & menampilkan insight per segmen Bundle_LOB (Home / Metronet / Dedicated)
@@ -4997,51 +4987,203 @@ Gunakan format poin-poin singkat per bagian, bahasa profesional namun mudah dipa
             { label: 'Promo Code', get: c => c.PROMO_CODE || '-' }
         ];
 
-        // 10. Instalasi bulan berjalan per Subdistrict
-        function renderSubdistrictInstallChart(startOfThisMonth, today) {
+        // 10. Instalasi bulan berjalan per Subdistrict (bulan ini vs bulan lalu pada tanggal yang sama)
+        let ovxSubShowAll = false;
+        let ovxSubArgs = null;
+        let ovxCharts = {};
+        const ovxStore = { top: [], reason: [] };
+        function ovxMk(id, cfg) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (ovxCharts[id]) ovxCharts[id].destroy();
+            ovxCharts[id] = new Chart(el.getContext('2d'), cfg);
+        }
+        function ovxEsc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+        function ovxOpen(kind, i) {
+            const r = ovxStore[kind][i];
+            if (r) showOverviewDetailModal(r.list, r.title, kind === 'reason', DEFAULT_DETAIL_COLUMNS);
+        }
+        function ovxGrowthHtml(cur, prev, label, invert) {
+            const pct = growthPct(cur, prev);
+            const good = invert ? pct <= 0 : pct >= 0;
+            const cls = pct === 0 ? 'text-gray-500' : (good ? 'text-green-600' : 'text-red-600');
+            const icon = pct > 0 ? 'fa-arrow-up' : (pct < 0 ? 'fa-arrow-down' : 'fa-minus');
+            return `<span class="${cls}"><i class="fas ${icon} mr-1"></i>${pct > 0 ? '+' : ''}${pct.toFixed(1)}% vs ${label} (${formatNumber(prev)})</span>`;
+        }
+
+        function renderSubdistrictInstallChart(startOfThisMonth, today, startOfLastMonth, sameDayLastMonth) {
             const ctx = document.getElementById('subdistrictInstallChart');
             if (!ctx) return;
-            const context = ctx.getContext('2d');
+            ovxSubArgs = [startOfThisMonth, today, startOfLastMonth, sameDayLastMonth];
             if (subdistrictInstallChartInstance) subdistrictInstallChartInstance.destroy();
 
-            const counts = {};
-            const customersBySub = {};
+            const cur = {}, prev = {}, curList = {}, prevList = {};
             allCustomers.forEach(c => {
                 const d = parseDate(c.CONTRACTSTARTDATE);
-                if (!d || d < startOfThisMonth || d > today) return;
+                if (!d) return;
                 const sub = (c.SUBDISTRICT_INST || 'Tidak Diketahui').trim();
-                counts[sub] = (counts[sub] || 0) + 1;
-                (customersBySub[sub] = customersBySub[sub] || []).push(c);
+                if (d >= startOfThisMonth && d <= today) { cur[sub] = (cur[sub] || 0) + 1; (curList[sub] = curList[sub] || []).push(c); }
+                else if (d >= startOfLastMonth && d <= sameDayLastMonth) { prev[sub] = (prev[sub] || 0) + 1; (prevList[sub] = prevList[sub] || []).push(c); }
             });
 
             const errorEl = document.getElementById('subdistrictInstallError');
-            const sortedSubs = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-            if (sortedSubs.length === 0) {
-                context.clearRect(0, 0, ctx.width, ctx.height);
+            const allSubs = Array.from(new Set([...Object.keys(cur), ...Object.keys(prev)]))
+                .sort((a, b) => ((cur[b] || 0) - (cur[a] || 0)) || ((prev[b] || 0) - (prev[a] || 0)));
+            if (allSubs.length === 0) {
+                ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
                 if (errorEl) { errorEl.classList.remove('hidden'); errorEl.textContent = 'Belum ada data instalasi bulan berjalan.'; }
                 return;
             }
             if (errorEl) errorEl.classList.add('hidden');
 
-            subdistrictInstallChartInstance = new Chart(context, {
+            const subs = ovxSubShowAll ? allSubs : allSubs.slice(0, 5);
+            const wrap = document.getElementById('ovxSubWrap');
+            if (wrap) wrap.style.height = (ovxSubShowAll ? Math.max(240, subs.length * 44 + 60) : 240) + 'px';
+            const btn = document.getElementById('ovxSubToggle');
+            if (btn) {
+                btn.style.display = allSubs.length > 5 ? '' : 'none';
+                btn.innerHTML = ovxSubShowAll ? 'Top 5 saja &uarr;' : `Lihat semua (${allSubs.length}) &rarr;`;
+                btn.onclick = () => { ovxSubShowAll = !ovxSubShowAll; renderSubdistrictInstallChart(...ovxSubArgs); };
+            }
+
+            const lastDay = sameDayLastMonth.getDate();
+            subdistrictInstallChartInstance = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
-                data: { labels: sortedSubs, datasets: [{ label: 'Instalasi', data: sortedSubs.map(s => counts[s]), backgroundColor: 'rgba(37, 99, 235, 0.7)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1, borderRadius: 4 }] },
+                data: {
+                    labels: subs,
+                    datasets: [
+                        { label: 'Bulan ini', data: subs.map(s => cur[s] || 0), backgroundColor: 'rgba(37, 99, 235, 0.8)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1, borderRadius: 4 },
+                        { label: `Bulan lalu (s/d tgl ${lastDay})`, data: subs.map(s => prev[s] || 0), backgroundColor: 'rgba(37, 99, 235, 0.22)', borderColor: 'rgba(37, 99, 235, 0.45)', borderWidth: 1, borderRadius: 4 }
+                    ]
+                },
                 options: {
                     indexAxis: 'y',
                     responsive: true, maintainAspectRatio: false,
-                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
-                    plugins: { legend: { display: false } },
+                    layout: { padding: { right: 18 } },
+                    interaction: { mode: 'nearest', intersect: true },
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { ticks: { font: { size: 11 } } } },
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+                        datalabels: { display: true, anchor: 'end', align: 'end', color: '#334155', font: { size: 10 }, formatter: v => v > 0 ? v : '' }
+                    },
                     onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            const sub = sortedSubs[elements[0].index];
-                            showOverviewDetailModal(customersBySub[sub] || [], `Instalasi Bulan Ini - ${sub}`, false, SUBDISTRICT_INSTALL_DETAIL_COLUMNS);
+                        if (!elements.length) return;
+                        const sub = subs[elements[0].index];
+                        if (elements[0].datasetIndex === 0) {
+                            showOverviewDetailModal(curList[sub] || [], `Instalasi Bulan Ini - ${sub}`, false, SUBDISTRICT_INSTALL_DETAIL_COLUMNS);
+                        } else {
+                            showOverviewDetailModal(prevList[sub] || [], `Instalasi Bulan Lalu (s/d tgl ${lastDay}) - ${sub}`, false, SUBDISTRICT_INSTALL_DETAIL_COLUMNS);
                         }
                     }
                 }
             });
         }
 
-        // 12. Penetrasi (Total Active / Total Homepass)
+        // ================= RINGKASAN OVERVIEW (layout mockup) =================
+        function renderOverviewMockup(today, days, start, lastStart, lastSame) {
+            const DAY = 86400000;
+            const inRange = (d, a, b) => d && d >= a && d <= b;
+            const setHtml = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+            const activeList = allCustomers.filter(c => c.STATUS && ['ACTIVE', 'SUSPENDED'].includes(c.STATUS.toUpperCase()));
+
+            // Segmentasi Bundle (donut)
+            const seg = { Home: [], Metronet: [], Dedicated: [], Lainnya: [] };
+            activeList.forEach(c => {
+                const b = (c.BUNDLE_LOB || '').toUpperCase();
+                (b.includes('HOME') ? seg.Home : b.includes('METRONET') ? seg.Metronet : b.includes('DEDICATED') ? seg.Dedicated : seg.Lainnya).push(c);
+            });
+            const segKeys = Object.keys(seg).filter(k => seg[k].length > 0);
+            const segColors = { Home: '#2563EB', Metronet: '#60A5FA', Dedicated: '#64748B', Lainnya: '#CBD5E1' };
+            ovxMk('ovxBundleChart', {
+                type: 'doughnut',
+                data: { labels: segKeys.map(k => `${k} (${((seg[k].length / (activeList.length || 1)) * 100).toFixed(0)}%)`), datasets: [{ data: segKeys.map(k => seg[k].length), backgroundColor: segKeys.map(k => segColors[k]), borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } }, datalabels: { display: false } },
+                    onClick: (e, el) => { if (el.length) { const k = segKeys[el[0].index]; showOverviewDetailModal(seg[k], `Customer Active + Suspend - Segmen ${k}`, false, DEFAULT_DETAIL_COLUMNS); } } }
+            });
+
+            const inst = allCustomers.filter(c => inRange(parseDate(c.CONTRACTSTARTDATE), start, today));
+            const instPrev = allCustomers.filter(c => inRange(parseDate(c.CONTRACTSTARTDATE), lastStart, lastSame));
+            const term = allCustomers.filter(c => inRange(parseDate(c.TERMDATE), start, today));
+            const termPrev = allCustomers.filter(c => inRange(parseDate(c.TERMDATE), lastStart, lastSame));
+
+            // Gauge Target Net Subs
+            const net = inst.length - term.length, target = 100;
+            const netPos = Math.max(net, 0);
+            const pct = netPos / target * 100;
+            setHtml('ovxTargetPct', `${pct.toFixed(0)}%`);
+            ovxMk('ovxTargetGauge', {
+                type: 'doughnut',
+                data: { labels: ['Net Subs', 'Sisa target'], datasets: [{ data: [Math.min(netPos, target), Math.max(target - netPos, 0)], backgroundColor: [pct >= 100 ? '#16A34A' : '#2563EB', '#E2E8F0'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, datalabels: { display: false } } }
+            });
+
+            // Daily New Subscribers
+            const bucket = (arr, from) => { const out = new Array(days).fill(0); arr.forEach(c => { const k = Math.floor((parseDate(c.CONTRACTSTARTDATE) - from) / DAY); if (k >= 0 && k < days) out[k]++; }); return out; };
+            const dNow = bucket(inst, start), dPrev = bucket(instPrev, lastStart);
+            setHtml('ovxDailyAvg', (days > 0 ? inst.length / days : 0).toFixed(1).replace('.', ','));
+            setHtml('ovxDailySub', `${formatNumber(inst.length)} instalasi &bull; ` + ovxGrowthHtml(inst.length, instPrev.length, 'bulan lalu', false));
+            ovxMk('ovxDailyChart', {
+                type: 'bar',
+                data: { labels: dNow.map((_, i) => i + 1), datasets: [
+                    { label: 'Bulan ini', data: dNow, backgroundColor: 'rgba(37, 99, 235, 0.8)' },
+                    { label: 'Bulan lalu', data: dPrev, backgroundColor: 'rgba(37, 99, 235, 0.22)' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } },
+                    scales: { x: { ticks: { font: { size: 9 }, maxTicksLimit: 10 } }, y: { beginAtZero: true, ticks: { precision: 0, font: { size: 9 } } } } }
+            });
+
+            // Terminasi & Penetrasi
+            setHtml('ovxTermCount', formatNumber(term.length));
+            setHtml('ovxTermGrowth', ovxGrowthHtml(term.length, termPrev.length, 'bulan lalu', true));
+            const homepass = Object.values(subdistrictHomepass).reduce((s, v) => s + (Number(v) || 0), 0);
+            const activeOnly = allCustomers.filter(c => c.STATUS && c.STATUS.toUpperCase() === 'ACTIVE').length;
+            setHtml('ovxPenetration', `${(homepass > 0 ? activeOnly / homepass * 100 : 0).toFixed(1).replace('.', ',')}%`);
+            setHtml('ovxPenetrationSub', `Active ${formatNumber(activeOnly)} / Homepass ${formatNumber(homepass)}`);
+
+            // Top 5 Sales
+            const bySales = {};
+            const slot = c => { const k = c.SALESCODE || 'Tidak Diketahui'; return (bySales[k] = bySales[k] || { inst: [], term: [] }); };
+            inst.forEach(c => slot(c).inst.push(c));
+            term.forEach(c => slot(c).term.push(c));
+            const netOf = s => s.inst.length - s.term.length;
+            const top = Object.entries(bySales).sort(([, a], [, b]) => (netOf(b) - netOf(a)) || (b.inst.length - a.inst.length)).slice(0, 5);
+            ovxStore.top = top.map(([code, s]) => ({ list: s.inst, title: `Instalasi Bulan Ini - ${salesCodeNames[code] || code}` }));
+            setHtml('ovxTopSalesBody', top.length ? top.map(([code, s], i) => `<tr class="cursor-pointer" onclick="ovxOpen('top',${i})"><td class="px-2 py-2">${i + 1}</td><td class="px-2 py-2">${ovxEsc(salesCodeNames[code] || code)}</td><td class="px-2 py-2">${ovxEsc(code)}</td><td class="px-2 py-2 text-right">${s.inst.length}</td><td class="px-2 py-2 text-right">${s.term.length}</td><td class="px-2 py-2 text-right font-semibold">${netOf(s)}</td></tr>`).join('')
+                : '<tr><td colspan="6" class="text-center text-gray-400 py-3">Belum ada data.</td></tr>');
+
+            // Terminasi (Detail) per penyebab
+            const byReason = {};
+            term.forEach(c => {
+                const entry = (typeof getReasonTerminationEntry === 'function' ? getReasonTerminationEntry(c.CONTRACTACCOUNT) : null) || {};
+                const r = entry.reason || 'Belum Diisi';
+                (byReason[r] = byReason[r] || []).push(c);
+            });
+            const reasons = Object.entries(byReason).sort(([, a], [, b]) => b.length - a.length);
+            ovxStore.reason = reasons.map(([r, l]) => ({ list: l, title: `Terminasi Bulan Ini - ${r}` }));
+            setHtml('ovxReasonBody', reasons.length ? reasons.map(([r, l], i) => `<tr class="cursor-pointer" onclick="ovxOpen('reason',${i})"><td class="px-2 py-2">${ovxEsc(r)}</td><td class="px-2 py-2 text-right">${l.length}</td><td class="px-2 py-2 text-right">${(l.length / term.length * 100).toFixed(1).replace('.', ',')}%</td></tr>`).join('')
+                : '<tr><td colspan="3" class="text-center text-gray-400 py-3">Belum ada terminasi pada periode ini.</td></tr>');
+        }
+
+        // Kartu ringkas Prospect (data prospect dimuat terpisah dari data customer)
+        function renderOvxProspectStat() {
+            const cEl = document.getElementById('ovxProspectCount');
+            if (!cEl || !Array.isArray(allProspects) || allProspects.length === 0) return;
+            const now = new Date(), day = now.getDate();
+            const thisKey = now.getFullYear() * 12 + now.getMonth();
+            let cur = 0, prev = 0;
+            allProspects.forEach(p => {
+                const d = new Date(pTanggalRaw(p));
+                if (isNaN(d.getTime()) || d.getDate() > day) return;
+                const k = d.getFullYear() * 12 + d.getMonth();
+                if (k === thisKey) cur++; else if (k === thisKey - 1) prev++;
+            });
+            cEl.textContent = formatNumber(cur);
+            const g = document.getElementById('ovxProspectGrowth');
+            if (g) g.innerHTML = ovxGrowthHtml(cur, prev, 'bulan lalu', false);
+        }
+
+        
+// 12. Penetrasi (Total Active / Total Homepass)
         function renderPenetrationChart() {
             const ctx = document.getElementById('penetrationChart');
             if (!ctx) return;
